@@ -62,7 +62,7 @@ struct PreviewData {
     }()
 
     // MARK: - Sample Circle
-    static let sampleCircle = Circle(
+    static let sampleCircle = SisterCircle(
         name: "Rooted Mamas",
         description: "Moms growing deeper roots in Christ while raising the next generation",
         creatorID: "user_1",

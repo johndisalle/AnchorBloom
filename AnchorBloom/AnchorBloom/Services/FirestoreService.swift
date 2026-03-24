@@ -131,24 +131,24 @@ final class FirestoreService: ObservableObject {
     // MARK: - Circle Operations
 
     /// Creates a new sister circle
-    func createCircle(_ circle: Circle) async throws -> String {
+    func createCircle(_ circle: SisterCircle) async throws -> String {
         let docRef = try circlesCollection.addDocument(from: circle)
         return docRef.documentID
     }
 
     /// Fetches circles the user belongs to
-    func fetchUserCircles() async throws -> [Circle] {
+    func fetchUserCircles() async throws -> [SisterCircle] {
         guard let userID = currentUserID else { return [] }
 
         let snapshot = try await circlesCollection
             .whereField("memberIDs", arrayContains: userID)
             .getDocuments()
 
-        return snapshot.documents.compactMap { try? $0.data(as: Circle.self) }
+        return snapshot.documents.compactMap { try? $0.data(as: SisterCircle.self) }
     }
 
     /// Joins a circle by invite code
-    func joinCircle(inviteCode: String) async throws -> Circle? {
+    func joinCircle(inviteCode: String) async throws -> SisterCircle? {
         guard let userID = currentUserID else { return nil }
 
         let snapshot = try await circlesCollection
@@ -157,7 +157,7 @@ final class FirestoreService: ObservableObject {
             .getDocuments()
 
         guard let document = snapshot.documents.first,
-              var circle = try? document.data(as: Circle.self) else {
+              var circle = try? document.data(as: SisterCircle.self) else {
             throw FirestoreError.circleNotFound
         }
 

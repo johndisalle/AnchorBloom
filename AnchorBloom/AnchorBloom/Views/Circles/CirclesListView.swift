@@ -6,10 +6,10 @@ struct CirclesListView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
-    @State private var circles: [Circle] = []
+    @State private var circles: [SisterCircle] = []
     @State private var showCreateCircle = false
     @State private var showJoinCircle = false
-    @State private var selectedCircle: Circle?
+    @State private var selectedCircle: SisterCircle?
     @State private var isLoading = false
 
     var body: some View {
@@ -148,7 +148,7 @@ struct CirclesListView: View {
 
 // MARK: - Circle Card
 struct CircleCardView: View {
-    let circle: Circle
+    let circle: SisterCircle
     let action: () -> Void
 
     var body: some View {
@@ -206,7 +206,7 @@ struct CreateCircleView: View {
     @State private var isPrivate = true
     @State private var isSaving = false
 
-    let onCreated: (Circle) -> Void
+    let onCreated: (SisterCircle) -> Void
 
     var body: some View {
         NavigationStack {
@@ -249,7 +249,7 @@ struct CreateCircleView: View {
         isSaving = true
         let inviteCode = String((0..<6).map { _ in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".randomElement()! })
 
-        let circle = Circle(
+        let circle = SisterCircle(
             name: name,
             description: description,
             creatorID: "",
@@ -258,7 +258,7 @@ struct CreateCircleView: View {
             createdAt: Date(),
             isPrivate: isPrivate,
             inviteCode: inviteCode,
-            maxMembers: Circle.defaultMaxMembers,
+            maxMembers: SisterCircle.defaultMaxMembers,
             coverImageName: "default"
         )
 
@@ -279,7 +279,7 @@ struct JoinCircleView: View {
     @State private var isJoining = false
     @State private var errorMessage: String?
 
-    let onJoined: (Circle?) -> Void
+    let onJoined: (SisterCircle?) -> Void
 
     var body: some View {
         NavigationStack {
@@ -351,7 +351,7 @@ struct JoinCircleView: View {
 
 // MARK: - Circle Detail View
 struct CircleDetailView: View {
-    let circle: Circle
+    let circle: SisterCircle
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
