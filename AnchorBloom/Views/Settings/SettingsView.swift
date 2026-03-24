@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 // MARK: - Settings View
 /// App settings: subscription, reminders, theme, account, export

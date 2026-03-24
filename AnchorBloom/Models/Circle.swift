@@ -3,7 +3,7 @@ import FirebaseFirestore
 
 // MARK: - Sister Circle Model
 /// Private small groups for encouragement and accountability
-struct Circle: Codable, Identifiable {
+struct SisterCircle: Codable, Identifiable {
     @DocumentID var id: String?
     var name: String
     var description: String

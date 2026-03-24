@@ -41,6 +41,7 @@ struct UserProfile: Codable, Identifiable {
             longestStreak: 0,
             totalDaysCompleted: 0,
             earnedBadgeIDs: [],
+            journeyProgress: [:],
             circleIDs: []
         )
     }

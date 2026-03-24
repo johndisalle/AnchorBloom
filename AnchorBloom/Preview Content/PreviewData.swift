@@ -16,6 +16,7 @@ struct PreviewData {
         longestStreak: 21,
         totalDaysCompleted: 38,
         earnedBadgeIDs: ["first_root", "seedling", "rooted", "flourishing", "first_anchor", "anchor_10", "first_bloom", "bloom_10", "first_prayer"],
+        journeyProgress: [:],
         circleIDs: ["circle_1"]
     )
 
@@ -30,6 +31,7 @@ struct PreviewData {
         longestStreak: 5,
         totalDaysCompleted: 5,
         earnedBadgeIDs: ["first_root", "seedling", "first_anchor", "first_bloom"],
+        journeyProgress: [:],
         circleIDs: []
     )
 
@@ -60,7 +62,7 @@ struct PreviewData {
     }()
 
     // MARK: - Sample Circle
-    static let sampleCircle = Circle(
+    static let sampleCircle = SisterCircle(
         name: "Rooted Mamas",
         description: "Moms growing deeper roots in Christ while raising the next generation",
         creatorID: "user_1",

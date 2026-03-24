@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import FirebaseAuth
 
 // MARK: - App View Model
@@ -89,7 +90,7 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Check Day Completion & Update Streak
     private func checkDayCompletion() async {
-        guard var entry = todayEntry, entry.isFullyCompleted,
+        guard let entry = todayEntry, entry.isFullyCompleted,
               var profile = userProfile else { return }
 
         do {
