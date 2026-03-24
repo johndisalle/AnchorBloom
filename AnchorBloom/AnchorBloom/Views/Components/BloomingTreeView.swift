@@ -621,29 +621,29 @@ struct LeafCluster: Shape {
         let segments = 12
 
         // Create an organic blob by varying the radius
-        let firstAngle = 0.0
+        let firstAngle: CGFloat = 0.0
         let firstRadius = radius(for: 0, rx: rx, ry: ry)
         path.move(to: CGPoint(
-            x: cx + firstRadius.x * cos(firstAngle),
-            y: cy + firstRadius.y * sin(firstAngle)
+            x: cx + firstRadius.x * CoreGraphics.cos(firstAngle),
+            y: cy + firstRadius.y * CoreGraphics.sin(firstAngle)
         ))
 
         for i in 1...segments {
-            let angle1 = Double(i - 1) / Double(segments) * 2 * .pi
-            let angle2 = Double(i) / Double(segments) * 2 * .pi
-            let midAngle = (angle1 + angle2) / 2
+            let angle1: CGFloat = CGFloat(i - 1) / CGFloat(segments) * 2 * .pi
+            let angle2: CGFloat = CGFloat(i) / CGFloat(segments) * 2 * .pi
+            let midAngle: CGFloat = (angle1 + angle2) / 2
 
             let r2 = radius(for: i % segments, rx: rx, ry: ry)
             let rMid = radius(for: i + segments / 2, rx: rx * 1.05, ry: ry * 1.05)
 
             path.addQuadCurve(
                 to: CGPoint(
-                    x: cx + r2.x * cos(angle2),
-                    y: cy + r2.y * sin(angle2)
+                    x: cx + r2.x * CoreGraphics.cos(angle2),
+                    y: cy + r2.y * CoreGraphics.sin(angle2)
                 ),
                 control: CGPoint(
-                    x: cx + rMid.x * cos(midAngle),
-                    y: cy + rMid.y * sin(midAngle)
+                    x: cx + rMid.x * CoreGraphics.cos(midAngle),
+                    y: cy + rMid.y * CoreGraphics.sin(midAngle)
                 )
             )
         }
@@ -740,8 +740,8 @@ struct PrettyFlower: View {
                     .fill(centerColor.opacity(0.8))
                     .frame(width: size * 0.08, height: size * 0.08)
                     .offset(
-                        x: cos(Double(i) * 2.1) * size * 0.08,
-                        y: sin(Double(i) * 2.1) * size * 0.08
+                        x: CoreGraphics.cos(CGFloat(i) * 2.1) * size * 0.08,
+                        y: CoreGraphics.sin(CGFloat(i) * 2.1) * size * 0.08
                     )
             }
         }
