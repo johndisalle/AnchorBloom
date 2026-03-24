@@ -1,15 +1,13 @@
 import SwiftUI
 
 // MARK: - Drift Log View
-/// One-tap drift entries with instant anchoring prayer audio
+/// One-tap drift entries with anchoring prayer text
 struct DriftLogView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @StateObject private var viewModel: AppViewModel
-    @StateObject private var audioPlayer = AudioPlayerManager()
 
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
-    @State private var showPrayerPlayer = false
     @State private var showHistory = false
 
     init() {
@@ -83,7 +81,6 @@ struct DriftLogView: View {
                             selectedCategory = nil
                         } else {
                             selectedCategory = category
-                            showPrayerPlayer = false
                         }
                     }
                 }
@@ -110,12 +107,6 @@ struct DriftLogView: View {
                     .lineSpacing(4)
             }
             .abCard()
-
-            // Prayer audio player
-            PrayerAudioPlayer(
-                category: category,
-                audioPlayer: audioPlayer
-            )
 
             // Optional note
             VStack(alignment: .leading, spacing: 8) {
@@ -177,12 +168,6 @@ struct DriftLogView: View {
 
                             Spacer()
 
-                            if drift.prayerPlayed {
-                                Image(systemName: "hands.sparkles.fill")
-                                    .font(.caption)
-                                    .foregroundColor(ABTheme.warmGold)
-                            }
-
                             Text(drift.timestamp, style: .time)
                                 .font(.caption2)
                                 .foregroundColor(ABTheme.secondaryText)
@@ -203,11 +188,10 @@ struct DriftLogView: View {
             await viewModel.logDrift(
                 category: category,
                 note: driftNote.isEmpty ? nil : driftNote,
-                prayerPlayed: audioPlayer.isPlaying || audioPlayer.progress > 0
+                prayerPlayed: false
             )
             driftNote = ""
             selectedCategory = nil
-            audioPlayer.stop()
         }
     }
 }
@@ -239,95 +223,6 @@ struct DriftCategoryButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
-    }
-}
-
-// MARK: - Prayer Audio Player
-struct PrayerAudioPlayer: View {
-    let category: DriftCategory
-    @ObservedObject var audioPlayer: AudioPlayerManager
-
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Image(systemName: "waveform.circle.fill")
-                    .font(.title2)
-                    .foregroundColor(ABTheme.sageGreen)
-
-                Text("Anchoring Prayer Audio")
-                    .font(.system(.subheadline, design: .serif, weight: .medium))
-                    .foregroundColor(ABTheme.primaryText)
-
-                Spacer()
-
-                Text("~25 sec")
-                    .font(.caption2)
-                    .foregroundColor(ABTheme.secondaryText)
-            }
-
-            // Play button with progress
-            Button {
-                if audioPlayer.isPlaying {
-                    audioPlayer.pause()
-                } else if audioPlayer.progress > 0 {
-                    audioPlayer.resume()
-                } else {
-                    // Play the prayer audio (filename matches category)
-                    audioPlayer.playPrayer(named: "prayer_\(category.rawValue.lowercased())")
-                }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: audioPlayer.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                        .font(.title)
-                        .foregroundColor(.white)
-
-                    Text(audioPlayer.isPlaying ? "Pause Prayer" : "Play Prayer")
-                        .font(.system(.body, design: .serif, weight: .semibold))
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(
-                    LinearGradient(
-                        colors: [ABTheme.sageGreen, ABTheme.sageGreenDark],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                )
-                .cornerRadius(ABTheme.cornerRadius)
-            }
-
-            // Progress bar
-            if audioPlayer.progress > 0 {
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        Capsule()
-                            .fill(ABTheme.sageGreen.opacity(0.15))
-                            .frame(height: 4)
-
-                        Capsule()
-                            .fill(ABTheme.sageGreen)
-                            .frame(width: geo.size.width * audioPlayer.progress, height: 4)
-                    }
-                }
-                .frame(height: 4)
-
-                HStack {
-                    Text(AudioPlayerManager.formatTime(audioPlayer.currentTime))
-                    Spacer()
-                    Text(AudioPlayerManager.formatTime(audioPlayer.duration))
-                }
-                .font(.caption2)
-                .foregroundColor(ABTheme.secondaryText)
-            }
-        }
-        .padding(ABTheme.paddingMedium)
-        .background(ABTheme.sageGreen.opacity(0.05))
-        .cornerRadius(ABTheme.cornerRadius)
-        .overlay(
-            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                .stroke(ABTheme.sageGreen.opacity(0.15), lineWidth: 1)
-        )
     }
 }
 
