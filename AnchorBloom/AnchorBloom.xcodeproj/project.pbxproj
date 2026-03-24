@@ -6,22 +6,310 @@
 	objectVersion = 56;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1000001000000000000001 /* AnchorBloomApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000001000000000000001 /* AnchorBloomApp.swift */; };
+		A1000002000000000000001 /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002000000000000001 /* AppViewModel.swift */; };
+		A1000003000000000000001 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000003000000000000001 /* Theme.swift */; };
+		A1000004000000000000001 /* Badge.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000004000000000000001 /* Badge.swift */; };
+		A1000005000000000000001 /* Circle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000005000000000000001 /* Circle.swift */; };
+		A1000006000000000000001 /* DailyEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000006000000000000001 /* DailyEntry.swift */; };
+		A1000007000000000000001 /* DailyPrompt.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000007000000000000001 /* DailyPrompt.swift */; };
+		A1000008000000000000001 /* Journey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000008000000000000001 /* Journey.swift */; };
+		A1000009000000000000001 /* Streak.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000009000000000000001 /* Streak.swift */; };
+		A1000010000000000000001 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010000000000000001 /* UserProfile.swift */; };
+		A1000011000000000000001 /* PreviewData.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000011000000000000001 /* PreviewData.swift */; };
+		A1000012000000000000001 /* AppStoreAssets.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000012000000000000001 /* AppStoreAssets.swift */; };
+		A1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift */; };
+		A1000014000000000000001 /* JourneyContent_Premium.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014000000000000001 /* JourneyContent_Premium.swift */; };
+		A1000015000000000000001 /* JourneyContent_Proverbs31.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000015000000000000001 /* JourneyContent_Proverbs31.swift */; };
+		A1000016000000000000001 /* JourneyContent_RootedIdentity.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016000000000000001 /* JourneyContent_RootedIdentity.swift */; };
+		A1000017000000000000001 /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000017000000000000001 /* AuthManager.swift */; };
+		A1000018000000000000001 /* FirestoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000018000000000000001 /* FirestoreService.swift */; };
+		A1000019000000000000001 /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000019000000000000001 /* NotificationManager.swift */; };
+		A1000020000000000000001 /* SubscriptionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020000000000000001 /* SubscriptionManager.swift */; };
+		A1000021000000000000001 /* AnchorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021000000000000001 /* AnchorView.swift */; };
+		A1000022000000000000001 /* BloomView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000022000000000000001 /* BloomView.swift */; };
+		A1000023000000000000001 /* CirclesListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000023000000000000001 /* CirclesListView.swift */; };
+		A1000024000000000000001 /* BloomingTreeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000024000000000000001 /* BloomingTreeView.swift */; };
+		A1000025000000000000001 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000025000000000000001 /* DashboardView.swift */; };
+		A1000026000000000000001 /* DriftLogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000026000000000000001 /* DriftLogView.swift */; };
+		A1000027000000000000001 /* JourneyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000027000000000000001 /* JourneyListView.swift */; };
+		A1000028000000000000001 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000028000000000000001 /* AuthView.swift */; };
+		A1000029000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000029000000000000001 /* OnboardingView.swift */; };
+		A1000030000000000000001 /* ProgressStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000030000000000000001 /* ProgressStatsView.swift */; };
+		A1000031000000000000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000031000000000000001 /* SettingsView.swift */; };
+		A1000032000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000032000000000000001 /* Assets.xcassets */; };
+		A1000033000000000000001 /* GoogleService-Info.plist.example in Resources */ = {isa = PBXBuildFile; fileRef = B1000033000000000000001 /* GoogleService-Info.plist.example */; };
+		A1000040000000000000001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D1000001000000000000001 /* FirebaseAuth */; };
+		A1000041000000000000001 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D1000002000000000000001 /* FirebaseFirestore */; };
+		A1000042000000000000001 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = D1000003000000000000001 /* FirebaseStorage */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B1000001000000000000001 /* AnchorBloomApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorBloomApp.swift; sourceTree = "<group>"; };
+		B1000002000000000000001 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
+		B1000003000000000000001 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		B1000004000000000000001 /* Badge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Badge.swift; sourceTree = "<group>"; };
+		B1000005000000000000001 /* Circle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Circle.swift; sourceTree = "<group>"; };
+		B1000006000000000000001 /* DailyEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyEntry.swift; sourceTree = "<group>"; };
+		B1000007000000000000001 /* DailyPrompt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyPrompt.swift; sourceTree = "<group>"; };
+		B1000008000000000000001 /* Journey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Journey.swift; sourceTree = "<group>"; };
+		B1000009000000000000001 /* Streak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streak.swift; sourceTree = "<group>"; };
+		B1000010000000000000001 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		B1000011000000000000001 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
+		B1000012000000000000001 /* AppStoreAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreAssets.swift; sourceTree = "<group>"; };
+		B1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyContent_ArmorOfGrace.swift; sourceTree = "<group>"; };
+		B1000014000000000000001 /* JourneyContent_Premium.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyContent_Premium.swift; sourceTree = "<group>"; };
+		B1000015000000000000001 /* JourneyContent_Proverbs31.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyContent_Proverbs31.swift; sourceTree = "<group>"; };
+		B1000016000000000000001 /* JourneyContent_RootedIdentity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyContent_RootedIdentity.swift; sourceTree = "<group>"; };
+		B1000017000000000000001 /* AuthManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthManager.swift; sourceTree = "<group>"; };
+		B1000018000000000000001 /* FirestoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreService.swift; sourceTree = "<group>"; };
+		B1000019000000000000001 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		B1000020000000000000001 /* SubscriptionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionManager.swift; sourceTree = "<group>"; };
+		B1000021000000000000001 /* AnchorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnchorView.swift; sourceTree = "<group>"; };
+		B1000022000000000000001 /* BloomView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomView.swift; sourceTree = "<group>"; };
+		B1000023000000000000001 /* CirclesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CirclesListView.swift; sourceTree = "<group>"; };
+		B1000024000000000000001 /* BloomingTreeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloomingTreeView.swift; sourceTree = "<group>"; };
+		B1000025000000000000001 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		B1000026000000000000001 /* DriftLogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DriftLogView.swift; sourceTree = "<group>"; };
+		B1000027000000000000001 /* JourneyListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyListView.swift; sourceTree = "<group>"; };
+		B1000028000000000000001 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		B1000029000000000000001 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		B1000030000000000000001 /* ProgressStatsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressStatsView.swift; sourceTree = "<group>"; };
+		B1000031000000000000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B1000032000000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B1000033000000000000001 /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
+		B1000034000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B1000035000000000000001 /* AnchorBloom.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AnchorBloom.entitlements; sourceTree = "<group>"; };
+		B1000050000000000000001 /* AnchorBloom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnchorBloom.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C1000001000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000040000000000000001 /* FirebaseAuth in Frameworks */,
+				A1000041000000000000001 /* FirebaseFirestore in Frameworks */,
+				A1000042000000000000001 /* FirebaseStorage in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		00000000000000000000001 /* AnchorBloom */ = {
 			isa = PBXGroup;
 			children = (
 				00000000000000000000002 /* AnchorBloom */,
+				E1000001000000000000001 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
 		00000000000000000000002 /* AnchorBloom */ = {
 			isa = PBXGroup;
 			children = (
+				G1000001000000000000001 /* App */,
+				G1000002000000000000001 /* Models */,
+				G1000003000000000000001 /* Views */,
+				G1000004000000000000001 /* Services */,
+				G1000005000000000000001 /* Resources */,
+				G1000006000000000000001 /* Preview Content */,
+				B1000032000000000000001 /* Assets.xcassets */,
+				B1000034000000000000001 /* Info.plist */,
+				B1000035000000000000001 /* AnchorBloom.entitlements */,
 			);
 			path = AnchorBloom;
 			sourceTree = "<group>";
 		};
+		E1000001000000000000001 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B1000050000000000000001 /* AnchorBloom.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		G1000001000000000000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B1000001000000000000001 /* AnchorBloomApp.swift */,
+				B1000002000000000000001 /* AppViewModel.swift */,
+				B1000003000000000000001 /* Theme.swift */,
+				B1000033000000000000001 /* GoogleService-Info.plist.example */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		G1000002000000000000001 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B1000004000000000000001 /* Badge.swift */,
+				B1000005000000000000001 /* Circle.swift */,
+				B1000006000000000000001 /* DailyEntry.swift */,
+				B1000007000000000000001 /* DailyPrompt.swift */,
+				B1000008000000000000001 /* Journey.swift */,
+				B1000009000000000000001 /* Streak.swift */,
+				B1000010000000000000001 /* UserProfile.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		G1000003000000000000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				G1000010000000000000001 /* Anchor */,
+				G1000011000000000000001 /* Bloom */,
+				G1000012000000000000001 /* Circles */,
+				G1000013000000000000001 /* Components */,
+				G1000014000000000000001 /* Dashboard */,
+				G1000015000000000000001 /* DriftLog */,
+				G1000016000000000000001 /* Journey */,
+				G1000017000000000000001 /* Onboarding */,
+				G1000018000000000000001 /* Progress */,
+				G1000019000000000000001 /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		G1000004000000000000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B1000017000000000000001 /* AuthManager.swift */,
+				B1000018000000000000001 /* FirestoreService.swift */,
+				B1000019000000000000001 /* NotificationManager.swift */,
+				B1000020000000000000001 /* SubscriptionManager.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		G1000005000000000000001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B1000012000000000000001 /* AppStoreAssets.swift */,
+				B1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift */,
+				B1000014000000000000001 /* JourneyContent_Premium.swift */,
+				B1000015000000000000001 /* JourneyContent_Proverbs31.swift */,
+				B1000016000000000000001 /* JourneyContent_RootedIdentity.swift */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		G1000006000000000000001 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				B1000011000000000000001 /* PreviewData.swift */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		G1000010000000000000001 /* Anchor */ = {
+			isa = PBXGroup;
+			children = (
+				B1000021000000000000001 /* AnchorView.swift */,
+			);
+			path = Anchor;
+			sourceTree = "<group>";
+		};
+		G1000011000000000000001 /* Bloom */ = {
+			isa = PBXGroup;
+			children = (
+				B1000022000000000000001 /* BloomView.swift */,
+			);
+			path = Bloom;
+			sourceTree = "<group>";
+		};
+		G1000012000000000000001 /* Circles */ = {
+			isa = PBXGroup;
+			children = (
+				B1000023000000000000001 /* CirclesListView.swift */,
+			);
+			path = Circles;
+			sourceTree = "<group>";
+		};
+		G1000013000000000000001 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				B1000024000000000000001 /* BloomingTreeView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		G1000014000000000000001 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				B1000025000000000000001 /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		G1000015000000000000001 /* DriftLog */ = {
+			isa = PBXGroup;
+			children = (
+				B1000026000000000000001 /* DriftLogView.swift */,
+			);
+			path = DriftLog;
+			sourceTree = "<group>";
+		};
+		G1000016000000000000001 /* Journey */ = {
+			isa = PBXGroup;
+			children = (
+				B1000027000000000000001 /* JourneyListView.swift */,
+			);
+			path = Journey;
+			sourceTree = "<group>";
+		};
+		G1000017000000000000001 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				B1000028000000000000001 /* AuthView.swift */,
+				B1000029000000000000001 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		G1000018000000000000001 /* Progress */ = {
+			isa = PBXGroup;
+			children = (
+				B1000030000000000000001 /* ProgressStatsView.swift */,
+			);
+			path = Progress;
+			sourceTree = "<group>";
+		};
+		G1000019000000000000001 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				B1000031000000000000001 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		T1000001000000000000001 /* AnchorBloom */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = T1000002000000000000001 /* Build configuration list for PBXNativeTarget "AnchorBloom" */;
+			buildPhases = (
+				C1000002000000000000001 /* Sources */,
+				C1000001000000000000001 /* Frameworks */,
+				C1000003000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AnchorBloom;
+			packageProductDependencies = (
+				D1000001000000000000001 /* FirebaseAuth */,
+				D1000002000000000000001 /* FirebaseFirestore */,
+				D1000003000000000000001 /* FirebaseStorage */,
+			);
+			productName = AnchorBloom;
+			productReference = B1000050000000000000001 /* AnchorBloom.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		00000000000000000000010 /* Project object */ = {
@@ -30,6 +318,11 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					T1000001000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
 			};
 			buildConfigurationList = 00000000000000000000011 /* Build configuration list for PBXProject "AnchorBloom" */;
 			compatibilityVersion = "Xcode 14.0";
@@ -40,13 +333,70 @@
 				Base,
 			);
 			mainGroup = 00000000000000000000001 /* AnchorBloom */;
-			productRefGroup = 00000000000000000000001 /* AnchorBloom */;
+			packageReferences = (
+				P1000001000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
+			productRefGroup = E1000001000000000000001 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				T1000001000000000000001 /* AnchorBloom */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C1000003000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000032000000000000001 /* Assets.xcassets in Resources */,
+				A1000033000000000000001 /* GoogleService-Info.plist.example in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C1000002000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000001000000000000001 /* AnchorBloomApp.swift in Sources */,
+				A1000002000000000000001 /* AppViewModel.swift in Sources */,
+				A1000003000000000000001 /* Theme.swift in Sources */,
+				A1000004000000000000001 /* Badge.swift in Sources */,
+				A1000005000000000000001 /* Circle.swift in Sources */,
+				A1000006000000000000001 /* DailyEntry.swift in Sources */,
+				A1000007000000000000001 /* DailyPrompt.swift in Sources */,
+				A1000008000000000000001 /* Journey.swift in Sources */,
+				A1000009000000000000001 /* Streak.swift in Sources */,
+				A1000010000000000000001 /* UserProfile.swift in Sources */,
+				A1000011000000000000001 /* PreviewData.swift in Sources */,
+				A1000012000000000000001 /* AppStoreAssets.swift in Sources */,
+				A1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift in Sources */,
+				A1000014000000000000001 /* JourneyContent_Premium.swift in Sources */,
+				A1000015000000000000001 /* JourneyContent_Proverbs31.swift in Sources */,
+				A1000016000000000000001 /* JourneyContent_RootedIdentity.swift in Sources */,
+				A1000017000000000000001 /* AuthManager.swift in Sources */,
+				A1000018000000000000001 /* FirestoreService.swift in Sources */,
+				A1000019000000000000001 /* NotificationManager.swift in Sources */,
+				A1000020000000000000001 /* SubscriptionManager.swift in Sources */,
+				A1000021000000000000001 /* AnchorView.swift in Sources */,
+				A1000022000000000000001 /* BloomView.swift in Sources */,
+				A1000023000000000000001 /* CirclesListView.swift in Sources */,
+				A1000024000000000000001 /* BloomingTreeView.swift in Sources */,
+				A1000025000000000000001 /* DashboardView.swift in Sources */,
+				A1000026000000000000001 /* DriftLogView.swift in Sources */,
+				A1000027000000000000001 /* JourneyListView.swift in Sources */,
+				A1000028000000000000001 /* AuthView.swift in Sources */,
+				A1000029000000000000001 /* OnboardingView.swift in Sources */,
+				A1000030000000000000001 /* ProgressStatsView.swift in Sources */,
+				A1000031000000000000001 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		00000000000000000000020 /* Debug */ = {
@@ -58,30 +408,31 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_ASSET_PATHS = "\"AnchorBloom/Preview Content\"";
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = AnchorBloom/Info.plist;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				LD_RUNPATH_SEARCH_PATHS = (
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
 					"$(inherited)",
-					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ellasid.anchorbloom;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
-				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -94,6 +445,34 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		T1000010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = AnchorBloom/AnchorBloom.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"AnchorBloom/Preview Content\"";
@@ -104,7 +483,6 @@
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -113,9 +491,37 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ellasid.anchorbloom;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		T1000011000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CODE_SIGN_ENTITLEMENTS = AnchorBloom/AnchorBloom.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"AnchorBloom/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = AnchorBloom/Info.plist;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ellasid.anchorbloom;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
@@ -131,7 +537,45 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		T1000002000000000000001 /* Build configuration list for PBXNativeTarget "AnchorBloom" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				T1000010000000000000001 /* Debug */,
+				T1000011000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		P1000001000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.19.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D1000001000000000000001 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = P1000001000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		D1000002000000000000001 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = P1000001000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		D1000003000000000000001 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = P1000001000000000000001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 	};
 	rootObject = 00000000000000000000010 /* Project object */;
