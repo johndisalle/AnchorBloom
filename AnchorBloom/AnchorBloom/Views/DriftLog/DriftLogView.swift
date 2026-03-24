@@ -48,7 +48,7 @@ struct DriftLogView: View {
     // MARK: - Header
     private var headerSection: some View {
         VStack(spacing: 8) {
-            Image(systemName: "anchor.circle.fill")
+            Image(systemName: "water.waves")
                 .font(.title)
                 .foregroundColor(ABTheme.sageGreen)
 

@@ -36,7 +36,7 @@ struct AnchorView: View {
                         saveAnchor()
                     } label: {
                         HStack {
-                            Image(systemName: "anchor.circle.fill")
+                            Image(systemName: "anchor")
                             Text("Anchor My Heart")
                         }
                     }

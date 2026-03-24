@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Blooming Tree View
-/// A beautiful watercolor-style tree that grows flowers and fruit with user consistency.
+/// A storybook-illustration tree with distinct round foliage clusters.
 struct BloomingTreeView: View {
     let growthLevel: Double
     let bloomCount: Int
@@ -12,263 +12,199 @@ struct BloomingTreeView: View {
     @State private var bloomPulse = false
 
     private var growth: CGFloat { max(0.15, CGFloat(growthLevel)) }
-    private var trunkH: CGFloat { 55 + growth * 65 }
-    private var canopyR: CGFloat { 55 + growth * 55 }
-
-    // MARK: - Colors
-    private let bark = Color(red: 0.50, green: 0.36, blue: 0.24)
-    private let barkDark = Color(red: 0.38, green: 0.26, blue: 0.16)
-    private let barkLight = Color(red: 0.60, green: 0.46, blue: 0.32)
-    private let leafDark = Color(red: 0.25, green: 0.42, blue: 0.22)
-    private let leafMid = Color(red: 0.34, green: 0.54, blue: 0.30)
-    private let leafBright = Color(red: 0.45, green: 0.64, blue: 0.38)
-    private let leafLight = Color(red: 0.58, green: 0.74, blue: 0.50)
 
     var body: some View {
-        Canvas { context, size in
-            let cx = size.width / 2
-            let baseY = size.height * 0.62
+        ZStack {
+            // Ground shadow
+            Ellipse()
+                .fill(Color.black.opacity(0.06))
+                .frame(width: 180, height: 16)
+                .offset(y: 72)
 
-            drawGround(context: &context, cx: cx, baseY: baseY, size: size)
-            drawRoots(context: &context, cx: cx, baseY: baseY)
-            drawTrunk(context: &context, cx: cx, baseY: baseY)
-            drawCanopy(context: &context, cx: cx, baseY: baseY)
-            drawFlowers(context: &context, cx: cx, baseY: baseY)
-            drawFruit(context: &context, cx: cx, baseY: baseY)
-        }
-        .frame(height: 280)
-        .overlay(alignment: .bottom) {
+            // Roots
+            rootsView
+                .offset(y: 52)
+
+            // Trunk
+            trunkView
+
+            // Canopy - distinct round clusters
+            canopyView
+                .offset(y: -60 - growth * 20)
+
+            // Flowers
+            flowersView
+                .offset(y: -60 - growth * 20)
+
+            // Fruit
+            fruitView
+                .offset(y: -40 - growth * 10)
+
+            // Streak badge
             if streakDays > 0 {
                 streakBadge
-                    .padding(.bottom, 16)
+                    .offset(y: 100)
             }
         }
+        .frame(height: 260)
         .onAppear {
-            withAnimation(.easeOut(duration: 1.2)) { animateIn = true }
+            withAnimation(.easeOut(duration: 1.0)) { animateIn = true }
             withAnimation(.easeInOut(duration: 2.5).repeatForever(autoreverses: true)) { bloomPulse = true }
         }
     }
 
-    // MARK: - Ground
-    private func drawGround(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat, size: CGSize) {
-        // Soft ground shadow
-        let groundRect = CGRect(x: cx - 100, y: baseY - 5, width: 200, height: 18)
-        context.fill(
-            Ellipse().path(in: groundRect),
-            with: .color(leafDark.opacity(0.08))
-        )
+    // MARK: - Colors
+    private let barkColor = Color(red: 0.48, green: 0.35, blue: 0.22)
+    private let barkDark = Color(red: 0.36, green: 0.24, blue: 0.14)
+    private let foliageDark = Color(red: 0.22, green: 0.40, blue: 0.20)
+    private let foliageMid = Color(red: 0.32, green: 0.52, blue: 0.28)
+    private let foliageBright = Color(red: 0.42, green: 0.62, blue: 0.36)
+    private let foliageLight = Color(red: 0.55, green: 0.72, blue: 0.48)
 
-        // Subtle ground line
-        let lineRect = CGRect(x: cx - 80, y: baseY + 2, width: 160, height: 8)
-        context.fill(
-            Ellipse().path(in: lineRect),
-            with: .color(leafMid.opacity(0.06))
-        )
+    // MARK: - Trunk
+    private var trunkView: some View {
+        ZStack {
+            // Main trunk
+            TrunkShape()
+                .fill(
+                    LinearGradient(
+                        colors: [barkDark, barkColor, barkColor.opacity(0.85)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: 28 + growth * 10, height: 90 + growth * 30)
+                .offset(y: 14)
+
+            // Branches
+            if growth > 0.2 {
+                BranchCurve()
+                    .stroke(barkColor, style: StrokeStyle(lineWidth: 5.5, lineCap: .round))
+                    .frame(width: 55 + growth * 20, height: 35)
+                    .scaleEffect(x: -1)
+                    .offset(x: -(18 + growth * 12), y: -22 - growth * 10)
+            }
+            if growth > 0.15 {
+                BranchCurve()
+                    .stroke(barkColor, style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    .frame(width: 50 + growth * 18, height: 30)
+                    .offset(x: 16 + growth * 10, y: -30 - growth * 12)
+            }
+            if growth > 0.5 {
+                BranchCurve()
+                    .stroke(barkColor.opacity(0.8), style: StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                    .frame(width: 30 + growth * 12, height: 20)
+                    .scaleEffect(x: -1)
+                    .offset(x: -(12 + growth * 8), y: -40 - growth * 8)
+            }
+        }
+        .scaleEffect(y: animateIn ? 1 : 0, anchor: .bottom)
     }
 
     // MARK: - Roots
-    private func drawRoots(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat) {
-        let rootColor = bark.opacity(0.55)
-        let spread = 30 + growth * 40
+    private var rootsView: some View {
+        ZStack {
+            // Left main root
+            RootCurve(flip: false)
+                .stroke(
+                    LinearGradient(colors: [barkColor, barkColor.opacity(0.3)], startPoint: .trailing, endPoint: .leading),
+                    style: StrokeStyle(lineWidth: 5.5, lineCap: .round)
+                )
+                .frame(width: 70 + growth * 30, height: 30)
+                .offset(x: -(35 + growth * 15), y: 0)
 
-        // Root paths - thick, graceful curves
-        let roots: [(dx: CGFloat, dy: CGFloat, ctrl: CGFloat, width: CGFloat)] = [
-            (-spread, 28, -15, 5),
-            (-spread * 0.55, 32, -8, 3.5),
-            (spread * 0.5, 30, 10, 3.5),
-            (spread * 1.05, 26, 18, 5),
-            (3, 35, 5, 4),
-        ]
+            // Right main root
+            RootCurve(flip: true)
+                .stroke(
+                    LinearGradient(colors: [barkColor, barkColor.opacity(0.3)], startPoint: .leading, endPoint: .trailing),
+                    style: StrokeStyle(lineWidth: 5, lineCap: .round)
+                )
+                .frame(width: 65 + growth * 28, height: 28)
+                .offset(x: 32 + growth * 14, y: 2)
 
-        for root in roots {
-            var path = Path()
-            path.move(to: CGPoint(x: cx, y: baseY))
-            path.addQuadCurve(
-                to: CGPoint(x: cx + root.dx, y: baseY + root.dy),
-                control: CGPoint(x: cx + root.dx * 0.5 + root.ctrl, y: baseY + root.dy * 0.4)
+            // Center root
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 0))
+                path.addQuadCurve(to: CGPoint(x: 4, y: 30), control: CGPoint(x: -6, y: 15))
+            }
+            .stroke(
+                LinearGradient(colors: [barkColor, barkColor.opacity(0.2)], startPoint: .top, endPoint: .bottom),
+                style: StrokeStyle(lineWidth: 4, lineCap: .round)
             )
-            context.stroke(
-                path,
-                with: .color(rootColor),
-                style: StrokeStyle(lineWidth: root.width, lineCap: .round)
-            )
+            .frame(width: 20, height: 30)
+
+            // Thin sub-roots
+            Path { path in
+                path.move(to: CGPoint(x: 10, y: 0))
+                path.addQuadCurve(to: CGPoint(x: 0, y: 18), control: CGPoint(x: 4, y: 8))
+            }
+            .stroke(barkColor.opacity(0.25), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            .frame(width: 20, height: 20)
+            .offset(x: -(45 + growth * 15), y: 12)
+
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: 0))
+                path.addQuadCurve(to: CGPoint(x: 12, y: 18), control: CGPoint(x: 8, y: 8))
+            }
+            .stroke(barkColor.opacity(0.25), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            .frame(width: 20, height: 20)
+            .offset(x: 42 + growth * 14, y: 10)
         }
-
-        // Thin sub-roots
-        let subRoots: [(startDx: CGFloat, startDy: CGFloat, dx: CGFloat, dy: CGFloat)] = [
-            (-spread * 0.7, 20, -spread * 0.9, 34),
-            (spread * 0.75, 18, spread * 1.0, 32),
-            (-8, 28, -18, 40),
-        ]
-
-        for sub in subRoots {
-            var path = Path()
-            path.move(to: CGPoint(x: cx + sub.startDx, y: baseY + sub.startDy))
-            path.addLine(to: CGPoint(x: cx + sub.dx, y: baseY + sub.dy))
-            context.stroke(
-                path,
-                with: .color(bark.opacity(0.25)),
-                style: StrokeStyle(lineWidth: 2, lineCap: .round)
-            )
-        }
-    }
-
-    // MARK: - Trunk
-    private func drawTrunk(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat) {
-        let topY = baseY - trunkH
-        let baseW: CGFloat = 10 + growth * 6
-        let topW: CGFloat = 5 + growth * 3
-
-        // Main trunk
-        var trunkPath = Path()
-        trunkPath.move(to: CGPoint(x: cx - topW, y: topY))
-        trunkPath.addCurve(
-            to: CGPoint(x: cx - baseW, y: baseY),
-            control1: CGPoint(x: cx - topW - 2, y: topY + trunkH * 0.4),
-            control2: CGPoint(x: cx - baseW + 1, y: baseY - trunkH * 0.3)
-        )
-        trunkPath.addLine(to: CGPoint(x: cx + baseW, y: baseY))
-        trunkPath.addCurve(
-            to: CGPoint(x: cx + topW, y: topY),
-            control1: CGPoint(x: cx + baseW - 1, y: baseY - trunkH * 0.3),
-            control2: CGPoint(x: cx + topW + 2, y: topY + trunkH * 0.4)
-        )
-        trunkPath.closeSubpath()
-
-        // Bark gradient via layered fills
-        context.fill(trunkPath, with: .color(bark))
-
-        // Light side highlight
-        var highlightPath = Path()
-        highlightPath.move(to: CGPoint(x: cx - topW * 0.2, y: topY))
-        highlightPath.addCurve(
-            to: CGPoint(x: cx + baseW * 0.4, y: baseY),
-            control1: CGPoint(x: cx + topW * 0.3, y: topY + trunkH * 0.4),
-            control2: CGPoint(x: cx + baseW * 0.3, y: baseY - trunkH * 0.3)
-        )
-        highlightPath.addLine(to: CGPoint(x: cx + baseW, y: baseY))
-        highlightPath.addCurve(
-            to: CGPoint(x: cx + topW, y: topY),
-            control1: CGPoint(x: cx + baseW - 1, y: baseY - trunkH * 0.3),
-            control2: CGPoint(x: cx + topW + 2, y: topY + trunkH * 0.4)
-        )
-        highlightPath.closeSubpath()
-        context.fill(highlightPath, with: .color(barkLight.opacity(0.4)))
-
-        // Dark side shadow
-        var shadowPath = Path()
-        shadowPath.move(to: CGPoint(x: cx - topW, y: topY))
-        shadowPath.addCurve(
-            to: CGPoint(x: cx - baseW, y: baseY),
-            control1: CGPoint(x: cx - topW - 2, y: topY + trunkH * 0.4),
-            control2: CGPoint(x: cx - baseW + 1, y: baseY - trunkH * 0.3)
-        )
-        shadowPath.addLine(to: CGPoint(x: cx - baseW * 0.3, y: baseY))
-        shadowPath.addCurve(
-            to: CGPoint(x: cx - topW * 0.3, y: topY),
-            control1: CGPoint(x: cx - baseW * 0.2, y: baseY - trunkH * 0.3),
-            control2: CGPoint(x: cx - topW * 0.1, y: topY + trunkH * 0.4)
-        )
-        shadowPath.closeSubpath()
-        context.fill(shadowPath, with: .color(barkDark.opacity(0.35)))
-
-        // Branches
-        if growth > 0.2 {
-            drawBranch(context: &context, cx: cx, startY: topY + trunkH * 0.25,
-                       dx: -(25 + growth * 20), dy: -(15 + growth * 12), width: 4.5)
-        }
-        if growth > 0.15 {
-            drawBranch(context: &context, cx: cx, startY: topY + trunkH * 0.15,
-                       dx: 22 + growth * 18, dy: -(18 + growth * 10), width: 4)
-        }
-        if growth > 0.5 {
-            drawBranch(context: &context, cx: cx, startY: topY + trunkH * 0.08,
-                       dx: -(15 + growth * 10), dy: -(12 + growth * 8), width: 3)
-        }
-    }
-
-    private func drawBranch(context: inout GraphicsContext, cx: CGFloat, startY: CGFloat, dx: CGFloat, dy: CGFloat, width: CGFloat) {
-        var path = Path()
-        path.move(to: CGPoint(x: cx, y: startY))
-        path.addQuadCurve(
-            to: CGPoint(x: cx + dx, y: startY + dy),
-            control: CGPoint(x: cx + dx * 0.5, y: startY + dy * 0.2)
-        )
-        context.stroke(path, with: .color(bark), style: StrokeStyle(lineWidth: width, lineCap: .round))
+        .opacity(animateIn ? 1 : 0)
     }
 
     // MARK: - Canopy
-    private func drawCanopy(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat) {
-        let topY = baseY - trunkH
-        let canopyCenterY = topY - canopyR * 0.25
+    private var canopyView: some View {
+        ZStack {
+            // Each foliage ball is a circle with a radial gradient (light top-left, dark bottom-right)
+            // giving it a distinct 3D sphere appearance.
 
-        // Layer 1: Deep shadow layer (back)
-        let backClusters: [(dx: CGFloat, dy: CGFloat, w: CGFloat, h: CGFloat)] = [
-            (0, 8, canopyR * 2.0, canopyR * 1.5),
-            (-canopyR * 0.5, 5, canopyR * 1.1, canopyR * 0.95),
-            (canopyR * 0.5, 10, canopyR * 1.0, canopyR * 0.9),
-        ]
-        for c in backClusters {
-            let rect = CGRect(
-                x: cx + c.dx - c.w / 2,
-                y: canopyCenterY + c.dy - c.h / 2,
-                width: c.w, height: c.h
-            )
-            context.fill(Ellipse().path(in: rect), with: .color(leafDark.opacity(0.45)))
-        }
+            // Back layer - darker, larger balls
+            FoliageBall(baseColor: foliageDark, lightColor: foliageMid, size: 62 + growth * 24)
+                .offset(x: 0, y: 10)
+            FoliageBall(baseColor: foliageDark, lightColor: foliageMid, size: 50 + growth * 18)
+                .offset(x: -(38 + growth * 14), y: 12)
+            FoliageBall(baseColor: foliageDark, lightColor: foliageMid, size: 48 + growth * 16)
+                .offset(x: 40 + growth * 14, y: 14)
 
-        // Layer 2: Main canopy mass
-        let mainClusters: [(dx: CGFloat, dy: CGFloat, w: CGFloat, h: CGFloat, color: Color)] = [
-            (0, 0, canopyR * 1.85, canopyR * 1.4, leafMid.opacity(0.7)),
-            (-canopyR * 0.35, -canopyR * 0.12, canopyR * 1.1, canopyR * 0.95, leafBright.opacity(0.65)),
-            (canopyR * 0.3, canopyR * 0.05, canopyR * 1.05, canopyR * 0.85, leafMid.opacity(0.6)),
-            (0, -canopyR * 0.3, canopyR * 0.95, canopyR * 0.8, leafBright.opacity(0.55)),
-            (-canopyR * 0.55, canopyR * 0.1, canopyR * 0.7, canopyR * 0.65, leafMid.opacity(0.5)),
-            (canopyR * 0.55, -canopyR * 0.05, canopyR * 0.65, canopyR * 0.6, leafBright.opacity(0.5)),
-        ]
-        for c in mainClusters {
-            let rect = CGRect(
-                x: cx + c.dx - c.w / 2,
-                y: canopyCenterY + c.dy - c.h / 2,
-                width: c.w, height: c.h
-            )
-            context.fill(Ellipse().path(in: rect), with: .color(c.color))
-        }
+            // Mid layer
+            FoliageBall(baseColor: foliageMid, lightColor: foliageBright, size: 58 + growth * 22)
+                .offset(x: -(18 + growth * 6), y: -5)
+            FoliageBall(baseColor: foliageMid, lightColor: foliageBright, size: 55 + growth * 20)
+                .offset(x: 20 + growth * 8, y: -2)
+            FoliageBall(baseColor: foliageMid, lightColor: foliageBright, size: 44 + growth * 16)
+                .offset(x: -(44 + growth * 10), y: -4)
+            FoliageBall(baseColor: foliageMid, lightColor: foliageBright, size: 42 + growth * 14)
+                .offset(x: 46 + growth * 10, y: 0)
 
-        // Layer 3: Bright highlights (front)
-        let highlights: [(dx: CGFloat, dy: CGFloat, w: CGFloat, h: CGFloat)] = [
-            (-canopyR * 0.2, -canopyR * 0.2, canopyR * 0.8, canopyR * 0.65),
-            (canopyR * 0.15, -canopyR * 0.05, canopyR * 0.65, canopyR * 0.55),
-            (-canopyR * 0.05, -canopyR * 0.42, canopyR * 0.55, canopyR * 0.45),
-        ]
-        for c in highlights {
-            let rect = CGRect(
-                x: cx + c.dx - c.w / 2,
-                y: canopyCenterY + c.dy - c.h / 2,
-                width: c.w, height: c.h
-            )
-            context.fill(Ellipse().path(in: rect), with: .color(leafLight.opacity(0.35)))
+            // Front layer - lighter, smaller highlights
+            FoliageBall(baseColor: foliageBright, lightColor: foliageLight, size: 46 + growth * 16)
+                .offset(x: -8, y: -(18 + growth * 8))
+            FoliageBall(baseColor: foliageBright, lightColor: foliageLight, size: 40 + growth * 14)
+                .offset(x: 14, y: -(10 + growth * 4))
+            FoliageBall(baseColor: foliageBright, lightColor: foliageLight, size: 34 + growth * 10)
+                .offset(x: -(28 + growth * 6), y: -(14 + growth * 6))
+
+            // Top crown
+            FoliageBall(baseColor: foliageBright, lightColor: foliageLight, size: 36 + growth * 12)
+                .offset(x: 2, y: -(30 + growth * 12))
         }
+        .scaleEffect(animateIn ? 1 : 0.3)
+        .opacity(animateIn ? 1 : 0)
     }
 
     // MARK: - Flowers
-    private func drawFlowers(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat) {
+    private var flowersView: some View {
         let count = min(bloomCount, 7)
-        guard count > 0 else { return }
-
-        let topY = baseY - trunkH
-        let canopyCenterY = topY - canopyR * 0.25
-
-        let positions: [(dx: CGFloat, dy: CGFloat)] = [
-            (-canopyR * 0.42, canopyR * 0.05),
-            (canopyR * 0.38, -canopyR * 0.18),
-            (-canopyR * 0.05, -canopyR * 0.48),
-            (-canopyR * 0.32, -canopyR * 0.28),
-            (canopyR * 0.48, canopyR * 0.1),
-            (canopyR * 0.12, -canopyR * 0.12),
-            (-canopyR * 0.5, -canopyR * 0.15),
+        let positions: [CGSize] = [
+            CGSize(width: -40, height: 8),
+            CGSize(width: 35, height: -10),
+            CGSize(width: -5, height: -35),
+            CGSize(width: -28, height: -20),
+            CGSize(width: 45, height: 12),
+            CGSize(width: 10, height: -5),
+            CGSize(width: -48, height: -10),
         ]
-
         let petalColors: [Color] = [
             Color(red: 0.96, green: 0.78, blue: 0.82),
             Color(red: 0.98, green: 0.86, blue: 0.88),
@@ -279,71 +215,40 @@ struct BloomingTreeView: View {
             Color(red: 1.00, green: 0.92, blue: 0.88),
         ]
 
-        for i in 0..<count {
-            let pos = positions[i]
-            let fcx = cx + pos.dx
-            let fcy = canopyCenterY + pos.dy
-            let size: CGFloat = 14 + CGFloat(i % 3) * 4
-            let petals = [5, 6, 5, 5, 6, 5, 5][i]
-            let petalColor = petalColors[i]
-
-            // Draw petals
-            for p in 0..<petals {
-                let angle = CGFloat(p) / CGFloat(petals) * 2 * .pi - .pi / 2
-                let petalDist = size * 0.32
-                let px = fcx + CoreGraphics.cos(angle) * petalDist
-                let py = fcy + CoreGraphics.sin(angle) * petalDist
-                let petalW = size * 0.38
-                let petalH = size * 0.3
-
-                let rect = CGRect(x: px - petalW / 2, y: py - petalH / 2, width: petalW, height: petalH)
-                context.fill(
-                    Ellipse().path(in: rect),
-                    with: .color(petalColor)
+        return ZStack {
+            ForEach(0..<count, id: \.self) { i in
+                SimpleFlower(
+                    petalColor: petalColors[i],
+                    size: 16 + CGFloat(i % 3) * 4
                 )
+                .offset(positions[i])
+                .scaleEffect(bloomPulse ? 1.06 : 0.94)
+                .animation(
+                    .easeInOut(duration: 2.5).repeatForever(autoreverses: true).delay(Double(i) * 0.3),
+                    value: bloomPulse
+                )
+                .opacity(animateIn ? 1 : 0)
             }
-
-            // Draw center
-            let centerSize = size * 0.28
-            let centerRect = CGRect(x: fcx - centerSize / 2, y: fcy - centerSize / 2, width: centerSize, height: centerSize)
-            context.fill(
-                Circle().path(in: centerRect),
-                with: .color(ABTheme.warmGold)
-            )
-
-            // Tiny highlight on center
-            let hlSize = size * 0.12
-            let hlRect = CGRect(x: fcx - hlSize / 2 - 1, y: fcy - hlSize / 2 - 1, width: hlSize, height: hlSize)
-            context.fill(
-                Circle().path(in: hlRect),
-                with: .color(ABTheme.warmGoldLight.opacity(0.8))
-            )
         }
     }
 
     // MARK: - Fruit
-    private func drawFruit(context: inout GraphicsContext, cx: CGFloat, baseY: CGFloat) {
+    private var fruitView: some View {
         let count = min(fruitCount, 12)
-        guard count > 0 else { return }
-
-        let topY = baseY - trunkH
-        let canopyCenterY = topY - canopyR * 0.1
-
-        let positions: [(dx: CGFloat, dy: CGFloat)] = [
-            (-canopyR * 0.35, canopyR * 0.12),
-            (canopyR * 0.38, canopyR * 0.15),
-            (-canopyR * 0.1, canopyR * 0.25),
-            (canopyR * 0.22, canopyR * 0.22),
-            (-canopyR * 0.5, canopyR * 0.02),
-            (canopyR * 0.5, canopyR * 0.05),
-            (-canopyR * 0.25, -canopyR * 0.05),
-            (canopyR * 0.08, canopyR * 0.18),
-            (-canopyR * 0.42, canopyR * 0.2),
-            (canopyR * 0.4, canopyR * 0.1),
-            (0, canopyR * 0.28),
-            (canopyR * 0.18, -canopyR * 0.02),
+        let positions: [CGSize] = [
+            CGSize(width: -35, height: 10),
+            CGSize(width: 38, height: 14),
+            CGSize(width: -10, height: 22),
+            CGSize(width: 22, height: 20),
+            CGSize(width: -50, height: 0),
+            CGSize(width: 50, height: 4),
+            CGSize(width: -24, height: -4),
+            CGSize(width: 8, height: 16),
+            CGSize(width: -42, height: 18),
+            CGSize(width: 40, height: 8),
+            CGSize(width: 0, height: 25),
+            CGSize(width: 18, height: -2),
         ]
-
         let fruitColors: [Color] = [
             Color(red: 0.82, green: 0.28, blue: 0.25),
             Color(red: 0.92, green: 0.58, blue: 0.25),
@@ -353,27 +258,12 @@ struct BloomingTreeView: View {
             Color(red: 0.94, green: 0.60, blue: 0.28),
         ]
 
-        for i in 0..<count {
-            let pos = positions[i]
-            let fruitX = cx + pos.dx
-            let fruitY = canopyCenterY + pos.dy
-            let size: CGFloat = 10 + CGFloat(i % 3) * 2
-            let color = fruitColors[i % fruitColors.count]
-
-            // Fruit body
-            let fruitRect = CGRect(x: fruitX - size / 2, y: fruitY - size / 2, width: size, height: size)
-            context.fill(Circle().path(in: fruitRect), with: .color(color))
-
-            // Highlight
-            let hlSize = size * 0.35
-            let hlRect = CGRect(x: fruitX - hlSize / 2 - size * 0.12, y: fruitY - hlSize / 2 - size * 0.12, width: hlSize, height: hlSize * 0.7)
-            context.fill(Ellipse().path(in: hlRect), with: .color(Color.white.opacity(0.45)))
-
-            // Tiny stem
-            var stem = Path()
-            stem.move(to: CGPoint(x: fruitX, y: fruitY - size / 2))
-            stem.addLine(to: CGPoint(x: fruitX + 1, y: fruitY - size / 2 - size * 0.3))
-            context.stroke(stem, with: .color(bark.opacity(0.6)), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
+        return ZStack {
+            ForEach(0..<count, id: \.self) { i in
+                SmallFruit(color: fruitColors[i % fruitColors.count], size: 10 + CGFloat(i % 3) * 2)
+                    .offset(positions[i])
+                    .opacity(animateIn ? 1 : 0)
+            }
         }
     }
 
@@ -394,7 +284,65 @@ struct BloomingTreeView: View {
     }
 }
 
-// MARK: - PrettyFlower (used by BloomView completion overlay)
+// MARK: - Foliage Ball
+/// A single round foliage cluster with 3D shading - the key building block.
+struct FoliageBall: View {
+    let baseColor: Color
+    let lightColor: Color
+    let size: CGFloat
+
+    var body: some View {
+        Circle()
+            .fill(
+                RadialGradient(
+                    colors: [
+                        lightColor,
+                        baseColor,
+                        baseColor.opacity(0.85)
+                    ],
+                    center: UnitPoint(x: 0.35, y: 0.3),
+                    startRadius: size * 0.05,
+                    endRadius: size * 0.55
+                )
+            )
+            .frame(width: size, height: size)
+            .shadow(color: baseColor.opacity(0.3), radius: 3, x: 2, y: 3)
+    }
+}
+
+// MARK: - Simple Flower
+struct SimpleFlower: View {
+    let petalColor: Color
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            // 5 petals as ellipses
+            ForEach(0..<5, id: \.self) { i in
+                Ellipse()
+                    .fill(petalColor)
+                    .frame(width: size * 0.4, height: size * 0.55)
+                    .offset(y: -size * 0.2)
+                    .rotationEffect(.degrees(Double(i) * 72))
+            }
+            // Gold center
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [ABTheme.warmGoldLight, ABTheme.warmGold],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: size * 0.16
+                    )
+                )
+                .frame(width: size * 0.3, height: size * 0.3)
+        }
+        .frame(width: size, height: size)
+        .shadow(color: petalColor.opacity(0.3), radius: 3)
+    }
+}
+
+// MARK: - PrettyFlower (kept for other views that reference it)
 struct PrettyFlower: View {
     let petalColor: Color
     let centerColor: Color
@@ -403,12 +351,12 @@ struct PrettyFlower: View {
 
     var body: some View {
         ZStack {
-            ForEach(0..<petalCount, id: \.self) { index in
+            ForEach(0..<petalCount, id: \.self) { i in
                 Ellipse()
                     .fill(petalColor)
                     .frame(width: size * 0.38, height: size * 0.55)
                     .offset(y: -size * 0.22)
-                    .rotationEffect(.degrees(Double(index) * (360.0 / Double(petalCount))))
+                    .rotationEffect(.degrees(Double(i) * (360.0 / Double(petalCount))))
             }
             Circle()
                 .fill(centerColor)
@@ -418,23 +366,115 @@ struct PrettyFlower: View {
     }
 }
 
+// MARK: - Small Fruit
+struct SmallFruit: View {
+    let color: Color
+    let size: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [color.opacity(0.95), color, color.opacity(0.7)],
+                        center: UnitPoint(x: 0.35, y: 0.3),
+                        startRadius: 0,
+                        endRadius: size * 0.55
+                    )
+                )
+                .frame(width: size, height: size)
+
+            // Highlight
+            Ellipse()
+                .fill(Color.white.opacity(0.4))
+                .frame(width: size * 0.35, height: size * 0.25)
+                .offset(x: -size * 0.1, y: -size * 0.12)
+
+            // Stem
+            RoundedRectangle(cornerRadius: 0.5)
+                .fill(Color(red: 0.4, green: 0.3, blue: 0.2))
+                .frame(width: 1.5, height: size * 0.3)
+                .offset(y: -size * 0.55)
+        }
+    }
+}
+
+// MARK: - Trunk Shape
+struct TrunkShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let w = rect.width
+        let h = rect.height
+        path.move(to: CGPoint(x: w * 0.3, y: 0))
+        path.addCurve(
+            to: CGPoint(x: w * 0.08, y: h),
+            control1: CGPoint(x: w * 0.27, y: h * 0.35),
+            control2: CGPoint(x: w * 0.06, y: h * 0.7)
+        )
+        path.addLine(to: CGPoint(x: w * 0.92, y: h))
+        path.addCurve(
+            to: CGPoint(x: w * 0.7, y: 0),
+            control1: CGPoint(x: w * 0.94, y: h * 0.7),
+            control2: CGPoint(x: w * 0.73, y: h * 0.35)
+        )
+        path.closeSubpath()
+        return path
+    }
+}
+
+// MARK: - Branch Curve
+struct BranchCurve: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: 0, y: rect.height))
+        path.addQuadCurve(
+            to: CGPoint(x: rect.width, y: 0),
+            control: CGPoint(x: rect.width * 0.35, y: rect.height * 0.2)
+        )
+        return path
+    }
+}
+
+// MARK: - Root Curve
+struct RootCurve: Shape {
+    let flip: Bool
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        if flip {
+            path.move(to: CGPoint(x: 0, y: 0))
+            path.addQuadCurve(
+                to: CGPoint(x: rect.width, y: rect.height),
+                control: CGPoint(x: rect.width * 0.4, y: rect.height * 0.3)
+            )
+        } else {
+            path.move(to: CGPoint(x: rect.width, y: 0))
+            path.addQuadCurve(
+                to: CGPoint(x: 0, y: rect.height),
+                control: CGPoint(x: rect.width * 0.6, y: rect.height * 0.3)
+            )
+        }
+        return path
+    }
+}
+
 // MARK: - Preview
 #Preview {
     ScrollView {
         VStack(spacing: 30) {
-            Text("New User (0 streak)").font(.caption)
+            Text("New User").font(.caption)
             BloomingTreeView(growthLevel: 0.0, bloomCount: 0, fruitCount: 0, streakDays: 0)
                 .padding()
                 .background(ABTheme.cardBackground)
                 .cornerRadius(16)
 
-            Text("Growing (streak 14)").font(.caption)
+            Text("Growing").font(.caption)
             BloomingTreeView(growthLevel: 0.5, bloomCount: 4, fruitCount: 3, streakDays: 14)
                 .padding()
                 .background(ABTheme.cardBackground)
                 .cornerRadius(16)
 
-            Text("Full Bloom (streak 100)").font(.caption)
+            Text("Full Bloom").font(.caption)
             BloomingTreeView(growthLevel: 1.0, bloomCount: 7, fruitCount: 12, streakDays: 100)
                 .padding()
                 .background(ABTheme.cardBackground)

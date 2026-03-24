@@ -25,7 +25,7 @@ enum BadgeCategory: String, Codable, CaseIterable {
     var icon: String {
         switch self {
         case .streak: return "flame.fill"
-        case .anchor: return "anchor.circle.fill"
+        case .anchor: return "anchor"
         case .bloom: return "camera.macro"
         case .drift: return "shield.checkered"
         case .journey: return "map.fill"

@@ -74,7 +74,7 @@ struct MainTabView: View {
 
             DriftLogView()
                 .tabItem {
-                    Label("Drift Log", systemImage: "anchor.circle.fill")
+                    Label("Drift Log", systemImage: "water.waves")
                 }
                 .tag(2)
 

@@ -154,7 +154,7 @@ struct ProgressStatsView: View {
             HStack(spacing: ABTheme.paddingMedium) {
                 WeekStatPill(icon: "sunrise.fill", value: "\(anchors)", label: "Anchors", color: ABTheme.warmGold)
                 WeekStatPill(icon: "camera.macro", value: "\(blooms)", label: "Blooms", color: ABTheme.blush)
-                WeekStatPill(icon: "anchor.circle.fill", value: "\(drifts)", label: "Drifts", color: ABTheme.sageGreen)
+                WeekStatPill(icon: "water.waves", value: "\(drifts)", label: "Drifts", color: ABTheme.sageGreen)
             }
         }
         .abCard()
