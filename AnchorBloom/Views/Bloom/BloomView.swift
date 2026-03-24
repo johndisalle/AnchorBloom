@@ -199,7 +199,7 @@ struct BloomView: View {
 
             VStack(spacing: ABTheme.paddingMedium) {
                 // Animated flower
-                FlowerView(color: ABTheme.blush, size: 80)
+                PrettyFlower(petalColor: ABTheme.blush, centerColor: ABTheme.warmGold, size: 80, petalCount: 5)
                     .rotationEffect(.degrees(showCompletionAnimation ? 0 : -15))
                     .animation(.spring(response: 0.6, dampingFraction: 0.5), value: showCompletionAnimation)
 
