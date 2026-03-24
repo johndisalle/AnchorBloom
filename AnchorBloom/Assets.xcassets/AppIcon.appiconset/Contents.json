@@ -1,0 +1,14 @@
+{
+  "images" : [
+    {
+      "filename" : "xT9Tu.jpg",
+      "idiom" : "universal",
+      "platform" : "ios",
+      "size" : "1024x1024"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
