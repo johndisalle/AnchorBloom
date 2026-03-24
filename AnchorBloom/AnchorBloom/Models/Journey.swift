@@ -43,7 +43,7 @@ extension Journey {
             coverColorName: "sageGreen",
             totalDays: 30,
             isPremium: false,
-            days: [], // Populated in content phases
+            days: JourneyDay.rootedIdentityDays,
             scriptureTheme: "Ephesians 1-3"
         ),
         Journey(
@@ -55,7 +55,7 @@ extension Journey {
             coverColorName: "warmGold",
             totalDays: 30,
             isPremium: false,
-            days: [],
+            days: JourneyDay.armorOfGraceDays,
             scriptureTheme: "Ephesians 6:10-18"
         ),
 
@@ -69,7 +69,7 @@ extension Journey {
             coverColorName: "blush",
             totalDays: 30,
             isPremium: true,
-            days: [],
+            days: JourneyDay.proverbs31Days,
             scriptureTheme: "Proverbs 31:10-31"
         ),
         Journey(
@@ -81,7 +81,7 @@ extension Journey {
             coverColorName: "darkNavy",
             totalDays: 30,
             isPremium: true,
-            days: [],
+            days: JourneyDay.prayerWarriorDays,
             scriptureTheme: "James 5:16, Philippians 4:6-7"
         ),
         Journey(
@@ -93,7 +93,7 @@ extension Journey {
             coverColorName: "sageGreen",
             totalDays: 30,
             isPremium: true,
-            days: [],
+            days: JourneyDay.gentleStrengthDays,
             scriptureTheme: "1 Peter 3:3-4, Galatians 5:22-23"
         ),
         Journey(
@@ -105,7 +105,7 @@ extension Journey {
             coverColorName: "warmGold",
             totalDays: 30,
             isPremium: true,
-            days: [],
+            days: JourneyDay.freedomComparisonDays,
             scriptureTheme: "Galatians 6:4-5, Psalm 139"
         ),
         Journey(
@@ -117,7 +117,7 @@ extension Journey {
             coverColorName: "cream",
             totalDays: 30,
             isPremium: true,
-            days: [],
+            days: JourneyDay.cultivatingPeaceDays,
             scriptureTheme: "John 14:27, Philippians 4:6-7"
         ),
     ]
