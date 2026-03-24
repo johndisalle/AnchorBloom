@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users can only read/write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Entries: users can only access their own entries
+    match /entries/{entryId} {
+      allow read, write: if request.auth != null && resource.data.userID == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userID == request.auth.uid;
+    }
+
+    // Circles: members can read, creators can write
+    match /circles/{circleId} {
+      allow read: if request.auth != null && request.auth.uid in resource.data.memberIDs;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null && request.auth.uid in resource.data.memberIDs;
+    }
+
+    // Posts: circle members can read, authenticated users can create
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,292 @@
+import SwiftUI
+
+// MARK: - Morning Anchor View
+/// Daily morning devotional: Scripture + reflection prompt + tag selection
+struct AnchorView: View {
+    @ObservedObject var viewModel: AppViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var reflectionText = ""
+    @State private var selectedTags: Set<AnchorTag> = []
+    @State private var isSaving = false
+    @State private var showCompletionAnimation = false
+
+    private var todayPrompt: DailyPrompt {
+        DailyPrompt.morningPrompt(for: Date())
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: ABTheme.paddingLarge) {
+                    // Scripture card
+                    scriptureCard
+
+                    // Reflection prompt
+                    promptCard
+
+                    // Tag selection
+                    tagSection
+
+                    // Reflection text field
+                    reflectionSection
+
+                    // Save button
+                    Button {
+                        saveAnchor()
+                    } label: {
+                        HStack {
+                            Image(systemName: "anchor.circle.fill")
+                            Text("Anchor My Heart")
+                        }
+                    }
+                    .buttonStyle(ABPrimaryButtonStyle())
+                    .disabled(isSaving)
+
+                    Spacer().frame(height: 40)
+                }
+                .padding(.horizontal, ABTheme.paddingMedium)
+                .padding(.top, ABTheme.paddingMedium)
+            }
+            .background(ABTheme.morningGradient.ignoresSafeArea())
+            .navigationTitle("Morning Anchor")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Close") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .overlay {
+                if showCompletionAnimation {
+                    completionOverlay
+                }
+            }
+        }
+    }
+
+    // MARK: - Scripture Card
+    private var scriptureCard: some View {
+        VStack(spacing: ABTheme.paddingMedium) {
+            Image(systemName: "book.closed.fill")
+                .font(.title2)
+                .foregroundColor(ABTheme.warmGold)
+
+            Text(todayPrompt.scripture)
+                .font(ABTheme.scriptureFont)
+                .foregroundColor(ABTheme.primaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+
+            Text(todayPrompt.scriptureReference)
+                .font(.system(.caption, design: .serif, weight: .semibold))
+                .foregroundColor(ABTheme.sageGreen)
+        }
+        .abCard()
+    }
+
+    // MARK: - Prompt Card
+    private var promptCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(ABTheme.warmGold)
+                Text("Today's Reflection")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            Text(todayPrompt.prompt)
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineSpacing(4)
+        }
+        .abCard()
+    }
+
+    // MARK: - Tag Section
+    private var tagSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("What is the enemy whispering today?")
+                .font(.system(.subheadline, design: .serif, weight: .medium))
+                .foregroundColor(ABTheme.primaryText)
+
+            FlowLayout(spacing: 8) {
+                ForEach(AnchorTag.allCases, id: \.self) { tag in
+                    TagChip(
+                        tag: tag.rawValue,
+                        icon: tag.icon,
+                        isSelected: selectedTags.contains(tag)
+                    ) {
+                        if selectedTags.contains(tag) {
+                            selectedTags.remove(tag)
+                        } else {
+                            selectedTags.insert(tag)
+                        }
+                    }
+                }
+            }
+
+            // Show anchoring verse for selected tag
+            if let firstTag = selectedTags.first {
+                Text(firstTag.anchoringVerse)
+                    .font(.system(.caption, design: .serif).italic())
+                    .foregroundColor(ABTheme.sageGreenDark)
+                    .padding(ABTheme.paddingSmall)
+                    .background(ABTheme.sageGreen.opacity(0.08))
+                    .cornerRadius(8)
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .animation(.easeInOut, value: selectedTags)
+            }
+        }
+    }
+
+    // MARK: - Reflection Section
+    private var reflectionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Your reflection")
+                .font(.system(.subheadline, design: .serif, weight: .medium))
+                .foregroundColor(ABTheme.primaryText)
+
+            TextEditor(text: $reflectionText)
+                .font(ABTheme.bodyFont)
+                .frame(minHeight: 100)
+                .padding(ABTheme.paddingSmall)
+                .background(ABTheme.softWhite)
+                .cornerRadius(ABTheme.cornerRadiusSmall)
+                .overlay(
+                    RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                        .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
+                )
+                .overlay(alignment: .topLeading) {
+                    if reflectionText.isEmpty {
+                        Text("Write what's on your heart...")
+                            .font(ABTheme.bodyFont)
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 16)
+                            .allowsHitTesting(false)
+                    }
+                }
+        }
+    }
+
+    // MARK: - Completion Overlay
+    private var completionOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+
+            VStack(spacing: ABTheme.paddingMedium) {
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(ABTheme.sageGreen)
+
+                Text("Anchored")
+                    .font(ABTheme.headlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+
+                Text("Your heart is rooted in truth today.")
+                    .font(ABTheme.bodyFont)
+                    .foregroundColor(ABTheme.secondaryText)
+            }
+            .padding(ABTheme.paddingXLarge)
+            .background(ABTheme.softWhite)
+            .cornerRadius(ABTheme.cornerRadius)
+            .shadow(radius: 20)
+            .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    // MARK: - Save
+    private func saveAnchor() {
+        isSaving = true
+        Task {
+            await viewModel.saveMorningAnchor(
+                reflection: reflectionText.isEmpty ? nil : reflectionText,
+                tags: Array(selectedTags),
+                scriptureRef: todayPrompt.scriptureReference
+            )
+            withAnimation(.spring(response: 0.4)) {
+                showCompletionAnimation = true
+            }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            dismiss()
+        }
+    }
+}
+
+// MARK: - Tag Chip
+struct TagChip: View {
+    let tag: String
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2)
+                Text(tag)
+                    .font(.system(.caption, design: .serif))
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 7)
+            .background(isSelected ? ABTheme.sageGreen : ABTheme.sageGreen.opacity(0.08))
+            .foregroundColor(isSelected ? .white : ABTheme.primaryText)
+            .cornerRadius(20)
+            .overlay(
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(ABTheme.sageGreen.opacity(0.3), lineWidth: isSelected ? 0 : 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Flow Layout
+/// A layout that wraps content horizontally (for tags)
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = flowLayout(proposal: proposal, subviews: subviews)
+        return result.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = flowLayout(proposal: proposal, subviews: subviews)
+        for (index, position) in result.positions.enumerated() {
+            subviews[index].place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
+        }
+    }
+
+    private func flowLayout(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
+        let maxWidth = proposal.width ?? .infinity
+        var positions: [CGPoint] = []
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var lineHeight: CGFloat = 0
+        var maxX: CGFloat = 0
+
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if currentX + size.width > maxWidth && currentX > 0 {
+                currentX = 0
+                currentY += lineHeight + spacing
+                lineHeight = 0
+            }
+            positions.append(CGPoint(x: currentX, y: currentY))
+            lineHeight = max(lineHeight, size.height)
+            currentX += size.width + spacing
+            maxX = max(maxX, currentX)
+        }
+
+        return (CGSize(width: maxX, height: currentY + lineHeight), positions)
+    }
+}
+
+#Preview {
+    AnchorView(viewModel: AppViewModel(firestoreService: FirestoreService()))
+}
