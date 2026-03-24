@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 import StoreKit
 
 // MARK: - Subscription Manager
@@ -93,8 +94,8 @@ final class SubscriptionManager: ObservableObject {
         Task.detached {
             for await result in Transaction.updates {
                 if case .verified(let transaction) = result {
-                    await MainActor.run {
-                        self.purchasedProductIDs.insert(transaction.productID)
+                    await MainActor.run { [productID = transaction.productID] in
+                        _ = self.purchasedProductIDs.insert(productID)
                     }
                     await transaction.finish()
                 }
