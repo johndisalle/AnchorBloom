@@ -38,6 +38,8 @@
 		A1000029000000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000029000000000000001 /* OnboardingView.swift */; };
 		A1000030000000000000001 /* ProgressStatsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000030000000000000001 /* ProgressStatsView.swift */; };
 		A1000031000000000000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000031000000000000001 /* SettingsView.swift */; };
+		A1000034000000000000001 /* JourneyDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000034100000000000001 /* JourneyDayView.swift */; };
+		A1000035000000000000001 /* JourneyProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000035100000000000001 /* JourneyProgressView.swift */; };
 		A1000032000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000032000000000000001 /* Assets.xcassets */; };
 		A1000033000000000000001 /* GoogleService-Info.plist.example in Resources */ = {isa = PBXBuildFile; fileRef = B1000033000000000000001 /* GoogleService-Info.plist.example */; };
 		A1000040000000000000001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D1000001000000000000001 /* FirebaseAuth */; };
@@ -81,6 +83,8 @@
 		B1000033000000000000001 /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
 		B1000034000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1000035000000000000001 /* AnchorBloom.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AnchorBloom.entitlements; sourceTree = "<group>"; };
+		B1000034100000000000001 /* JourneyDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyDayView.swift; sourceTree = "<group>"; };
+		B1000035100000000000001 /* JourneyProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyProgressView.swift; sourceTree = "<group>"; };
 		B1000050000000000000001 /* AnchorBloom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnchorBloom.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -255,6 +259,8 @@
 			isa = PBXGroup;
 			children = (
 				B1000027000000000000001 /* JourneyListView.swift */,
+				B1000034100000000000001 /* JourneyDayView.swift */,
+				B1000035100000000000001 /* JourneyProgressView.swift */,
 			);
 			path = Journey;
 			sourceTree = "<group>";
@@ -393,6 +399,8 @@
 				A1000029000000000000001 /* OnboardingView.swift in Sources */,
 				A1000030000000000000001 /* ProgressStatsView.swift in Sources */,
 				A1000031000000000000001 /* SettingsView.swift in Sources */,
+				A1000034000000000000001 /* JourneyDayView.swift in Sources */,
+				A1000035000000000000001 /* JourneyProgressView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

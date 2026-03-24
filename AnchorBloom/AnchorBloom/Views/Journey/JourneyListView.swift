@@ -4,7 +4,15 @@ import SwiftUI
 /// Browse and start 30-day guided spiritual growth journeys
 struct JourneyListView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @EnvironmentObject var firestoreService: FirestoreService
+    @StateObject private var viewModel: AppViewModel
+
     @State private var selectedJourney: Journey?
+
+    init() {
+        // Initialized with a placeholder; real service comes from environment
+        _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: FirestoreService()))
+    }
 
     var body: some View {
         NavigationStack {
@@ -22,12 +30,20 @@ struct JourneyListView: View {
                     }
                     .padding(.top, ABTheme.paddingSmall)
 
+                    // Active journey card
+                    if let active = viewModel.activeJourney {
+                        activeJourneyCard(active)
+                    }
+
                     // Free journeys
                     VStack(alignment: .leading, spacing: 12) {
                         SectionHeader(title: "Free Journeys", icon: "gift.fill")
 
                         ForEach(Journey.allJourneys.filter { !$0.isPremium }) { journey in
-                            JourneyCard(journey: journey) {
+                            JourneyCard(
+                                journey: journey,
+                                progress: viewModel.journeyProgress(for: journey.id)
+                            ) {
                                 selectedJourney = journey
                             }
                         }
@@ -38,7 +54,11 @@ struct JourneyListView: View {
                         SectionHeader(title: "Premium Journeys", icon: "crown.fill")
 
                         ForEach(Journey.allJourneys.filter { $0.isPremium }) { journey in
-                            JourneyCard(journey: journey, isPremiumLocked: !subscriptionManager.isPremium) {
+                            JourneyCard(
+                                journey: journey,
+                                progress: viewModel.journeyProgress(for: journey.id),
+                                isPremiumLocked: !subscriptionManager.isPremium
+                            ) {
                                 if subscriptionManager.isPremium || !journey.isPremium {
                                     selectedJourney = journey
                                 }
@@ -53,10 +73,66 @@ struct JourneyListView: View {
             .abScreenBackground()
             .navigationTitle("Journeys")
             .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await viewModel.loadUserData()
+            }
             .sheet(item: $selectedJourney) { journey in
-                JourneyDetailView(journey: journey)
+                JourneyDetailView(journey: journey, viewModel: viewModel)
             }
         }
+    }
+
+    // MARK: - Active Journey Card
+    private func activeJourneyCard(_ journey: Journey) -> some View {
+        let progress = viewModel.journeyProgress(for: journey.id)
+        return Button {
+            selectedJourney = journey
+        } label: {
+            VStack(spacing: 12) {
+                HStack {
+                    Image(systemName: journey.iconName)
+                        .font(.title3)
+                        .foregroundColor(ABTheme.sageGreen)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Currently Active")
+                            .font(.system(.caption2, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.sageGreen)
+                        Text(journey.title)
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.primaryText)
+                    }
+
+                    Spacer()
+
+                    Text("Day \(progress)/\(journey.totalDays)")
+                        .font(.system(.caption, design: .serif, weight: .medium))
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+
+                // Mini progress bar
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(ABTheme.sageGreen.opacity(0.12))
+                            .frame(height: 6)
+
+                        RoundedRectangle(cornerRadius: 3)
+                            .fill(ABTheme.sageGreen)
+                            .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 6)
+                    }
+                }
+                .frame(height: 6)
+            }
+            .padding(ABTheme.paddingMedium)
+            .background(ABTheme.sageGreen.opacity(0.06))
+            .overlay(
+                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                    .stroke(ABTheme.sageGreen.opacity(0.3), lineWidth: 1)
+            )
+            .cornerRadius(ABTheme.cornerRadius)
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -80,6 +156,7 @@ struct SectionHeader: View {
 // MARK: - Journey Card
 struct JourneyCard: View {
     let journey: Journey
+    var progress: Int = 0
     var isPremiumLocked: Bool = false
     let action: () -> Void
 
@@ -127,6 +204,13 @@ struct JourneyCard: View {
                         .foregroundColor(ABTheme.secondaryText)
 
                     HStack(spacing: 4) {
+                        if progress > 0 {
+                            Text("Day \(progress)/\(journey.totalDays)")
+                                .font(.caption2)
+                                .foregroundColor(ABTheme.sageGreen)
+                            Text("·")
+                                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                        }
                         Image(systemName: "calendar")
                             .font(.caption2)
                         Text("\(journey.totalDays) days")
@@ -154,8 +238,17 @@ struct JourneyCard: View {
 // MARK: - Journey Detail View
 struct JourneyDetailView: View {
     let journey: Journey
+    @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var isStarting = false
+    @State private var showProgressView = false
+
+    private var progress: Int {
+        viewModel.journeyProgress(for: journey.id)
+    }
+
+    private var isActive: Bool {
+        viewModel.userProfile?.activeJourneyID == journey.id
+    }
 
     var body: some View {
         NavigationStack {
@@ -184,6 +277,31 @@ struct JourneyDetailView: View {
                             .cornerRadius(12)
                     }
 
+                    // Progress indicator (if started)
+                    if progress > 0 {
+                        VStack(spacing: 8) {
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(ABTheme.sageGreen.opacity(0.12))
+                                        .frame(height: 8)
+
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .fill(ABTheme.sageGreen)
+                                        .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 8)
+                                }
+                            }
+                            .frame(height: 8)
+
+                            Text("Day \(progress) of \(journey.totalDays) completed")
+                                .font(.system(.caption, design: .serif, weight: .medium))
+                                .foregroundColor(ABTheme.sageGreen)
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.sageGreen.opacity(0.06))
+                        .cornerRadius(ABTheme.cornerRadius)
+                    }
+
                     // Description
                     Text(journey.description)
                         .font(ABTheme.bodyFont)
@@ -204,21 +322,33 @@ struct JourneyDetailView: View {
                     }
                     .abCard()
 
-                    // Start button
-                    Button {
-                        isStarting = true
-                        // In production, this would update user's active journey
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            dismiss()
+                    // Action button
+                    if progress > 0 {
+                        // Continue journey
+                        Button {
+                            showProgressView = true
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.right")
+                                Text("Continue Journey — Day \(progress + 1)")
+                            }
                         }
-                    } label: {
-                        HStack {
-                            Image(systemName: "play.fill")
-                            Text("Begin This Journey")
+                        .buttonStyle(ABPrimaryButtonStyle())
+                    } else {
+                        // Begin journey
+                        Button {
+                            Task {
+                                await viewModel.beginJourney(journey.id)
+                                showProgressView = true
+                            }
+                        } label: {
+                            HStack {
+                                Image(systemName: "play.fill")
+                                Text("Begin This Journey")
+                            }
                         }
+                        .buttonStyle(ABPrimaryButtonStyle())
                     }
-                    .buttonStyle(ABPrimaryButtonStyle())
-                    .disabled(isStarting)
 
                     Spacer().frame(height: 40)
                 }
@@ -231,6 +361,9 @@ struct JourneyDetailView: View {
                     Button("Close") { dismiss() }
                         .foregroundColor(ABTheme.sageGreen)
                 }
+            }
+            .fullScreenCover(isPresented: $showProgressView) {
+                JourneyProgressView(journey: journey, viewModel: viewModel)
             }
         }
     }
@@ -257,4 +390,5 @@ struct JourneyBullet: View {
 #Preview {
     JourneyListView()
         .environmentObject(SubscriptionManager())
+        .environmentObject(FirestoreService())
 }

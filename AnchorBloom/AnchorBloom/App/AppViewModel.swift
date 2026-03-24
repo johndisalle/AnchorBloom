@@ -141,4 +141,53 @@ final class AppViewModel: ObservableObject {
     var fruitCount: Int {
         min(12, totalDays / 5)
     }
+
+    // MARK: - Journey Progression
+
+    /// Get the current day completed for a journey (0 = not started)
+    func journeyProgress(for journeyID: String) -> Int {
+        userProfile?.journeyProgress[journeyID] ?? 0
+    }
+
+    /// The user's currently active journey, if any
+    var activeJourney: Journey? {
+        guard let activeID = userProfile?.activeJourneyID else { return nil }
+        return Journey.allJourneys.first { $0.id == activeID }
+    }
+
+    /// Begin a new journey — sets it as the active journey
+    func beginJourney(_ journeyID: String) async {
+        guard var profile = userProfile else { return }
+
+        profile.activeJourneyID = journeyID
+        // Initialize progress if not already started
+        if profile.journeyProgress[journeyID] == nil {
+            profile.journeyProgress[journeyID] = 0
+        }
+
+        do {
+            try await firestoreService.saveUserProfile(profile)
+            userProfile = profile
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Mark a journey day as complete and advance progress
+    func completeJourneyDay(journeyID: String, day: Int) async {
+        guard var profile = userProfile else { return }
+
+        let currentProgress = profile.journeyProgress[journeyID] ?? 0
+        // Only advance if completing the next sequential day
+        if day == currentProgress + 1 {
+            profile.journeyProgress[journeyID] = day
+        }
+
+        do {
+            try await firestoreService.saveUserProfile(profile)
+            userProfile = profile
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
 }
