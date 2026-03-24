@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Morning Anchor View
-/// Daily morning devotional: Scripture + reflection prompt + tag selection
+/// Daily morning devotional: Scripture → Drift tags → Reflection prompt → Response → Open in prayer
 struct AnchorView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
@@ -19,17 +19,20 @@ struct AnchorView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
-                    // Scripture card
+                    // 1. Verse
                     scriptureCard
 
-                    // Reflection prompt
-                    promptCard
+                    // 2. Drift tags
+                    driftSection
 
-                    // Tag selection
-                    tagSection
+                    // 3. Today's Reflection
+                    reflectionPromptCard
 
-                    // Reflection text field
+                    // 4. Your reflection response box
                     reflectionSection
+
+                    // 5. Open in prayer
+                    openInPrayerSection
 
                     // Save button
                     Button {
@@ -65,7 +68,7 @@ struct AnchorView: View {
         }
     }
 
-    // MARK: - Scripture Card
+    // MARK: - 1. Scripture Card (Verse)
     private var scriptureCard: some View {
         VStack(spacing: ABTheme.paddingMedium) {
             Image(systemName: "book.closed.fill")
@@ -85,31 +88,16 @@ struct AnchorView: View {
         .abCard()
     }
 
-    // MARK: - Prompt Card
-    private var promptCard: some View {
+    // MARK: - 2. Drift Section
+    private var driftSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Image(systemName: "sparkles")
+                Image(systemName: "wind")
                     .foregroundColor(ABTheme.warmGold)
-                Text("Today's Reflection")
+                Text("Any drift pulling at you today?")
                     .font(ABTheme.subheadlineFont)
                     .foregroundColor(ABTheme.primaryText)
             }
-
-            Text(todayPrompt.prompt)
-                .font(ABTheme.bodyFont)
-                .foregroundColor(ABTheme.secondaryText)
-                .lineSpacing(4)
-        }
-        .abCard()
-    }
-
-    // MARK: - Tag Section
-    private var tagSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("What is the enemy whispering today?")
-                .font(.system(.subheadline, design: .serif, weight: .medium))
-                .foregroundColor(ABTheme.primaryText)
 
             FlowLayout(spacing: 8) {
                 ForEach(AnchorTag.allCases, id: \.self) { tag in
@@ -139,9 +127,29 @@ struct AnchorView: View {
                     .animation(.easeInOut, value: selectedTags)
             }
         }
+        .abCard()
     }
 
-    // MARK: - Reflection Section
+    // MARK: - 3. Today's Reflection
+    private var reflectionPromptCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(ABTheme.warmGold)
+                Text("Today's Reflection")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            Text(todayPrompt.prompt)
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineSpacing(4)
+        }
+        .abCard()
+    }
+
+    // MARK: - 4. Your Reflection Response Box
     private var reflectionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Your reflection")
@@ -169,6 +177,26 @@ struct AnchorView: View {
                     }
                 }
         }
+    }
+
+    // MARK: - 5. Open in Prayer
+    private var openInPrayerSection: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "hands.sparkles.fill")
+                .font(.title2)
+                .foregroundColor(ABTheme.warmGold)
+
+            Text("Open in Prayer")
+                .font(ABTheme.subheadlineFont)
+                .foregroundColor(ABTheme.primaryText)
+
+            Text("Lord, anchor my heart in Your truth today. Guard my mind from the enemy's lies and help me walk confidently in who You've called me to be. Amen.")
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+        }
+        .abCard()
     }
 
     // MARK: - Completion Overlay

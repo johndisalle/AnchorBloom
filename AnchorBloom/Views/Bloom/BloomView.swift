@@ -1,7 +1,7 @@
 import SwiftUI
 
 // MARK: - Evening Bloom View
-/// Evening reflection on biblical womanhood roles and purposeful living
+/// Evening reflection: Verse → Calling roles → Reflect prompt → Response → Close in prayer
 struct BloomView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
@@ -19,17 +19,20 @@ struct BloomView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
-                    // Evening greeting
-                    eveningHeader
+                    // 1. Verse
+                    scriptureCard
 
-                    // Prompt card
-                    promptCard
-
-                    // Role selection
+                    // 2. How did you walk in your calling today?
                     roleSection
 
-                    // Reflection
+                    // 3. Reflect
+                    reflectPromptCard
+
+                    // 4. Your reflect response box
                     reflectionSection
+
+                    // 5. Close in prayer
+                    closeInPrayerSection
 
                     // Save button
                     Button {
@@ -76,22 +79,18 @@ struct BloomView: View {
         }
     }
 
-    // MARK: - Evening Header
-    private var eveningHeader: some View {
-        VStack(spacing: 8) {
+    // MARK: - 1. Verse
+    private var scriptureCard: some View {
+        VStack(spacing: ABTheme.paddingMedium) {
             Image(systemName: "moon.stars.fill")
-                .font(.title)
+                .font(.title2)
                 .foregroundColor(ABTheme.blush)
-
-            Text("How did you bloom today?")
-                .font(ABTheme.headlineFont)
-                .foregroundColor(ABTheme.primaryText)
 
             Text(todayPrompt.scripture)
                 .font(ABTheme.scriptureFont)
-                .foregroundColor(ABTheme.secondaryText)
+                .foregroundColor(ABTheme.primaryText)
                 .multilineTextAlignment(.center)
-                .lineSpacing(3)
+                .lineSpacing(4)
 
             Text(todayPrompt.scriptureReference)
                 .font(.system(.caption, design: .serif, weight: .semibold))
@@ -100,31 +99,16 @@ struct BloomView: View {
         .abCard()
     }
 
-    // MARK: - Prompt Card
-    private var promptCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
+    // MARK: - 2. How did you walk in your calling today?
+    private var roleSection: some View {
+        VStack(alignment: .leading, spacing: ABTheme.paddingMedium) {
             HStack {
-                Image(systemName: "sparkles")
+                Image(systemName: "figure.walk")
                     .foregroundColor(ABTheme.blush)
-                Text("Reflect")
+                Text("How did you walk in your calling today?")
                     .font(ABTheme.subheadlineFont)
                     .foregroundColor(ABTheme.primaryText)
             }
-
-            Text(todayPrompt.prompt)
-                .font(ABTheme.bodyFont)
-                .foregroundColor(ABTheme.secondaryText)
-                .lineSpacing(4)
-        }
-        .abCard()
-    }
-
-    // MARK: - Role Selection
-    private var roleSection: some View {
-        VStack(alignment: .leading, spacing: ABTheme.paddingMedium) {
-            Text("How did you walk in your calling today?")
-                .font(.system(.subheadline, design: .serif, weight: .medium))
-                .foregroundColor(ABTheme.primaryText)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 ForEach(BloomRole.allCases, id: \.self) { role in
@@ -159,12 +143,32 @@ struct BloomView: View {
                 .animation(.easeInOut, value: selectedRoles)
             }
         }
+        .abCard()
     }
 
-    // MARK: - Reflection Section
+    // MARK: - 3. Reflect
+    private var reflectPromptCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(ABTheme.blush)
+                Text("Reflect")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            Text(todayPrompt.prompt)
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineSpacing(4)
+        }
+        .abCard()
+    }
+
+    // MARK: - 4. Your Reflect Response Box
     private var reflectionSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Your evening reflection")
+            Text("Your reflection")
                 .font(.system(.subheadline, design: .serif, weight: .medium))
                 .foregroundColor(ABTheme.primaryText)
 
@@ -189,6 +193,26 @@ struct BloomView: View {
                     }
                 }
         }
+    }
+
+    // MARK: - 5. Close in Prayer
+    private var closeInPrayerSection: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "hands.sparkles.fill")
+                .font(.title2)
+                .foregroundColor(ABTheme.blush)
+
+            Text("Close in Prayer")
+                .font(ABTheme.subheadlineFont)
+                .foregroundColor(ABTheme.primaryText)
+
+            Text("Lord, thank You for this day and the ways You moved through me. Where I fell short, cover me with grace. As I rest tonight, let the seeds planted today take root and bloom for Your glory. Amen.")
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+        }
+        .abCard()
     }
 
     // MARK: - Bloom Completion Overlay
