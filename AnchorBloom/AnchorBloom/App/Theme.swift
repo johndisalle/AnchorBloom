@@ -1,22 +1,48 @@
 import SwiftUI
 
+// MARK: - Adaptive Color Helper
+/// Creates a Color that resolves differently in light vs dark mode
+private func adaptive(light: UIColor, dark: UIColor) -> Color {
+    Color(uiColor: UIColor { traits in
+        traits.userInterfaceStyle == .dark ? dark : light
+    })
+}
+
 // MARK: - Anchor & Bloom Theme
 /// Soft feminine color palette: sage green, blush, warm gold, cream, dark navy
+/// Supports light and dark mode via adaptive colors
 struct ABTheme {
-    // MARK: - Primary Colors
+    // MARK: - Brand Colors (same in both modes)
     static let sageGreen = Color(red: 0.56, green: 0.68, blue: 0.58)       // #8FAD94
     static let sageGreenDark = Color(red: 0.40, green: 0.52, blue: 0.42)   // #66856B
     static let blush = Color(red: 0.89, green: 0.72, blue: 0.72)           // #E3B8B8
     static let blushDark = Color(red: 0.78, green: 0.55, blue: 0.55)       // #C78C8C
     static let warmGold = Color(red: 0.85, green: 0.75, blue: 0.55)        // #D9BF8C
-    static let warmGoldLight = Color(red: 0.93, green: 0.87, blue: 0.73)   // #EDDEBA
-    static let cream = Color(red: 0.97, green: 0.95, blue: 0.91)           // #F8F2E8
-    static let darkNavy = Color(red: 0.15, green: 0.18, blue: 0.27)        // #262E45
-    static let softWhite = Color(red: 0.99, green: 0.98, blue: 0.96)       // #FDFAF5
+    static let warmGoldLight = adaptive(
+        light: UIColor(red: 0.93, green: 0.87, blue: 0.73, alpha: 1),      // #EDDEBA
+        dark: UIColor(red: 0.55, green: 0.48, blue: 0.30, alpha: 1)        // darker gold
+    )
 
-    // MARK: - Semantic Colors
-    static let primaryText = darkNavy
-    static let secondaryText = Color(red: 0.45, green: 0.48, blue: 0.55)
+    // MARK: - Surface Colors (adaptive)
+    static let cream = adaptive(
+        light: UIColor(red: 0.97, green: 0.95, blue: 0.91, alpha: 1),      // #F8F2E8
+        dark: UIColor(red: 0.10, green: 0.10, blue: 0.12, alpha: 1)        // near black
+    )
+    static let darkNavy = Color(red: 0.15, green: 0.18, blue: 0.27)        // #262E45
+    static let softWhite = adaptive(
+        light: UIColor(red: 0.99, green: 0.98, blue: 0.96, alpha: 1),      // #FDFAF5
+        dark: UIColor(red: 0.15, green: 0.15, blue: 0.17, alpha: 1)        // dark card
+    )
+
+    // MARK: - Semantic Colors (adaptive)
+    static let primaryText = adaptive(
+        light: UIColor(red: 0.15, green: 0.18, blue: 0.27, alpha: 1),      // darkNavy
+        dark: UIColor(red: 0.93, green: 0.91, blue: 0.88, alpha: 1)        // warm off-white
+    )
+    static let secondaryText = adaptive(
+        light: UIColor(red: 0.45, green: 0.48, blue: 0.55, alpha: 1),
+        dark: UIColor(red: 0.62, green: 0.60, blue: 0.57, alpha: 1)        // muted warm gray
+    )
     static let background = cream
     static let cardBackground = softWhite
     static let accent = sageGreen

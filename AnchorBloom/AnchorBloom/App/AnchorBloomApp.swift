@@ -22,6 +22,8 @@ struct AnchorBloomApp: App {
     @StateObject private var subscriptionManager = SubscriptionManager()
     @StateObject private var notificationManager = NotificationManager()
 
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -29,7 +31,9 @@ struct AnchorBloomApp: App {
                 .environmentObject(firestoreService)
                 .environmentObject(subscriptionManager)
                 .environmentObject(notificationManager)
-                .preferredColorScheme(.light)
+                .onAppear {
+                    appearanceMode.apply()
+                }
         }
     }
 }
