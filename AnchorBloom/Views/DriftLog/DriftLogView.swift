@@ -186,19 +186,20 @@ struct DriftLogView: View {
 
     // MARK: - Log Drift
     private func logDrift(category: DriftCategory) {
-        let categoryName = category.rawValue
+        let note = driftNote.isEmpty ? nil : driftNote
+
+        // Show feedback IMMEDIATELY, save in background
+        loggedCategoryName = category.rawValue
+        showDriftLogged = true
+        driftNote = ""
+        selectedCategory = nil
+
         Task {
-            let success = await viewModel.logDrift(
+            let _ = await viewModel.logDrift(
                 category: category,
-                note: driftNote.isEmpty ? nil : driftNote,
+                note: note,
                 prayerPlayed: false
             )
-            if success {
-                driftNote = ""
-                selectedCategory = nil
-                loggedCategoryName = categoryName
-                showDriftLogged = true
-            }
         }
     }
 }

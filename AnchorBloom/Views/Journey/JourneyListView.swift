@@ -236,15 +236,10 @@ struct JourneyDetailView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showProgressView = false
-    @State private var isBeginning = false
     @State private var showJourneyStarted = false
 
     private var progress: Int {
         viewModel.journeyProgress(for: journey.id)
-    }
-
-    private var isActive: Bool {
-        viewModel.userProfile?.activeJourneyID == journey.id
     }
 
     var body: some View {
@@ -321,7 +316,6 @@ struct JourneyDetailView: View {
 
                     // Action button
                     if progress > 0 {
-                        // Continue journey
                         Button {
                             showProgressView = true
                         } label: {
@@ -332,29 +326,17 @@ struct JourneyDetailView: View {
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
                     } else {
-                        // Begin journey
                         Button {
-                            isBeginning = true
-                            Task {
-                                let success = await viewModel.beginJourney(journey.id)
-                                isBeginning = false
-                                if success {
-                                    showJourneyStarted = true
-                                }
-                            }
+                            // Show feedback IMMEDIATELY, save in background
+                            showJourneyStarted = true
+                            Task { let _ = await viewModel.beginJourney(journey.id) }
                         } label: {
                             HStack {
-                                if isBeginning {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Image(systemName: "play.fill")
-                                }
-                                Text(isBeginning ? "Starting..." : "Begin This Journey")
+                                Image(systemName: "play.fill")
+                                Text("Begin This Journey")
                             }
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
-                        .disabled(isBeginning)
                     }
 
                     Spacer().frame(height: 40)
@@ -372,12 +354,14 @@ struct JourneyDetailView: View {
             .fullScreenCover(isPresented: $showProgressView) {
                 JourneyProgressView(journey: journey, viewModel: viewModel)
             }
+            // Alert on the NavigationStack level, not on the button
             .alert("Journey Started!", isPresented: $showJourneyStarted) {
                 Button("Start Day 1") {
                     showProgressView = true
                 }
+                Button("OK", role: .cancel) {}
             } message: {
-                Text("You've begun \"\(journey.title)\" — a 30-day journey. Let's go!")
+                Text("You've begun \(journey.title). Tap 'Start Day 1' to open your first devotional.")
             }
         }
     }
