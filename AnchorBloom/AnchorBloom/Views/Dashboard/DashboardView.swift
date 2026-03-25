@@ -358,8 +358,9 @@ struct BadgeCardSmall: View {
 }
 
 #Preview {
+    let service = FirestoreService()
     DashboardView()
-        .environmentObject(FirestoreService())
+        .environmentObject(service)
         .environmentObject(SubscriptionManager())
         .environmentObject(AppViewModel(firestoreService: service))
 }
