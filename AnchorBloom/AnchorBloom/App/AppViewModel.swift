@@ -28,7 +28,7 @@ final class AppViewModel: ObservableObject {
             todayEntry = try await firestoreService.fetchOrCreateTodayEntry()
 
             // Load recent entries for progress
-            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+            let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
             recentEntries = try await firestoreService.fetchEntries(from: thirtyDaysAgo, to: Date())
         } catch {
             errorMessage = error.localizedDescription

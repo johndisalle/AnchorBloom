@@ -435,7 +435,7 @@ struct BadgeCard: View {
                 .minimumScaleFactor(0.7)
 
             Text(badge.description)
-                .font(.system(size: 8))
+                .font(.system(size: 10))
                 .foregroundColor(ABTheme.secondaryText.opacity(isEarned ? 0.8 : 0.3))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
@@ -512,7 +512,7 @@ struct JourneyProgressCard: View {
 
                     RoundedRectangle(cornerRadius: 3)
                         .fill(progress >= journey.totalDays ? ABTheme.warmGold : ABTheme.sageGreen)
-                        .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 6)
+                        .frame(width: journey.totalDays > 0 ? geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays) : 0, height: 6)
                 }
             }
             .frame(height: 6)

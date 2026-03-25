@@ -124,7 +124,7 @@ struct DashboardView: View {
 
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(ABTheme.sageGreen)
-                                .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 4)
+                                .frame(width: journey.totalDays > 0 ? geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays) : 0, height: 4)
                         }
                     }
                     .frame(height: 4)

@@ -109,13 +109,13 @@ struct JourneyProgressView: View {
 
                     RoundedRectangle(cornerRadius: 4)
                         .fill(ABTheme.sageGreen)
-                        .frame(width: geo.size.width * CGFloat(currentDay) / CGFloat(journey.totalDays), height: 8)
+                        .frame(width: journey.totalDays > 0 ? geo.size.width * CGFloat(currentDay) / CGFloat(journey.totalDays) : 0, height: 8)
                 }
             }
             .frame(height: 8)
 
             HStack {
-                Text("\(Int(Double(currentDay) / Double(journey.totalDays) * 100))% complete")
+                Text("\(journey.totalDays > 0 ? Int(Double(currentDay) / Double(journey.totalDays) * 100) : 0)% complete")
                     .font(.caption2)
                     .foregroundColor(ABTheme.secondaryText)
                 Spacer()

@@ -100,7 +100,7 @@ struct SettingsView: View {
                         Label("Upgrade to Premium", systemImage: "crown.fill")
                             .foregroundColor(ABTheme.warmGold)
                         Spacer()
-                        Text("$6.99/mo")
+                        Text(subscriptionManager.monthlyProduct?.displayPrice ?? "$6.99/mo")
                             .font(.caption)
                             .foregroundColor(ABTheme.secondaryText)
                         Image(systemName: "chevron.right")
@@ -161,13 +161,40 @@ struct SettingsView: View {
             HStack {
                 Label("Version", systemImage: "info.circle")
                 Spacer()
-                Text("1.0.0")
+                Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                     .foregroundColor(ABTheme.secondaryText)
             }
 
-            Label("Privacy Policy", systemImage: "hand.raised.fill")
-            Label("Terms of Service", systemImage: "doc.text.fill")
-            Label("Rate Anchor & Bloom", systemImage: "star.fill")
+            Link(destination: URL(string: "https://anchorbloom.app/privacy")!) {
+                HStack {
+                    Label("Privacy Policy", systemImage: "hand.raised.fill")
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+            }
+
+            Link(destination: URL(string: "https://anchorbloom.app/terms")!) {
+                HStack {
+                    Label("Terms of Service", systemImage: "doc.text.fill")
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+            }
+
+            Button {
+                if let url = URL(string: "itms-apps://itunes.apple.com/app/id\(Bundle.main.infoDictionary?["APP_STORE_ID"] as? String ?? "")") {
+                    UIApplication.shared.open(url)
+                }
+            } label: {
+                Label("Rate Anchor & Bloom", systemImage: "star.fill")
+                    .foregroundColor(ABTheme.primaryText)
+            }
         }
         .listRowBackground(ABTheme.cardBackground)
     }

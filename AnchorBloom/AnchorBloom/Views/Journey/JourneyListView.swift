@@ -58,7 +58,7 @@ struct JourneyListView: View {
                                             .frame(height: 6)
                                         RoundedRectangle(cornerRadius: 3)
                                             .fill(ABTheme.sageGreen)
-                                            .frame(width: geo.size.width * CGFloat(prog) / CGFloat(active.totalDays), height: 6)
+                                            .frame(width: active.totalDays > 0 ? geo.size.width * CGFloat(prog) / CGFloat(active.totalDays) : 0, height: 6)
                                     }
                                 }
                                 .frame(height: 6)
@@ -371,7 +371,9 @@ struct JourneyDetailView: View {
                     } else if !journeyStarted {
                         Button {
                             journeyStarted = true
-                            // Firestore save removed for testing
+                            Task {
+                                await viewModel.beginJourney(journey.id)
+                            }
                         } label: {
                             HStack {
                                 Image(systemName: "play.fill")

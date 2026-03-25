@@ -158,9 +158,17 @@ struct DriftLogView: View {
                 }
 
                 Button {
+                    guard let category = selectedCategory else { return }
+                    let note = driftNote.isEmpty ? nil : driftNote
                     driftLogged = true
                     driftNote = ""
-                    // Firestore save removed for testing
+                    Task {
+                        await viewModel.logDrift(
+                            category: category,
+                            note: note,
+                            prayerPlayed: false
+                        )
+                    }
                 } label: {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
@@ -215,23 +223,6 @@ struct DriftLogView: View {
         }
     }
 
-    // MARK: - Log Drift
-    private func logDrift(category: DriftCategory) {
-        let note = driftNote.isEmpty ? nil : driftNote
-
-        // Show success state inline (don't collapse section)
-        driftLogged = true
-        driftNote = ""
-
-        // Save in background
-        Task {
-            await viewModel.logDrift(
-                category: category,
-                note: note,
-                prayerPlayed: false
-            )
-        }
-    }
 }
 
 // MARK: - Drift Category Button

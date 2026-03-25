@@ -31,7 +31,7 @@ struct Streak: Codable {
         totalDaysCompleted += 1
 
         // Check if yesterday was completed to continue streak
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: date)!
+        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: date) else { return }
         let yesterdayKey = formatter.string(from: yesterday)
 
         if weeklyCompletions[yesterdayKey] == true || currentStreak == 0 {
