@@ -270,11 +270,14 @@ struct SubscriptionView: View {
 
                     // Features
                     VStack(alignment: .leading, spacing: 14) {
-                        PremiumFeatureRow(icon: "person.3.fill", text: "Unlimited Sister Circles — post & comment")
-                        PremiumFeatureRow(icon: "map.fill", text: "All premium 30-day journeys")
-                        PremiumFeatureRow(icon: "target", text: "Custom spiritual goals")
-                        PremiumFeatureRow(icon: "xmark.circle", text: "Ad-free experience")
                         PremiumFeatureRow(icon: "heart.circle.fill", text: "Kingdom Funded — all profits fund service and missions")
+                        PremiumFeatureRow(icon: "map.fill", text: "All premium 30-day journeys")
+                        PremiumFeatureRow(icon: "person.3.fill", text: "Unlimited Sister Circles — post & comment")
+                        PremiumFeatureRow(icon: "book.fill", text: "Deeper daily devotional prompts & reflections")
+                        PremiumFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Detailed growth insights & weekly spiritual reports")
+                        PremiumFeatureRow(icon: "bell.badge.fill", text: "Personalized scripture reminders throughout the day")
+                        PremiumFeatureRow(icon: "target", text: "Custom spiritual goals & milestone tracking")
+                        PremiumFeatureRow(icon: "xmark.circle", text: "Ad-free experience")
                     }
                     .abCard()
 
