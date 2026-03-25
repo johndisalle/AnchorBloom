@@ -18,6 +18,30 @@ struct DriftLogView: View {
                     // Header
                     headerSection
 
+                    // Drift logged confirmation (inline, no modal)
+                    if showDriftLogged {
+                        HStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.title3)
+                                .foregroundColor(.white)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Drift Logged & Anchored")
+                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                    .foregroundColor(.white)
+
+                                Text("You acknowledged your \(loggedCategoryName.lowercased()) drift. God sees you.")
+                                    .font(.system(.caption2, design: .serif))
+                                    .foregroundColor(.white.opacity(0.85))
+                            }
+
+                            Spacer()
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.sageGreen)
+                        .cornerRadius(ABTheme.cornerRadius)
+                    }
+
                     // Quick-tap drift categories
                     driftCategoriesGrid
 
@@ -38,11 +62,6 @@ struct DriftLogView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await viewModel.loadUserData()
-            }
-            .alert("Drift Logged & Anchored", isPresented: $showDriftLogged) {
-                Button("Amen") {}
-            } message: {
-                Text("You acknowledged your \(loggedCategoryName.lowercased()) drift. God sees you and He's holding you steady.")
             }
         }
     }

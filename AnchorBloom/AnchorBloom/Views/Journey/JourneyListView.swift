@@ -235,8 +235,7 @@ struct JourneyDetailView: View {
     let journey: Journey
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showProgressView = false
-    @State private var showJourneyStarted = false
+    @State private var journeyStarted = false
 
     private var progress: Int {
         viewModel.journeyProgress(for: journey.id)
@@ -314,21 +313,73 @@ struct JourneyDetailView: View {
                     }
                     .abCard()
 
+                    // Journey started confirmation (inline, no modal)
+                    if journeyStarted {
+                        VStack(spacing: 12) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 40))
+                                .foregroundColor(ABTheme.sageGreen)
+
+                            Text("Journey Started!")
+                                .font(ABTheme.headlineFont)
+                                .foregroundColor(ABTheme.primaryText)
+
+                            Text("You've begun \(journey.title). Open Day 1 below to start your first devotional.")
+                                .font(ABTheme.captionFont)
+                                .foregroundColor(ABTheme.secondaryText)
+                                .multilineTextAlignment(.center)
+
+                            NavigationLink {
+                                JourneyDayView(
+                                    journey: journey,
+                                    dayNumber: 1,
+                                    viewModel: viewModel
+                                )
+                            } label: {
+                                HStack {
+                                    Image(systemName: "arrow.right")
+                                    Text("Open Day 1")
+                                }
+                                .font(.system(.body, design: .serif, weight: .semibold))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(ABTheme.sageGreen)
+                                .cornerRadius(ABTheme.cornerRadius)
+                            }
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.sageGreen.opacity(0.06))
+                        .cornerRadius(ABTheme.cornerRadius)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                                .stroke(ABTheme.sageGreen.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+
                     // Action button
                     if progress > 0 {
-                        Button {
-                            showProgressView = true
+                        NavigationLink {
+                            JourneyDayView(
+                                journey: journey,
+                                dayNumber: progress + 1,
+                                viewModel: viewModel
+                            )
                         } label: {
                             HStack {
                                 Image(systemName: "arrow.right")
                                 Text("Continue Journey — Day \(progress + 1)")
                             }
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(ABTheme.sageGreen)
+                            .cornerRadius(ABTheme.cornerRadius)
                         }
-                        .buttonStyle(ABPrimaryButtonStyle())
-                    } else {
+                    } else if !journeyStarted {
                         Button {
-                            // Show feedback IMMEDIATELY, save in background
-                            showJourneyStarted = true
+                            journeyStarted = true
                             Task { let _ = await viewModel.beginJourney(journey.id) }
                         } label: {
                             HStack {
@@ -350,18 +401,6 @@ struct JourneyDetailView: View {
                     Button("Close") { dismiss() }
                         .foregroundColor(ABTheme.sageGreen)
                 }
-            }
-            .fullScreenCover(isPresented: $showProgressView) {
-                JourneyProgressView(journey: journey, viewModel: viewModel)
-            }
-            // Alert on the NavigationStack level, not on the button
-            .alert("Journey Started!", isPresented: $showJourneyStarted) {
-                Button("Start Day 1") {
-                    showProgressView = true
-                }
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("You've begun \(journey.title). Tap 'Start Day 1' to open your first devotional.")
             }
         }
     }
