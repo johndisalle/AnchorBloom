@@ -35,6 +35,20 @@ struct DriftLogView: View {
             .abScreenBackground()
             .navigationTitle("Drift Log")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        DriftHistoryView()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chart.bar.fill")
+                            Text("Patterns")
+                        }
+                        .font(.system(.caption, design: .serif, weight: .medium))
+                        .foregroundColor(ABTheme.sageGreen)
+                    }
+                }
+            }
             .task {
                 await viewModel.loadUserData()
             }

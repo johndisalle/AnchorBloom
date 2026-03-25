@@ -23,6 +23,24 @@ struct SettingsView: View {
                 // Profile section
                 profileSection
 
+                // My Verses
+                Section {
+                    NavigationLink {
+                        MyVersesView()
+                    } label: {
+                        Label {
+                            Text("My Verses")
+                                .font(.system(.body, design: .serif))
+                                .foregroundColor(ABTheme.primaryText)
+                        } icon: {
+                            Image(systemName: "bookmark.fill")
+                                .foregroundColor(ABTheme.warmGold)
+                        }
+                    }
+                } header: {
+                    Text("Scripture")
+                }
+
                 // Subscription section
                 subscriptionSection
 

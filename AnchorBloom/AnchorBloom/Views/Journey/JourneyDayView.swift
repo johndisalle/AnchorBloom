@@ -146,6 +146,12 @@ struct JourneyDayView: View {
             Text(day.scriptureReference)
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .foregroundColor(ABTheme.sageGreen)
+
+            ScriptureActionButtons(
+                verseText: day.scripture,
+                reference: day.scriptureReference,
+                source: .journey
+            )
         }
         .abCard()
     }

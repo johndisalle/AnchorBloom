@@ -293,6 +293,57 @@ final class FirestoreService: ObservableObject {
         try await goalsCollection.document(goalID).delete()
     }
 
+    // MARK: - Bookmark Operations
+
+    private var bookmarksCollection: CollectionReference { db.collection("bookmarks") }
+
+    /// Saves a verse bookmark
+    func saveBookmark(verseText: String, reference: String, source: BookmarkedVerse.VerseSource) async {
+        guard let userID = currentUserID else { return }
+        let bookmark = BookmarkedVerse(
+            userID: userID,
+            verseText: verseText,
+            reference: reference,
+            source: source,
+            savedAt: Date()
+        )
+        try? bookmarksCollection.addDocument(from: bookmark)
+    }
+
+    /// Removes a bookmark by reference
+    func removeBookmark(reference: String) async {
+        guard let userID = currentUserID else { return }
+        let snapshot = try? await bookmarksCollection
+            .whereField("userID", isEqualTo: userID)
+            .whereField("reference", isEqualTo: reference)
+            .getDocuments()
+
+        for doc in snapshot?.documents ?? [] {
+            try? await doc.reference.delete()
+        }
+    }
+
+    /// Checks if a verse is bookmarked
+    func isVerseBookmarked(reference: String) async -> Bool {
+        guard let userID = currentUserID else { return false }
+        let snapshot = try? await bookmarksCollection
+            .whereField("userID", isEqualTo: userID)
+            .whereField("reference", isEqualTo: reference)
+            .limit(to: 1)
+            .getDocuments()
+        return !(snapshot?.documents.isEmpty ?? true)
+    }
+
+    /// Fetches all bookmarked verses for the current user
+    func fetchBookmarks() async throws -> [BookmarkedVerse] {
+        guard let userID = currentUserID else { return [] }
+        let snapshot = try await bookmarksCollection
+            .whereField("userID", isEqualTo: userID)
+            .order(by: "savedAt", descending: true)
+            .getDocuments()
+        return snapshot.documents.compactMap { try? $0.data(as: BookmarkedVerse.self) }
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress

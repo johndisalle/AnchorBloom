@@ -90,6 +90,12 @@ struct AnchorView: View {
             Text(todayPrompt.scriptureReference)
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .foregroundColor(ABTheme.sageGreen)
+
+            ScriptureActionButtons(
+                verseText: todayPrompt.scripture,
+                reference: todayPrompt.scriptureReference,
+                source: .morningAnchor
+            )
         }
         .abCard()
     }

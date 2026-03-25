@@ -30,9 +30,46 @@ final class AppViewModel: ObservableObject {
             // Load recent entries for progress
             let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date())!
             recentEntries = try await firestoreService.fetchEntries(from: thirtyDaysAgo, to: Date())
+
+            // Schedule weekly summary notification with this week's stats
+            scheduleWeeklySummaryIfNeeded()
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    // MARK: - Weekly Summary Notification
+    private func scheduleWeeklySummaryIfNeeded() {
+        guard userProfile?.notificationsEnabled == true else { return }
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        let weekEntries = recentEntries.filter { $0.date >= sevenDaysAgo }
+
+        let anchorDays = weekEntries.filter { $0.anchorCompleted }.count
+        let bloomDays = weekEntries.filter { $0.bloomCompleted }.count
+
+        // Find top drift category this week
+        let drifts = weekEntries.flatMap { $0.driftEntries }
+        var driftCounts: [DriftCategory: Int] = [:]
+        for drift in drifts {
+            driftCounts[drift.category, default: 0] += 1
+        }
+        let topDrift = driftCounts.max(by: { $0.value < $1.value })?.key.rawValue
+
+        // Find top bloom role this week
+        let roles = weekEntries.flatMap { $0.bloomRoles }
+        var roleCounts: [BloomRole: Int] = [:]
+        for role in roles {
+            roleCounts[role, default: 0] += 1
+        }
+        let topRole = roleCounts.max(by: { $0.value < $1.value })?.key.rawValue
+
+        NotificationManager().scheduleWeeklySummary(
+            anchorDays: anchorDays,
+            bloomDays: bloomDays,
+            topDrift: topDrift,
+            topRole: topRole,
+            streak: currentStreak
+        )
     }
 
     // MARK: - Save Morning Anchor

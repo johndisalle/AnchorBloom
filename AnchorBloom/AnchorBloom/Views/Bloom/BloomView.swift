@@ -101,6 +101,12 @@ struct BloomView: View {
             Text(todayPrompt.scriptureReference)
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .foregroundColor(ABTheme.blushDark)
+
+            ScriptureActionButtons(
+                verseText: todayPrompt.scripture,
+                reference: todayPrompt.scriptureReference,
+                source: .eveningBloom
+            )
         }
         .abCard()
     }

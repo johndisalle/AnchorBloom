@@ -62,6 +62,52 @@ final class NotificationManager: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
 
+    // MARK: - Schedule Weekly Summary (Sunday at 7pm)
+    static let weeklySummaryIdentifier = "weekly_spiritual_summary"
+
+    func scheduleWeeklySummary(
+        anchorDays: Int,
+        bloomDays: Int,
+        topDrift: String?,
+        topRole: String?,
+        streak: Int
+    ) {
+        let content = UNMutableNotificationContent()
+        content.title = "Your Week in Review"
+
+        var bodyParts: [String] = []
+        bodyParts.append("You anchored \(anchorDays) days and bloomed \(bloomDays) days this week.")
+        if let drift = topDrift {
+            bodyParts.append("Top drift: \(drift).")
+        }
+        if let role = topRole {
+            bodyParts.append("Top role: \(role).")
+        }
+        if streak > 0 {
+            bodyParts.append("Current streak: \(streak) days!")
+        }
+        bodyParts.append("Keep growing, sister!")
+
+        content.body = bodyParts.joined(separator: " ")
+        content.sound = .default
+        content.categoryIdentifier = "WEEKLY_SUMMARY"
+
+        // Sunday at 7pm
+        var components = DateComponents()
+        components.weekday = 1 // Sunday
+        components.hour = 19
+        components.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: Self.weeklySummaryIdentifier,
+            content: content,
+            trigger: trigger
+        )
+
+        UNUserNotificationCenter.current().add(request)
+    }
+
     // MARK: - Cancel All Notifications
     func cancelAllNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
