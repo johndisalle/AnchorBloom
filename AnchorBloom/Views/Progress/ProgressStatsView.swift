@@ -14,8 +14,9 @@ struct ProgressStatsView: View {
                 // Segmented picker
                 Picker("", selection: $selectedTab) {
                     Text("Growth").tag(0)
-                    Text("Calendar").tag(1)
-                    Text("Badges").tag(2)
+                    Text("Journeys").tag(1)
+                    Text("Calendar").tag(2)
+                    Text("Badges").tag(3)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, ABTheme.paddingMedium)
@@ -23,8 +24,9 @@ struct ProgressStatsView: View {
 
                 TabView(selection: $selectedTab) {
                     growthTab.tag(0)
-                    calendarTab.tag(1)
-                    badgesTab.tag(2)
+                    journeysTab.tag(1)
+                    calendarTab.tag(2)
+                    badgesTab.tag(3)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
@@ -88,6 +90,82 @@ struct ProgressStatsView: View {
 
                 Spacer().frame(height: 40)
             }
+        }
+    }
+
+    // MARK: - Journeys Tab
+    private var journeysTab: some View {
+        ScrollView {
+            VStack(spacing: ABTheme.paddingLarge) {
+                Text("Your Journeys")
+                    .font(ABTheme.headlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+                    .padding(.top, ABTheme.paddingMedium)
+
+                ForEach(Journey.allJourneys) { journey in
+                    let progress = viewModel.journeyProgress(for: journey.id)
+                    let isActive = viewModel.userProfile?.activeJourneyID == journey.id
+
+                    if progress > 0 || isActive {
+                        // Started journey card
+                        JourneyProgressCard(
+                            journey: journey,
+                            progress: progress,
+                            isActive: isActive
+                        )
+                    }
+                }
+
+                // Not-started journeys
+                let startedIDs = Journey.allJourneys
+                    .filter { viewModel.journeyProgress(for: $0.id) > 0 || viewModel.userProfile?.activeJourneyID == $0.id }
+                    .map { $0.id }
+
+                let notStarted = Journey.allJourneys.filter { !startedIDs.contains($0.id) }
+                if !notStarted.isEmpty {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Available Journeys")
+                            .font(ABTheme.subheadlineFont)
+                            .foregroundColor(ABTheme.secondaryText)
+
+                        ForEach(notStarted) { journey in
+                            HStack(spacing: 12) {
+                                Image(systemName: journey.iconName)
+                                    .font(.body)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                                    .frame(width: 30)
+
+                                VStack(alignment: .leading, spacing: 2) {
+                                    HStack {
+                                        Text(journey.title)
+                                            .font(.system(.subheadline, design: .serif, weight: .medium))
+                                            .foregroundColor(ABTheme.secondaryText)
+                                        if journey.isPremium {
+                                            Image(systemName: "crown.fill")
+                                                .font(.caption2)
+                                                .foregroundColor(ABTheme.warmGold)
+                                        }
+                                    }
+                                    Text("\(journey.totalDays) days · \(journey.scriptureTheme)")
+                                        .font(.caption2)
+                                        .foregroundColor(ABTheme.secondaryText.opacity(0.6))
+                                }
+
+                                Spacer()
+
+                                Text("Not started")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.4))
+                            }
+                            .padding(.vertical, 6)
+                        }
+                    }
+                    .abCard()
+                }
+
+                Spacer().frame(height: 40)
+            }
+            .padding(.horizontal, ABTheme.paddingMedium)
         }
     }
 
@@ -372,6 +450,74 @@ struct BadgeCard: View {
                 .stroke(isEarned ? ABTheme.warmGold.opacity(0.3) : Color.clear, lineWidth: 1)
         )
         .opacity(isEarned ? 1 : 0.5)
+    }
+}
+
+// MARK: - Journey Progress Card
+struct JourneyProgressCard: View {
+    let journey: Journey
+    let progress: Int
+    let isActive: Bool
+
+    private var percentage: Int {
+        guard journey.totalDays > 0 else { return 0 }
+        return Int(Double(progress) / Double(journey.totalDays) * 100)
+    }
+
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: journey.iconName)
+                    .font(.title3)
+                    .foregroundColor(ABTheme.sageGreen)
+                    .frame(width: 36)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Text(journey.title)
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.primaryText)
+
+                        if isActive {
+                            Text("ACTIVE")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(ABTheme.sageGreen)
+                                .cornerRadius(4)
+                        }
+                    }
+
+                    Text(progress >= journey.totalDays
+                         ? "Completed!"
+                         : "Day \(progress) of \(journey.totalDays)")
+                        .font(.system(.caption, design: .serif))
+                        .foregroundColor(progress >= journey.totalDays ? ABTheme.warmGold : ABTheme.secondaryText)
+                }
+
+                Spacer()
+
+                Text("\(percentage)%")
+                    .font(.system(.headline, design: .serif, weight: .bold))
+                    .foregroundColor(ABTheme.sageGreen)
+            }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(ABTheme.sageGreen.opacity(0.12))
+                        .frame(height: 6)
+
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(progress >= journey.totalDays ? ABTheme.warmGold : ABTheme.sageGreen)
+                        .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 6)
+                }
+            }
+            .frame(height: 6)
+        }
+        .abCard()
     }
 }
 

@@ -452,6 +452,19 @@ struct CircleDetailView: View {
 // MARK: - Circle Post View
 struct CirclePostView: View {
     let post: CirclePost
+    @EnvironmentObject var firestoreService: FirestoreService
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
+
+    @State private var isLiked = false
+    @State private var likeCount: Int
+    @State private var showComments = false
+    @State private var commentCount: Int
+
+    init(post: CirclePost) {
+        self.post = post
+        _likeCount = State(initialValue: post.likeCount)
+        _commentCount = State(initialValue: post.commentCount)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -505,25 +518,245 @@ struct CirclePostView: View {
 
             // Interaction bar
             HStack(spacing: 16) {
-                HStack(spacing: 4) {
-                    Image(systemName: "heart")
-                        .font(.caption)
-                    Text("\(post.likeCount)")
-                        .font(.caption)
+                // Like button
+                Button {
+                    toggleLike()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isLiked ? "heart.fill" : "heart")
+                            .font(.caption)
+                            .foregroundColor(isLiked ? ABTheme.blush : ABTheme.secondaryText)
+                        Text("\(likeCount)")
+                            .font(.caption)
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
                 }
+                .buttonStyle(.plain)
 
-                HStack(spacing: 4) {
-                    Image(systemName: "bubble.right")
-                        .font(.caption)
-                    Text("\(post.commentCount)")
-                        .font(.caption)
+                // Comment button
+                Button {
+                    showComments = true
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "bubble.right")
+                            .font(.caption)
+                        Text("\(commentCount)")
+                            .font(.caption)
+                    }
+                    .foregroundColor(ABTheme.secondaryText)
                 }
+                .buttonStyle(.plain)
 
                 Spacer()
             }
-            .foregroundColor(ABTheme.secondaryText)
         }
         .abCard()
+        .sheet(isPresented: $showComments) {
+            CommentThreadView(
+                post: post,
+                isPremium: subscriptionManager.isPremium
+            ) {
+                commentCount += 1
+            }
+        }
+    }
+
+    private func toggleLike() {
+        guard let postID = post.id else { return }
+        isLiked.toggle()
+        likeCount += isLiked ? 1 : -1
+        Task {
+            try? await firestoreService.toggleLike(postID: postID)
+        }
+    }
+}
+
+// MARK: - Comment Thread View
+struct CommentThreadView: View {
+    let post: CirclePost
+    let isPremium: Bool
+    let onCommentAdded: () -> Void
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var comments: [CircleComment] = []
+    @State private var newComment = ""
+    @State private var isLoading = false
+    @State private var isSending = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Comments list
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Original post at top
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack(spacing: 8) {
+                                Circle()
+                                    .fill(ABTheme.blush.opacity(0.3))
+                                    .frame(width: 28, height: 28)
+                                    .overlay(
+                                        Text(String(post.authorName.prefix(1)))
+                                            .font(.system(.caption2, design: .serif, weight: .bold))
+                                            .foregroundColor(ABTheme.blush)
+                                    )
+
+                                Text(post.authorName)
+                                    .font(.system(.caption, design: .serif, weight: .semibold))
+                                    .foregroundColor(ABTheme.primaryText)
+
+                                Spacer()
+
+                                Text(post.createdAt, style: .relative)
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+
+                            Text(post.content)
+                                .font(ABTheme.bodyFont)
+                                .foregroundColor(ABTheme.primaryText)
+                                .lineSpacing(3)
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.sageGreen.opacity(0.04))
+
+                        Divider()
+
+                        // Comments
+                        if isLoading {
+                            ProgressView()
+                                .tint(ABTheme.sageGreen)
+                                .padding(.top, 30)
+                        } else if comments.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "bubble.left.and.bubble.right")
+                                    .font(.title2)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+                                Text("No comments yet")
+                                    .font(ABTheme.captionFont)
+                                    .foregroundColor(ABTheme.secondaryText)
+                                Text("Be the first to encourage!")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.6))
+                            }
+                            .padding(.top, 30)
+                        } else {
+                            ForEach(comments) { comment in
+                                CommentRow(comment: comment)
+                                Divider().padding(.leading, 48)
+                            }
+                        }
+                    }
+                }
+
+                Divider()
+
+                // Comment input
+                if isPremium {
+                    HStack(spacing: 10) {
+                        TextField("Write a comment...", text: $newComment)
+                            .font(ABTheme.bodyFont)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(ABTheme.sageGreen.opacity(0.06))
+                            .cornerRadius(20)
+
+                        Button {
+                            sendComment()
+                        } label: {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.title2)
+                                .foregroundColor(newComment.isEmpty ? ABTheme.secondaryText.opacity(0.3) : ABTheme.sageGreen)
+                        }
+                        .disabled(newComment.isEmpty || isSending)
+                    }
+                    .padding(ABTheme.paddingSmall)
+                    .background(ABTheme.softWhite)
+                } else {
+                    HStack(spacing: 8) {
+                        Image(systemName: "crown.fill")
+                            .foregroundColor(ABTheme.warmGold)
+                            .font(.caption)
+                        Text("Upgrade to Premium to comment")
+                            .font(.system(.caption, design: .serif))
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
+                    .padding(ABTheme.paddingSmall)
+                    .background(ABTheme.warmGoldLight.opacity(0.2))
+                }
+            }
+            .abScreenBackground()
+            .navigationTitle("Comments")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .task {
+                await loadComments()
+            }
+        }
+    }
+
+    private func loadComments() async {
+        guard let postID = post.id else { return }
+        isLoading = true
+        defer { isLoading = false }
+        comments = (try? await firestoreService.fetchComments(postID: postID)) ?? []
+    }
+
+    private func sendComment() {
+        guard let postID = post.id, !newComment.isEmpty else { return }
+        let text = newComment
+        newComment = ""
+        isSending = true
+        Task {
+            try? await firestoreService.addComment(postID: postID, content: text)
+            onCommentAdded()
+            await loadComments()
+            isSending = false
+        }
+    }
+}
+
+// MARK: - Comment Row
+struct CommentRow: View {
+    let comment: CircleComment
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle()
+                .fill(ABTheme.sageGreen.opacity(0.2))
+                .frame(width: 28, height: 28)
+                .overlay(
+                    Text(String(comment.authorName.prefix(1)))
+                        .font(.system(.caption2, design: .serif, weight: .bold))
+                        .foregroundColor(ABTheme.sageGreen)
+                )
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack {
+                    Text(comment.authorName)
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+                    Text(comment.createdAt, style: .relative)
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+
+                Text(comment.content)
+                    .font(ABTheme.bodyFont)
+                    .foregroundColor(ABTheme.primaryText)
+                    .lineSpacing(2)
+            }
+
+            Spacer()
+        }
+        .padding(.horizontal, ABTheme.paddingMedium)
+        .padding(.vertical, 8)
     }
 }
 

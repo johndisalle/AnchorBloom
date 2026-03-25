@@ -9,6 +9,7 @@ struct DashboardView: View {
     @State private var showAnchorSheet = false
     @State private var showBloomSheet = false
     @State private var showProgressView = false
+    @State private var showJourneyProgress = false
 
     init() {
         // Will be properly initialized with environment object
@@ -39,6 +40,11 @@ struct DashboardView: View {
 
                     // Tree visualization
                     treeSection
+
+                    // Active journey card
+                    if let journey = viewModel.activeJourney {
+                        activeJourneyCard(journey)
+                    }
 
                     // Daily action cards
                     dailyActionsSection
@@ -71,7 +77,73 @@ struct DashboardView: View {
             .sheet(isPresented: $showProgressView) {
                 ProgressStatsView(viewModel: viewModel)
             }
+            .fullScreenCover(isPresented: $showJourneyProgress) {
+                if let journey = viewModel.activeJourney {
+                    JourneyProgressView(journey: journey, viewModel: viewModel)
+                }
+            }
         }
+    }
+
+    // MARK: - Active Journey Card
+    private func activeJourneyCard(_ journey: Journey) -> some View {
+        let progress = viewModel.journeyProgress(for: journey.id)
+        let nextDay = min(progress + 1, journey.totalDays)
+
+        return Button {
+            showJourneyProgress = true
+        } label: {
+            HStack(spacing: ABTheme.paddingMedium) {
+                // Journey icon
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(ABTheme.sageGreen.opacity(0.15))
+                        .frame(width: 50, height: 50)
+
+                    Image(systemName: journey.iconName)
+                        .font(.title2)
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(journey.title)
+                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+
+                    if progress >= journey.totalDays {
+                        Text("Journey Complete!")
+                            .font(.caption)
+                            .foregroundColor(ABTheme.warmGold)
+                    } else {
+                        Text("Continue Day \(nextDay) of \(journey.totalDays)")
+                            .font(.caption)
+                            .foregroundColor(ABTheme.sageGreen)
+                    }
+
+                    // Mini progress bar
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(ABTheme.sageGreen.opacity(0.12))
+                                .frame(height: 4)
+
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(ABTheme.sageGreen)
+                                .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+
+                Spacer()
+
+                Image(systemName: "arrow.right.circle.fill")
+                    .font(.title3)
+                    .foregroundColor(ABTheme.sageGreen)
+            }
+            .abCard()
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Header

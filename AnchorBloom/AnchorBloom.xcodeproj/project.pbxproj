@@ -83,6 +83,7 @@
 		B1000033000000000000001 /* GoogleService-Info.plist.example */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist.example"; sourceTree = "<group>"; };
 		B1000034000000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B1000035000000000000001 /* AnchorBloom.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AnchorBloom.entitlements; sourceTree = "<group>"; };
+		B1000036000000000000001 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B1000034100000000000001 /* JourneyDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyDayView.swift; sourceTree = "<group>"; };
 		B1000035100000000000001 /* JourneyProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyProgressView.swift; sourceTree = "<group>"; };
 		B1000050000000000000001 /* AnchorBloom.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnchorBloom.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -122,6 +123,7 @@
 				B1000032000000000000001 /* Assets.xcassets */,
 				B1000034000000000000001 /* Info.plist */,
 				B1000035000000000000001 /* AnchorBloom.entitlements */,
+				B1000036000000000000001 /* LaunchScreen.storyboard */,
 			);
 			path = AnchorBloom;
 			sourceTree = "<group>";

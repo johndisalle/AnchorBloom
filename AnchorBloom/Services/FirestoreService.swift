@@ -202,6 +202,40 @@ final class FirestoreService: ObservableObject {
         try docRef.setData(from: post, merge: true)
     }
 
+    // MARK: - Comment Operations
+
+    private var commentsCollection: CollectionReference {
+        db.collection("comments")
+    }
+
+    /// Add a comment to a post
+    func addComment(postID: String, content: String) async throws {
+        guard let userID = currentUserID else { return }
+        let profile = try await fetchUserProfile()
+        let comment = CircleComment(
+            postID: postID,
+            authorID: userID,
+            authorName: profile?.displayName ?? "Sister",
+            content: content,
+            createdAt: Date()
+        )
+        try commentsCollection.addDocument(from: comment)
+
+        // Increment comment count on the post
+        let postRef = postsCollection.document(postID)
+        try await postRef.updateData(["commentCount": FieldValue.increment(Int64(1))])
+    }
+
+    /// Fetch comments for a post
+    func fetchComments(postID: String) async throws -> [CircleComment] {
+        let snapshot = try await commentsCollection
+            .whereField("postID", isEqualTo: postID)
+            .order(by: "createdAt", descending: false)
+            .getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: CircleComment.self) }
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress
