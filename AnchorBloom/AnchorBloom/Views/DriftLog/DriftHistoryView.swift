@@ -76,7 +76,7 @@ struct DriftHistoryView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .onChange(of: selectedPeriod) { _ in
+                .onChange(of: selectedPeriod) {
                     Task { await loadEntries() }
                 }
 

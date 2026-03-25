@@ -307,7 +307,7 @@ final class FirestoreService: ObservableObject {
             source: source,
             savedAt: Date()
         )
-        try? bookmarksCollection.addDocument(from: bookmark)
+        _ = try? bookmarksCollection.addDocument(from: bookmark)
     }
 
     /// Removes a bookmark by reference
