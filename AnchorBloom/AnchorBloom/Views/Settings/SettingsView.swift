@@ -160,6 +160,9 @@ struct SettingsView: View {
                 }
             }
             .tint(ABTheme.sageGreen)
+            .onChange(of: appearanceMode) {
+                appearanceMode.apply()
+            }
         }
         .listRowBackground(ABTheme.cardBackground)
     }
