@@ -8,8 +8,7 @@ struct DriftLogView: View {
 
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
-    @State private var showDriftLogged = false
-    @State private var loggedCategoryName = ""
+    @State private var driftLogged = false
 
     var body: some View {
         NavigationStack {
@@ -17,30 +16,6 @@ struct DriftLogView: View {
                 VStack(spacing: ABTheme.paddingLarge) {
                     // Header
                     headerSection
-
-                    // Drift logged confirmation (inline, no modal)
-                    if showDriftLogged {
-                        HStack(spacing: 12) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.title3)
-                                .foregroundColor(.white)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Drift Logged & Anchored")
-                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                    .foregroundColor(.white)
-
-                                Text("You acknowledged your \(loggedCategoryName.lowercased()) drift. God sees you.")
-                                    .font(.system(.caption2, design: .serif))
-                                    .foregroundColor(.white.opacity(0.85))
-                            }
-
-                            Spacer()
-                        }
-                        .padding(ABTheme.paddingMedium)
-                        .background(ABTheme.sageGreen)
-                        .cornerRadius(ABTheme.cornerRadius)
-                    }
 
                     // Quick-tap drift categories
                     driftCategoriesGrid
@@ -129,35 +104,70 @@ struct DriftLogView: View {
             }
             .abCard()
 
-            // Optional note
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Add a note (optional)")
-                    .font(.system(.caption, design: .serif))
-                    .foregroundColor(ABTheme.secondaryText)
-
-                TextField("What triggered this drift?", text: $driftNote)
-                    .font(ABTheme.bodyFont)
-                    .padding()
-                    .background(ABTheme.softWhite)
-                    .cornerRadius(ABTheme.cornerRadiusSmall)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
-                            .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
-                    )
-            }
-
-            // Log drift button
-            Button {
-                logDrift(category: category)
-            } label: {
-                HStack {
+            if driftLogged {
+                // Success state — replaces the form
+                HStack(spacing: 12) {
                     Image(systemName: "checkmark.circle.fill")
-                    Text("Log & Anchor")
+                        .font(.title3)
+                        .foregroundColor(.white)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Drift Logged & Anchored")
+                            .font(.system(.subheadline, design: .serif, weight: .semibold))
+                            .foregroundColor(.white)
+
+                        Text("You acknowledged your \(category.rawValue.lowercased()) drift. God sees you.")
+                            .font(.system(.caption2, design: .serif))
+                            .foregroundColor(.white.opacity(0.85))
+                    }
+
+                    Spacer()
                 }
+                .padding(ABTheme.paddingMedium)
+                .background(ABTheme.sageGreen)
+                .cornerRadius(ABTheme.cornerRadius)
+
+                Button {
+                    driftLogged = false
+                    selectedCategory = nil
+                } label: {
+                    Text("Done")
+                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.sageGreen)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(ABTheme.sageGreen.opacity(0.1))
+                        .cornerRadius(ABTheme.cornerRadius)
+                }
+            } else {
+                // Note + Log button
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Add a note (optional)")
+                        .font(.system(.caption, design: .serif))
+                        .foregroundColor(ABTheme.secondaryText)
+
+                    TextField("What triggered this drift?", text: $driftNote)
+                        .font(ABTheme.bodyFont)
+                        .padding()
+                        .background(ABTheme.softWhite)
+                        .cornerRadius(ABTheme.cornerRadiusSmall)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                                .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
+                        )
+                }
+
+                Button {
+                    logDrift(category: category)
+                } label: {
+                    HStack {
+                        Image(systemName: "checkmark.circle.fill")
+                        Text("Log & Anchor")
+                    }
+                }
+                .buttonStyle(ABPrimaryButtonStyle())
             }
-            .buttonStyle(ABPrimaryButtonStyle())
         }
-        .transition(.opacity.combined(with: .move(edge: .bottom)))
     }
 
     // MARK: - Today's Drift History
@@ -207,12 +217,11 @@ struct DriftLogView: View {
     private func logDrift(category: DriftCategory) {
         let note = driftNote.isEmpty ? nil : driftNote
 
-        // Show feedback IMMEDIATELY, save in background
-        loggedCategoryName = category.rawValue
-        showDriftLogged = true
+        // Show success state inline (don't collapse section)
+        driftLogged = true
         driftNote = ""
-        selectedCategory = nil
 
+        // Save in background
         Task {
             let _ = await viewModel.logDrift(
                 category: category,

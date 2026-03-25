@@ -7,8 +7,6 @@ struct JourneyListView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
 
-    @State private var selectedJourney: Journey?
-
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -27,7 +25,53 @@ struct JourneyListView: View {
 
                     // Active journey card
                     if let active = viewModel.activeJourney {
-                        activeJourneyCard(active)
+                        let prog = viewModel.journeyProgress(for: active.id)
+                        NavigationLink {
+                            JourneyDetailView(journey: active, viewModel: viewModel)
+                        } label: {
+                            VStack(spacing: 12) {
+                                HStack {
+                                    Image(systemName: active.iconName)
+                                        .font(.title3)
+                                        .foregroundColor(ABTheme.sageGreen)
+
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Currently Active")
+                                            .font(.system(.caption2, design: .serif, weight: .semibold))
+                                            .foregroundColor(ABTheme.sageGreen)
+                                        Text(active.title)
+                                            .font(.system(.body, design: .serif, weight: .semibold))
+                                            .foregroundColor(ABTheme.primaryText)
+                                    }
+
+                                    Spacer()
+
+                                    Text("Day \(prog)/\(active.totalDays)")
+                                        .font(.system(.caption, design: .serif, weight: .medium))
+                                        .foregroundColor(ABTheme.secondaryText)
+                                }
+
+                                GeometryReader { geo in
+                                    ZStack(alignment: .leading) {
+                                        RoundedRectangle(cornerRadius: 3)
+                                            .fill(ABTheme.sageGreen.opacity(0.12))
+                                            .frame(height: 6)
+                                        RoundedRectangle(cornerRadius: 3)
+                                            .fill(ABTheme.sageGreen)
+                                            .frame(width: geo.size.width * CGFloat(prog) / CGFloat(active.totalDays), height: 6)
+                                    }
+                                }
+                                .frame(height: 6)
+                            }
+                            .padding(ABTheme.paddingMedium)
+                            .background(ABTheme.sageGreen.opacity(0.06))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                                    .stroke(ABTheme.sageGreen.opacity(0.3), lineWidth: 1)
+                            )
+                            .cornerRadius(ABTheme.cornerRadius)
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     // Free journeys
@@ -35,12 +79,15 @@ struct JourneyListView: View {
                         SectionHeader(title: "Free Journeys", icon: "gift.fill")
 
                         ForEach(Journey.allJourneys.filter { !$0.isPremium }) { journey in
-                            JourneyCard(
-                                journey: journey,
-                                progress: viewModel.journeyProgress(for: journey.id)
-                            ) {
-                                selectedJourney = journey
+                            NavigationLink {
+                                JourneyDetailView(journey: journey, viewModel: viewModel)
+                            } label: {
+                                JourneyCardLabel(
+                                    journey: journey,
+                                    progress: viewModel.journeyProgress(for: journey.id)
+                                )
                             }
+                            .buttonStyle(.plain)
                         }
                     }
 
@@ -49,14 +96,22 @@ struct JourneyListView: View {
                         SectionHeader(title: "Premium Journeys", icon: "crown.fill")
 
                         ForEach(Journey.allJourneys.filter { $0.isPremium }) { journey in
-                            JourneyCard(
-                                journey: journey,
-                                progress: viewModel.journeyProgress(for: journey.id),
-                                isPremiumLocked: !subscriptionManager.isPremium
-                            ) {
-                                if subscriptionManager.isPremium || !journey.isPremium {
-                                    selectedJourney = journey
+                            if subscriptionManager.isPremium {
+                                NavigationLink {
+                                    JourneyDetailView(journey: journey, viewModel: viewModel)
+                                } label: {
+                                    JourneyCardLabel(
+                                        journey: journey,
+                                        progress: viewModel.journeyProgress(for: journey.id)
+                                    )
                                 }
+                                .buttonStyle(.plain)
+                            } else {
+                                JourneyCardLabel(
+                                    journey: journey,
+                                    progress: 0,
+                                    isPremiumLocked: true
+                                )
                             }
                         }
                     }
@@ -71,63 +126,7 @@ struct JourneyListView: View {
             .task {
                 await viewModel.loadUserData()
             }
-            .sheet(item: $selectedJourney) { journey in
-                JourneyDetailView(journey: journey, viewModel: viewModel)
-            }
         }
-    }
-
-    // MARK: - Active Journey Card
-    private func activeJourneyCard(_ journey: Journey) -> some View {
-        let progress = viewModel.journeyProgress(for: journey.id)
-        return Button {
-            selectedJourney = journey
-        } label: {
-            VStack(spacing: 12) {
-                HStack {
-                    Image(systemName: journey.iconName)
-                        .font(.title3)
-                        .foregroundColor(ABTheme.sageGreen)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Currently Active")
-                            .font(.system(.caption2, design: .serif, weight: .semibold))
-                            .foregroundColor(ABTheme.sageGreen)
-                        Text(journey.title)
-                            .font(.system(.body, design: .serif, weight: .semibold))
-                            .foregroundColor(ABTheme.primaryText)
-                    }
-
-                    Spacer()
-
-                    Text("Day \(progress)/\(journey.totalDays)")
-                        .font(.system(.caption, design: .serif, weight: .medium))
-                        .foregroundColor(ABTheme.secondaryText)
-                }
-
-                // Mini progress bar
-                GeometryReader { geo in
-                    ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(ABTheme.sageGreen.opacity(0.12))
-                            .frame(height: 6)
-
-                        RoundedRectangle(cornerRadius: 3)
-                            .fill(ABTheme.sageGreen)
-                            .frame(width: geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays), height: 6)
-                    }
-                }
-                .frame(height: 6)
-            }
-            .padding(ABTheme.paddingMedium)
-            .background(ABTheme.sageGreen.opacity(0.06))
-            .overlay(
-                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                    .stroke(ABTheme.sageGreen.opacity(0.3), lineWidth: 1)
-            )
-            .cornerRadius(ABTheme.cornerRadius)
-        }
-        .buttonStyle(.plain)
     }
 }
 
@@ -148,12 +147,11 @@ struct SectionHeader: View {
     }
 }
 
-// MARK: - Journey Card
-struct JourneyCard: View {
+// MARK: - Journey Card Label
+struct JourneyCardLabel: View {
     let journey: Journey
     var progress: Int = 0
     var isPremiumLocked: Bool = false
-    let action: () -> Void
 
     private var coverColor: Color {
         switch journey.coverColorName {
@@ -167,66 +165,61 @@ struct JourneyCard: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: ABTheme.paddingMedium) {
-                // Icon
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(coverColor.opacity(0.2))
-                        .frame(width: 60, height: 60)
+        HStack(spacing: ABTheme.paddingMedium) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(coverColor.opacity(0.2))
+                    .frame(width: 60, height: 60)
 
-                    Image(systemName: journey.iconName)
-                        .font(.title2)
-                        .foregroundColor(coverColor)
-                }
-
-                // Details
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(journey.title)
-                            .font(.system(.body, design: .serif, weight: .semibold))
-                            .foregroundColor(ABTheme.primaryText)
-
-                        if isPremiumLocked {
-                            Image(systemName: "lock.fill")
-                                .font(.caption2)
-                                .foregroundColor(ABTheme.warmGold)
-                        }
-                    }
-
-                    Text(journey.subtitle)
-                        .font(.system(.caption, design: .serif))
-                        .foregroundColor(ABTheme.secondaryText)
-
-                    HStack(spacing: 4) {
-                        if progress > 0 {
-                            Text("Day \(progress)/\(journey.totalDays)")
-                                .font(.caption2)
-                                .foregroundColor(ABTheme.sageGreen)
-                            Text("·")
-                                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
-                        }
-                        Image(systemName: "calendar")
-                            .font(.caption2)
-                        Text("\(journey.totalDays) days")
-                            .font(.caption2)
-                        Text("·")
-                        Text(journey.scriptureTheme)
-                            .font(.caption2)
-                    }
-                    .foregroundColor(ABTheme.secondaryText.opacity(0.7))
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundColor(ABTheme.secondaryText)
+                Image(systemName: journey.iconName)
+                    .font(.title2)
+                    .foregroundColor(coverColor)
             }
-            .abCard()
-            .opacity(isPremiumLocked ? 0.75 : 1.0)
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(journey.title)
+                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+
+                    if isPremiumLocked {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                            .foregroundColor(ABTheme.warmGold)
+                    }
+                }
+
+                Text(journey.subtitle)
+                    .font(.system(.caption, design: .serif))
+                    .foregroundColor(ABTheme.secondaryText)
+
+                HStack(spacing: 4) {
+                    if progress > 0 {
+                        Text("Day \(progress)/\(journey.totalDays)")
+                            .font(.caption2)
+                            .foregroundColor(ABTheme.sageGreen)
+                        Text("·")
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                    }
+                    Image(systemName: "calendar")
+                        .font(.caption2)
+                    Text("\(journey.totalDays) days")
+                        .font(.caption2)
+                    Text("·")
+                    Text(journey.scriptureTheme)
+                        .font(.caption2)
+                }
+                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundColor(ABTheme.secondaryText)
         }
-        .buttonStyle(.plain)
+        .abCard()
+        .opacity(isPremiumLocked ? 0.75 : 1.0)
     }
 }
 
@@ -234,7 +227,6 @@ struct JourneyCard: View {
 struct JourneyDetailView: View {
     let journey: Journey
     @ObservedObject var viewModel: AppViewModel
-    @Environment(\.dismiss) private var dismiss
     @State private var journeyStarted = false
 
     private var progress: Int {
@@ -242,8 +234,7 @@ struct JourneyDetailView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
+        ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
                     // Hero section
                     VStack(spacing: ABTheme.paddingMedium) {
@@ -396,13 +387,8 @@ struct JourneyDetailView: View {
                 .padding(.top, ABTheme.paddingMedium)
             }
             .abScreenBackground()
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Close") { dismiss() }
-                        .foregroundColor(ABTheme.sageGreen)
-                }
-            }
-        }
+            .navigationTitle(journey.title)
+            .navigationBarTitleDisplayMode(.inline)
     }
 }
 
