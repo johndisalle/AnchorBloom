@@ -241,6 +241,7 @@ struct JourneyDetailView: View {
     @ObservedObject var viewModel: AppViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showProgressView = false
+    @State private var isBeginning = false
 
     private var progress: Int {
         viewModel.journeyProgress(for: journey.id)
@@ -337,17 +338,25 @@ struct JourneyDetailView: View {
                     } else {
                         // Begin journey
                         Button {
+                            isBeginning = true
                             Task {
                                 await viewModel.beginJourney(journey.id)
-                                showProgressView = true
+                                isBeginning = false
+                                dismiss()
                             }
                         } label: {
                             HStack {
-                                Image(systemName: "play.fill")
-                                Text("Begin This Journey")
+                                if isBeginning {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "play.fill")
+                                }
+                                Text(isBeginning ? "Starting..." : "Begin This Journey")
                             }
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
+                        .disabled(isBeginning)
                     }
 
                     Spacer().frame(height: 40)

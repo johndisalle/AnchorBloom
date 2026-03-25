@@ -9,6 +9,8 @@ struct DriftLogView: View {
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
     @State private var showHistory = false
+    @State private var showConfirmation = false
+    @State private var confirmedCategory: DriftCategory?
 
     init() {
         _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: FirestoreService()))
@@ -41,6 +43,14 @@ struct DriftLogView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await viewModel.loadUserData()
+            }
+            .overlay(alignment: .top) {
+                if showConfirmation, let category = confirmedCategory {
+                    DriftConfirmationBanner(category: category)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .padding(.top, 8)
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                }
             }
         }
     }
@@ -184,14 +194,27 @@ struct DriftLogView: View {
 
     // MARK: - Log Drift
     private func logDrift(category: DriftCategory) {
+        let cat = category
         Task {
             await viewModel.logDrift(
-                category: category,
+                category: cat,
                 note: driftNote.isEmpty ? nil : driftNote,
                 prayerPlayed: false
             )
             driftNote = ""
             selectedCategory = nil
+
+            // Show confirmation banner
+            confirmedCategory = cat
+            withAnimation(.spring(response: 0.4)) {
+                showConfirmation = true
+            }
+
+            // Auto-dismiss after 2.5 seconds
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            withAnimation(.easeOut(duration: 0.3)) {
+                showConfirmation = false
+            }
         }
     }
 }
@@ -223,6 +246,35 @@ struct DriftCategoryButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+}
+
+// MARK: - Drift Confirmation Banner
+struct DriftConfirmationBanner: View {
+    let category: DriftCategory
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title3)
+                .foregroundColor(.white)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Drift Logged & Anchored")
+                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                    .foregroundColor(.white)
+
+                Text("You acknowledged your \(category.rawValue.lowercased()) drift. God sees you.")
+                    .font(.system(.caption2, design: .serif))
+                    .foregroundColor(.white.opacity(0.85))
+            }
+
+            Spacer()
+        }
+        .padding(ABTheme.paddingMedium)
+        .background(ABTheme.sageGreen)
+        .cornerRadius(ABTheme.cornerRadius)
+        .shadow(color: ABTheme.sageGreen.opacity(0.3), radius: 8, x: 0, y: 4)
     }
 }
 
