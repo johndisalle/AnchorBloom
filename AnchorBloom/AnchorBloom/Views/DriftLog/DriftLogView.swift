@@ -86,6 +86,7 @@ struct DriftLogView: View {
                     category: category,
                     isSelected: selectedCategory == category
                 ) {
+                    UISelectionFeedbackGenerator().selectionChanged()
                     withAnimation(.spring(response: 0.3)) {
                         if selectedCategory == category {
                             selectedCategory = nil
@@ -176,6 +177,7 @@ struct DriftLogView: View {
                     let note = driftNote.isEmpty ? nil : driftNote
                     driftLogged = true
                     driftNote = ""
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                     Task {
                         await viewModel.logDrift(
                             category: category,

@@ -287,6 +287,7 @@ struct BloomView: View {
                 reflection: reflectionText.isEmpty ? nil : reflectionText,
                 roles: Array(selectedRoles)
             )
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             withAnimation(.spring(response: 0.4)) {
                 showCompletionAnimation = true
             }

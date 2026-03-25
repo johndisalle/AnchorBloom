@@ -270,6 +270,7 @@ struct AnchorView: View {
                 tags: Array(selectedTags),
                 scriptureRef: todayPrompt.scriptureReference
             )
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
             withAnimation(.spring(response: 0.4)) {
                 showCompletionAnimation = true
             }

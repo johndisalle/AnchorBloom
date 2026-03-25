@@ -315,6 +315,108 @@ struct DailyPrompt {
         ),
     ]
 
+    // MARK: - Premium Deeper Reflections
+    /// Additional deeper reflection questions for premium users
+    static let premiumMorningReflections: [String] = [
+        "Journal prompt: Write a letter to yourself from God's perspective, using today's scripture as the foundation. What would He say about your current season?",
+        "Go deeper: Read the full chapter surrounding today's verse. What context changes how you understand it? How does the bigger story speak to your life?",
+        "Cross-reference: Today's truth connects to Psalm 139. Read both passages together. What pattern of God's character do you see across Scripture?",
+        "Meditate: Read today's verse three times slowly. The first time, listen for a word that stands out. The second time, ask God why. The third time, receive His answer.",
+        "Journal prompt: What would your life look like if you fully believed today's scripture? Write about one specific area where this truth would change your actions.",
+        "Go deeper: Research the original Hebrew or Greek meaning of one key word in today's verse. How does the deeper meaning enrich your understanding?",
+        "Cross-reference: Compare today's verse with Romans 8:28-39. How do these truths together build an unshakeable foundation for your identity?",
+        "Meditate: Sit in silence for 2 minutes after reading today's verse. Don't analyze — just listen. Write down whatever the Holy Spirit brings to mind.",
+        "Journal prompt: Write about a time when the opposite of today's truth felt more real. How did God bring you back? What did that journey teach you?",
+        "Go deeper: Imagine you're teaching today's scripture to your daughter, niece, or younger sister. How would you explain it? What story would you tell?",
+        "Cross-reference: Today's verse echoes Isaiah 43:1-4. Read both and notice how God's love is personal, not generic. Write your name into the passage.",
+        "Meditate: Pray today's scripture back to God in your own words. Turn His promises into personal declarations over your life.",
+        "Journal prompt: What stronghold or lie has the enemy been using against you? Write today's truth as a weapon against it. Speak it out loud.",
+        "Go deeper: Study the life of the biblical woman closest to today's theme. What can you learn from her faith, mistakes, and courage?",
+        "Cross-reference: Connect today's verse to Ephesians 6:10-18. Which piece of the armor of God does this truth represent? How will you wear it today?",
+        "Meditate: Choose one phrase from today's scripture. Repeat it with every breath for 60 seconds. Let it become the rhythm of your morning.",
+        "Journal prompt: Write three specific ways you will live out today's truth before the sun sets. Make them actionable, not abstract.",
+        "Go deeper: What cultural lie does today's scripture directly oppose? How has the world tried to redefine this truth? Stand firm in God's version.",
+        "Cross-reference: Read Proverbs 31 alongside today's verse. How does the Proverbs 31 woman model the truth you're studying?",
+        "Meditate: Draw or sketch something that represents today's verse. Art opens a different door to hearing God — let your creativity be worship.",
+        "Journal prompt: Who in your life needs to hear today's truth? Write them a note or text sharing the verse and what it means to you.",
+        "Go deeper: How would embracing today's truth change your marriage, friendships, or parenting? Get specific about one relationship.",
+        "Cross-reference: Today's verse pairs beautifully with Lamentations 3:22-23. How do mercy, faithfulness, and today's theme weave together?",
+        "Meditate: Take a prayer walk. With each step, meditate on a different word from today's scripture. Let movement and truth combine.",
+        "Journal prompt: If fear wasn't a factor, how would today's truth change the way you show up? Write about your fearless version.",
+        "Go deeper: Find a worship song that echoes today's scripture. Listen to it as an act of worship and write what stirs in your heart.",
+        "Cross-reference: Pair today's verse with 2 Corinthians 12:9-10. How does God's strength in weakness connect to today's truth?",
+        "Meditate: Write today's verse on a sticky note and place it where you'll see it all day. Each time you read it, whisper a one-sentence prayer.",
+        "Journal prompt: What season of life are you in? Write about how today's truth applies specifically to THIS season — not a past or future one.",
+        "Go deeper: End your morning anchor by writing a psalm of your own, inspired by today's verse. Pour out your heart like David did.",
+    ]
+
+    static let premiumEveningReflections: [String] = [
+        "Evening journal: Write about a specific moment today when you felt God's presence. Describe it in detail — what were you doing, feeling, sensing?",
+        "Go deeper: Review your day through the lens of the fruit of the Spirit. Which fruits were evident? Which felt absent? No judgment — just awareness.",
+        "Gratitude deep dive: List 10 specific things from today you're grateful for. Challenge yourself to include things you might normally overlook.",
+        "Cross-reference: Read Psalm 4:8 alongside tonight's verse. How do both speak to the peace God offers at the end of a long day?",
+        "Evening journal: Write a confession and a celebration. One area you fell short, and one area you walked in obedience. God holds both with grace.",
+        "Go deeper: Who did you serve today without being asked? Who served you? Reflect on how the body of Christ showed up in your day.",
+        "Gratitude deep dive: Write a thank-you letter to God for one specific thing He did in your life today. Be detailed and personal.",
+        "Cross-reference: Read Psalm 63:6-8 with tonight's verse. David meditated on God through the night watches. What truth will you take into sleep?",
+        "Evening journal: Describe a conversation from today. How did you show grace? Where could you have shown more? Ask God for growth, not guilt.",
+        "Go deeper: What surprised you today? Where did God show up unexpectedly? His faithfulness often appears in the unplanned moments.",
+        "Gratitude deep dive: Thank God for one difficulty from today. How might He be using it for your growth? Trust His process even when it's hard.",
+        "Cross-reference: Pair tonight's verse with Matthew 11:28-30. How is Jesus offering you rest right now? Lay your burdens at His feet.",
+        "Evening journal: Rate your day from 1-10 on three scales: peace, purpose, and presence with God. Write one sentence about each score.",
+        "Go deeper: What idol competed for your heart today — approval, control, comfort, or success? Name it without shame and surrender it.",
+        "Gratitude deep dive: Think about one person who made your day better. Pray a specific blessing over their life right now.",
+        "Cross-reference: Read Psalm 91 alongside tonight's verse. How does God's protection and presence wrap around you as you rest?",
+        "Evening journal: What would you do differently if you could relive today? Not with regret — but with the wisdom God is building in you.",
+        "Go deeper: Where did you see beauty today — in creation, a person, a moment? Beauty is God's signature. Write about finding Him in the ordinary.",
+        "Gratitude deep dive: Write about a prayer God answered today — even partially. Answered prayer builds faith for tomorrow's requests.",
+        "Cross-reference: Read Philippians 1:6 with tonight's verse. God began a good work in you and He will complete it. Reflect on your progress.",
+        "Evening journal: Write about one way you mothered, mentored, or nurtured someone today — even if it felt small. It wasn't small to them.",
+        "Go deeper: How did you steward your time today? Not with perfectionism — but with honesty. What matters most got your attention?",
+        "Gratitude deep dive: Thank God for your body and what it allowed you to do today. We often forget to be grateful for the vessel He gave us.",
+        "Cross-reference: Read Psalm 121 with tonight's verse. Your help comes from the Lord. Reflect on every way He helped you today.",
+        "Evening journal: What truth do you want to carry into tomorrow? Write it down as a declaration you'll read when you wake up.",
+        "Go deeper: Forgiveness check — is there anyone you need to release tonight? Unforgiveness is a heavy blanket. Let God take it before you sleep.",
+        "Gratitude deep dive: Name three character qualities God is developing in you through this season. Celebrate the becoming, not just the being.",
+        "Cross-reference: Read Isaiah 40:31 with tonight's verse. You may be tired, but those who hope in the Lord will renew their strength.",
+        "Evening journal: Write a one-paragraph prayer for tomorrow. Surrender the unknowns. Claim God's promises. Release control and receive peace.",
+        "Go deeper: As you close this day, read Song of Solomon 2:10-13. You are God's beloved. Rest in that identity tonight — nothing you did or didn't do changes it.",
+    ]
+
+    /// Scripture reminders for premium notifications throughout the day
+    static let scriptureReminders: [(scripture: String, reference: String)] = [
+        ("Be still, and know that I am God.", "Psalm 46:10"),
+        ("The Lord is my strength and my shield; my heart trusts in him.", "Psalm 28:7"),
+        ("Cast all your anxiety on him because he cares for you.", "1 Peter 5:7"),
+        ("I can do all things through Christ who strengthens me.", "Philippians 4:13"),
+        ("The Lord your God is with you, the Mighty Warrior who saves.", "Zephaniah 3:17"),
+        ("His mercies are new every morning; great is His faithfulness.", "Lamentations 3:23"),
+        ("God is within her, she will not fall.", "Psalm 46:5"),
+        ("She is clothed with strength and dignity.", "Proverbs 31:25"),
+        ("For I know the plans I have for you, declares the Lord.", "Jeremiah 29:11"),
+        ("The Lord will fight for you; you need only to be still.", "Exodus 14:14"),
+        ("He makes me lie down in green pastures, he leads me beside quiet waters.", "Psalm 23:2"),
+        ("You are fearfully and wonderfully made.", "Psalm 139:14"),
+        ("Trust in the Lord with all your heart.", "Proverbs 3:5"),
+        ("My grace is sufficient for you, for my power is made perfect in weakness.", "2 Corinthians 12:9"),
+        ("The joy of the Lord is your strength.", "Nehemiah 8:10"),
+        ("He who began a good work in you will carry it on to completion.", "Philippians 1:6"),
+        ("Do not be anxious about anything, but in every situation, by prayer, present your requests to God.", "Philippians 4:6"),
+        ("For God has not given us a spirit of fear, but of power, love, and self-control.", "2 Timothy 1:7"),
+        ("The Lord is close to the brokenhearted.", "Psalm 34:18"),
+        ("But those who hope in the Lord will renew their strength.", "Isaiah 40:31"),
+        ("Above all else, guard your heart, for everything you do flows from it.", "Proverbs 4:23"),
+        ("Let the peace of Christ rule in your hearts.", "Colossians 3:15"),
+        ("She opens her mouth with wisdom, and the teaching of kindness is on her tongue.", "Proverbs 31:26"),
+        ("Delight yourself in the Lord, and he will give you the desires of your heart.", "Psalm 37:4"),
+        ("Come to me, all you who are weary, and I will give you rest.", "Matthew 11:28"),
+        ("In all things God works for the good of those who love him.", "Romans 8:28"),
+        ("The name of the Lord is a fortified tower; the righteous run to it and are safe.", "Proverbs 18:10"),
+        ("Many women do noble things, but you surpass them all.", "Proverbs 31:29"),
+        ("Blessed is she who has believed that the Lord would fulfill his promises to her!", "Luke 1:45"),
+        ("Whatever is true, whatever is noble, whatever is right... think about such things.", "Philippians 4:8"),
+    ]
+
     // MARK: - Get Prompt for Date
     /// Returns a rotating morning prompt based on the day of the year
     static func morningPrompt(for date: Date) -> DailyPrompt {
@@ -326,5 +428,24 @@ struct DailyPrompt {
     static func eveningPrompt(for date: Date) -> DailyPrompt {
         let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
         return eveningPrompts[(dayOfYear - 1) % eveningPrompts.count]
+    }
+
+    /// Returns the premium deeper reflection for the morning
+    static func premiumMorningReflection(for date: Date) -> String {
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
+        return premiumMorningReflections[(dayOfYear - 1) % premiumMorningReflections.count]
+    }
+
+    /// Returns the premium deeper reflection for the evening
+    static func premiumEveningReflection(for date: Date) -> String {
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
+        return premiumEveningReflections[(dayOfYear - 1) % premiumEveningReflections.count]
+    }
+
+    /// Returns the scripture reminder for a given day and slot (0-2)
+    static func scriptureReminder(for date: Date, slot: Int) -> (scripture: String, reference: String) {
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: date) ?? 1
+        let index = ((dayOfYear - 1) * 3 + slot) % scriptureReminders.count
+        return scriptureReminders[index]
     }
 }

@@ -68,6 +68,7 @@ struct ScriptureActionButtons: View {
     }
 
     private func toggleBookmark() {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         Task {
             if isBookmarked {
                 await firestoreService.removeBookmark(reference: reference)

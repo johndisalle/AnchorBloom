@@ -128,6 +128,9 @@ struct CirclesListView: View {
             .abScreenBackground()
             .navigationTitle("Circles")
             .navigationBarTitleDisplayMode(.inline)
+            .refreshable {
+                await loadCircles()
+            }
             .task {
                 await loadCircles()
             }
@@ -322,6 +325,7 @@ struct CreateCircleView: View {
 
         Task {
             _ = try? await firestoreService.createCircle(circle)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             onCreated(circle)
             dismiss()
         }
@@ -664,6 +668,7 @@ struct CirclePostView: View {
 
     private func toggleLike() {
         guard let postID = post.id else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
         isLiked.toggle()
         likeCount += isLiked ? 1 : -1
         Task {

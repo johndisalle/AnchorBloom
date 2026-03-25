@@ -7,6 +7,7 @@ struct MyVersesView: View {
     @State private var bookmarks: [BookmarkedVerse] = []
     @State private var isLoading = false
     @State private var selectedVerse: BookmarkedVerse?
+    @State private var verseToDelete: BookmarkedVerse?
 
     var body: some View {
         NavigationStack {
@@ -39,7 +40,7 @@ struct MyVersesView: View {
                             BookmarkedVerseCard(verse: verse) {
                                 selectedVerse = verse
                             } onDelete: {
-                                removeBookmark(verse)
+                                verseToDelete = verse
                             }
                         }
                     }
@@ -56,6 +57,24 @@ struct MyVersesView: View {
             }
             .sheet(item: $selectedVerse) { verse in
                 VerseShareSheet(verseText: verse.verseText, reference: verse.reference)
+            }
+            .alert("Remove Verse?", isPresented: Binding(
+                get: { verseToDelete != nil },
+                set: { if !$0 { verseToDelete = nil } }
+            )) {
+                Button("Cancel", role: .cancel) {
+                    verseToDelete = nil
+                }
+                Button("Remove", role: .destructive) {
+                    if let verse = verseToDelete {
+                        removeBookmark(verse)
+                        verseToDelete = nil
+                    }
+                }
+            } message: {
+                if let verse = verseToDelete {
+                    Text("Remove \"\(verse.reference)\" from your saved verses?")
+                }
             }
         }
     }

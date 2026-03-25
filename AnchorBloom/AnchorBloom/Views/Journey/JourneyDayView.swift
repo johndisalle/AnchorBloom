@@ -262,6 +262,7 @@ struct JourneyDayView: View {
         isCompleting = true
         Task {
             await viewModel.completeJourneyDay(journeyID: journey.id, day: dayNumber)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             withAnimation(.spring(response: 0.4)) {
                 showCompletion = true
             }
