@@ -22,8 +22,6 @@ struct AnchorBloomApp: App {
     @StateObject private var subscriptionManager = SubscriptionManager()
     @StateObject private var notificationManager = NotificationManager()
 
-    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
-
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -31,7 +29,6 @@ struct AnchorBloomApp: App {
                 .environmentObject(firestoreService)
                 .environmentObject(subscriptionManager)
                 .environmentObject(notificationManager)
-                .preferredColorScheme(appearanceMode.colorScheme)
         }
     }
 }
@@ -40,6 +37,7 @@ struct AnchorBloomApp: App {
 struct RootView: View {
     @EnvironmentObject var authManager: AuthManager
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
     var body: some View {
         Group {
@@ -53,6 +51,7 @@ struct RootView: View {
         }
         .animation(.easeInOut(duration: 0.3), value: authManager.isAuthenticated)
         .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)
+        .preferredColorScheme(appearanceMode.colorScheme)
     }
 }
 
