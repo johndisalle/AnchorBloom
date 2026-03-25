@@ -44,6 +44,43 @@ struct DashboardView: View {
                     // Daily action cards
                     dailyActionsSection
 
+                    // Active goals (premium)
+                    if subscriptionManager.isPremium {
+                        let activeGoals = viewModel.spiritualGoals.filter { !$0.isCompleted }
+                        if !activeGoals.isEmpty {
+                            VStack(alignment: .leading, spacing: ABTheme.paddingSmall) {
+                                HStack {
+                                    Image(systemName: "target")
+                                        .foregroundColor(ABTheme.warmGold)
+                                    Text("Active Goals")
+                                        .font(ABTheme.subheadlineFont)
+                                        .foregroundColor(ABTheme.primaryText)
+                                }
+
+                                ForEach(activeGoals.prefix(2)) { goal in
+                                    HStack(spacing: 10) {
+                                        Image(systemName: goal.category.icon)
+                                            .foregroundColor(ABTheme.sageGreen)
+                                            .frame(width: 20)
+
+                                        Text(goal.title)
+                                            .font(.system(.caption, design: .serif))
+                                            .foregroundColor(ABTheme.primaryText)
+                                            .lineLimit(1)
+
+                                        Spacer()
+
+                                        Text("\(goal.completedDays)/\(goal.targetDays)")
+                                            .font(.system(.caption2, design: .serif, weight: .bold))
+                                            .foregroundColor(ABTheme.sageGreen)
+                                    }
+                                    .padding(.vertical, 6)
+                                }
+                            }
+                            .abCard()
+                        }
+                    }
+
                     // Quick stats row
                     statsRow
 

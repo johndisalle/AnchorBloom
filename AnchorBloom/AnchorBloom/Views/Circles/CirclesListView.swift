@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 // MARK: - Circles List View
 /// Sister Circles: private small groups for encouragement
@@ -11,6 +12,7 @@ struct CirclesListView: View {
     @State private var showJoinCircle = false
     @State private var selectedCircle: SisterCircle?
     @State private var isLoading = false
+    @State private var showUpgradePrompt = false
 
     var body: some View {
         NavigationStack {
@@ -36,7 +38,13 @@ struct CirclesListView: View {
                     // Action buttons
                     HStack(spacing: 12) {
                         Button {
-                            showCreateCircle = true
+                            let userID = FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
+                            let createdCount = circles.filter { $0.creatorID == userID }.count
+                            if !subscriptionManager.isPremium && createdCount >= SisterCircle.maxFreeCircles {
+                                showUpgradePrompt = true
+                            } else {
+                                showCreateCircle = true
+                            }
                         } label: {
                             HStack {
                                 Image(systemName: "plus.circle.fill")
@@ -113,6 +121,9 @@ struct CirclesListView: View {
             }
             .sheet(item: $selectedCircle) { circle in
                 CircleDetailView(circle: circle)
+            }
+            .sheet(isPresented: $showUpgradePrompt) {
+                SubscriptionView()
             }
         }
     }
@@ -252,7 +263,7 @@ struct CreateCircleView: View {
         let circle = SisterCircle(
             name: name,
             description: description,
-            creatorID: "",
+            creatorID: Auth.auth().currentUser?.uid ?? "",
             memberIDs: [],
             memberNames: [:],
             createdAt: Date(),

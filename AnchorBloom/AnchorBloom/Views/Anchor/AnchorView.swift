@@ -4,6 +4,7 @@ import SwiftUI
 /// Daily morning devotional: Scripture → Drift tags → Reflection prompt → Response → Open in prayer
 struct AnchorView: View {
     @ObservedObject var viewModel: AppViewModel
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var reflectionText = ""
@@ -27,6 +28,11 @@ struct AnchorView: View {
 
                     // 3. Today's Reflection
                     reflectionPromptCard
+
+                    // 3b. Premium Deeper Reflection
+                    if subscriptionManager.isPremium {
+                        deeperReflectionCard
+                    }
 
                     // 4. Your reflection response box
                     reflectionSection
@@ -147,6 +153,29 @@ struct AnchorView: View {
                 .lineSpacing(4)
         }
         .abCard()
+    }
+
+    // MARK: - 3b. Premium Deeper Reflection
+    private var deeperReflectionCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "crown.fill")
+                    .foregroundColor(ABTheme.warmGold)
+                Text("Go Deeper")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            Text(DailyPrompt.premiumMorningReflection(for: Date()))
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineSpacing(4)
+        }
+        .abCard()
+        .overlay(
+            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                .stroke(ABTheme.warmGold.opacity(0.3), lineWidth: 1)
+        )
     }
 
     // MARK: - 4. Your Reflection Response Box

@@ -9,6 +9,7 @@ final class AppViewModel: ObservableObject {
     @Published var userProfile: UserProfile?
     @Published var todayEntry: DailyEntry?
     @Published var recentEntries: [DailyEntry] = []
+    @Published var spiritualGoals: [SpiritualGoal] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
 
@@ -30,6 +31,7 @@ final class AppViewModel: ObservableObject {
             // Load recent entries for progress
             let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
             recentEntries = try await firestoreService.fetchEntries(from: thirtyDaysAgo, to: Date())
+            spiritualGoals = try await firestoreService.fetchGoals()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -167,6 +169,70 @@ final class AppViewModel: ObservableObject {
         try? await firestoreService.saveUserProfile(profile)
         // NOT setting self.userProfile here — that would trigger a
         // re-render which dismisses sheets / pops navigation
+    }
+
+    // MARK: - Spiritual Goals
+
+    /// Create a new spiritual goal
+    func createGoal(title: String, category: GoalCategory, targetDays: Int) async {
+        guard let userID = userProfile?.id ?? Auth.auth().currentUser?.uid else { return }
+        let goal = SpiritualGoal(
+            userID: userID,
+            title: title,
+            category: category,
+            targetDays: targetDays,
+            completedDays: 0,
+            startDate: Date(),
+            isCompleted: false,
+            createdAt: Date()
+        )
+        do {
+            try await firestoreService.saveGoal(goal)
+            spiritualGoals = try await firestoreService.fetchGoals()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Increment progress on a goal
+    func incrementGoal(_ goalID: String) async {
+        do {
+            try await firestoreService.incrementGoalProgress(goalID: goalID)
+            spiritualGoals = try await firestoreService.fetchGoals()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Delete a goal
+    func deleteGoal(_ goalID: String) async {
+        do {
+            try await firestoreService.deleteGoal(goalID: goalID)
+            spiritualGoals.removeAll { $0.id == goalID }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Computed properties for insights
+    var topDriftCategories: [(category: DriftCategory, count: Int)] {
+        var counts: [DriftCategory: Int] = [:]
+        for entry in recentEntries {
+            for drift in entry.driftEntries {
+                counts[drift.category, default: 0] += 1
+            }
+        }
+        return counts.sorted { $0.value > $1.value }.prefix(3).map { ($0.key, $0.value) }
+    }
+
+    var topBloomRoles: [(role: BloomRole, count: Int)] {
+        var counts: [BloomRole: Int] = [:]
+        for entry in recentEntries {
+            for role in entry.bloomRoles {
+                counts[role, default: 0] += 1
+            }
+        }
+        return counts.sorted { $0.value > $1.value }.prefix(3).map { ($0.key, $0.value) }
     }
 
     /// Mark a journey day as complete and advance progress

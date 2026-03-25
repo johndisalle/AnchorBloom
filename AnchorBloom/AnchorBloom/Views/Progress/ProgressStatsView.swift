@@ -4,9 +4,11 @@ import SwiftUI
 /// Tree visualization, streak calendar, badge gallery, weekly summaries
 struct ProgressStatsView: View {
     @ObservedObject var viewModel: AppViewModel
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedTab = 0
+    @State private var showCreateGoal = false
 
     var body: some View {
         NavigationStack {
@@ -17,6 +19,9 @@ struct ProgressStatsView: View {
                     Text("Journeys").tag(1)
                     Text("Calendar").tag(2)
                     Text("Badges").tag(3)
+                    if subscriptionManager.isPremium {
+                        Text("Insights").tag(4)
+                    }
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, ABTheme.paddingMedium)
@@ -27,6 +32,9 @@ struct ProgressStatsView: View {
                     journeysTab.tag(1)
                     calendarTab.tag(2)
                     badgesTab.tag(3)
+                    if subscriptionManager.isPremium {
+                        insightsTab.tag(4)
+                    }
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
             }
@@ -88,8 +96,309 @@ struct ProgressStatsView: View {
                 weeklyBreakdown
                     .padding(.horizontal, ABTheme.paddingMedium)
 
+                // Spiritual Goals (Premium)
+                if subscriptionManager.isPremium {
+                    goalsSection
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                }
+
                 Spacer().frame(height: 40)
             }
+        }
+    }
+
+    // MARK: - Goals Section
+    private var goalsSection: some View {
+        VStack(alignment: .leading, spacing: ABTheme.paddingSmall) {
+            HStack {
+                Image(systemName: "target")
+                    .foregroundColor(ABTheme.warmGold)
+                Text("Spiritual Goals")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+
+                Spacer()
+
+                Button {
+                    showCreateGoal = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+
+            let activeGoals = viewModel.spiritualGoals.filter { !$0.isCompleted }
+            let completedGoals = viewModel.spiritualGoals.filter { $0.isCompleted }
+
+            if activeGoals.isEmpty && completedGoals.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "target")
+                        .font(.title2)
+                        .foregroundColor(ABTheme.secondaryText.opacity(0.4))
+                    Text("No goals yet")
+                        .font(ABTheme.captionFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                    Button("Set Your First Goal") {
+                        showCreateGoal = true
+                    }
+                    .font(.system(.caption, design: .serif, weight: .semibold))
+                    .foregroundColor(ABTheme.sageGreen)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, ABTheme.paddingLarge)
+            } else {
+                ForEach(activeGoals) { goal in
+                    GoalCard(goal: goal, viewModel: viewModel)
+                }
+
+                if !completedGoals.isEmpty {
+                    Text("Completed")
+                        .font(.system(.caption2, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.secondaryText)
+                        .padding(.top, 4)
+
+                    ForEach(completedGoals.prefix(3)) { goal in
+                        GoalCard(goal: goal, viewModel: viewModel)
+                    }
+                }
+            }
+        }
+        .abCard()
+        .sheet(isPresented: $showCreateGoal) {
+            CreateGoalView(viewModel: viewModel)
+        }
+    }
+
+    // MARK: - Insights Tab (Premium)
+    private var insightsTab: some View {
+        ScrollView {
+            VStack(spacing: ABTheme.paddingLarge) {
+                Text("Growth Insights")
+                    .font(ABTheme.headlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+                    .padding(.top, ABTheme.paddingMedium)
+
+                // Weekly Summary Card
+                weeklySummaryCard
+                    .padding(.horizontal, ABTheme.paddingMedium)
+
+                // 14-day activity chart
+                activityChart
+                    .padding(.horizontal, ABTheme.paddingMedium)
+
+                // Top drift categories
+                if !viewModel.topDriftCategories.isEmpty {
+                    topDriftSection
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                }
+
+                // Top bloom roles
+                if !viewModel.topBloomRoles.isEmpty {
+                    topBloomSection
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                }
+
+                Spacer().frame(height: 40)
+            }
+        }
+    }
+
+    // MARK: - Weekly Summary Card
+    private var weeklySummaryCard: some View {
+        let last7 = viewModel.recentEntries.suffix(7)
+        let daysCompleted = last7.filter { $0.isFullyCompleted }.count
+        let anchors = last7.filter { $0.anchorCompleted }.count
+        let blooms = last7.filter { $0.bloomCompleted }.count
+        let drifts = last7.flatMap { $0.driftEntries }.count
+        let topDrift = viewModel.topDriftCategories.first?.category.rawValue ?? "none"
+        let topRole = viewModel.topBloomRoles.first?.role.rawValue ?? "none"
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "doc.text.fill")
+                    .foregroundColor(ABTheme.warmGold)
+                Text("This Week's Report")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            Text("You completed \(daysCompleted) of 7 days this week with \(anchors) anchors and \(blooms) blooms. \(drifts > 0 ? "Your most common drift was \(topDrift.lowercased())." : "No drifts logged — standing strong!") \(blooms > 0 ? "You walked most as a \(topRole)." : "")")
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineSpacing(4)
+
+            // Completion rate
+            HStack {
+                Text("Weekly completion")
+                    .font(.system(.caption, design: .serif))
+                    .foregroundColor(ABTheme.secondaryText)
+                Spacer()
+                Text("\(daysCompleted)/7 days")
+                    .font(.system(.caption, design: .serif, weight: .bold))
+                    .foregroundColor(ABTheme.sageGreen)
+            }
+
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(ABTheme.sageGreen.opacity(0.12))
+                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(ABTheme.sageGreen)
+                        .frame(width: geo.size.width * CGFloat(daysCompleted) / 7.0, height: 6)
+                }
+            }
+            .frame(height: 6)
+        }
+        .abCard()
+        .overlay(
+            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                .stroke(ABTheme.warmGold.opacity(0.3), lineWidth: 1)
+        )
+    }
+
+    // MARK: - Activity Chart (Simple bar chart)
+    private var activityChart: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "chart.bar.fill")
+                    .foregroundColor(ABTheme.sageGreen)
+                Text("14-Day Activity")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            let last14 = last14DaysActivity()
+
+            HStack(alignment: .bottom, spacing: 4) {
+                ForEach(last14, id: \.date) { day in
+                    VStack(spacing: 2) {
+                        RoundedRectangle(cornerRadius: 2)
+                            .fill(day.isFullDay ? ABTheme.sageGreen :
+                                  day.isPartialDay ? ABTheme.warmGold.opacity(0.6) :
+                                  ABTheme.sageGreen.opacity(0.1))
+                            .frame(height: CGFloat(day.score) * 12 + 4)
+
+                        Text(day.label)
+                            .font(.system(size: 8))
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            .frame(height: 60)
+
+            // Legend
+            HStack(spacing: 16) {
+                HStack(spacing: 4) {
+                    Circle().fill(ABTheme.sageGreen).frame(width: 8, height: 8)
+                    Text("Full day").font(.caption2).foregroundColor(ABTheme.secondaryText)
+                }
+                HStack(spacing: 4) {
+                    Circle().fill(ABTheme.warmGold.opacity(0.6)).frame(width: 8, height: 8)
+                    Text("Partial").font(.caption2).foregroundColor(ABTheme.secondaryText)
+                }
+            }
+        }
+        .abCard()
+    }
+
+    // MARK: - Top Drift Section
+    private var topDriftSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "water.waves")
+                    .foregroundColor(ABTheme.blush)
+                Text("Most Common Drifts")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            ForEach(viewModel.topDriftCategories, id: \.category) { item in
+                HStack {
+                    Image(systemName: item.category.icon)
+                        .foregroundColor(ABTheme.blush)
+                        .frame(width: 24)
+                    Text(item.category.rawValue)
+                        .font(.system(.body, design: .serif))
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Text("\(item.count) times")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Text("Awareness is the first step to anchoring. You're doing the work.")
+                .font(.system(.caption, design: .serif).italic())
+                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+        }
+        .abCard()
+    }
+
+    // MARK: - Top Bloom Section
+    private var topBloomSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Image(systemName: "camera.macro")
+                    .foregroundColor(ABTheme.sageGreen)
+                Text("Your Strongest Callings")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+            }
+
+            ForEach(viewModel.topBloomRoles, id: \.role) { item in
+                HStack {
+                    Image(systemName: item.role.icon)
+                        .foregroundColor(ABTheme.sageGreen)
+                        .frame(width: 24)
+                    Text(item.role.rawValue)
+                        .font(.system(.body, design: .serif))
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Text("\(item.count) days")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+                .padding(.vertical, 4)
+            }
+
+            Text("These roles reveal how God is shaping you. Keep walking in them.")
+                .font(.system(.caption, design: .serif).italic())
+                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+        }
+        .abCard()
+    }
+
+    // MARK: - Helper: 14-day activity data
+    private struct DayActivity: Hashable {
+        let date: Date
+        let label: String
+        let score: Int // 0 = nothing, 1 = partial, 2 = full
+        var isFullDay: Bool { score == 2 }
+        var isPartialDay: Bool { score == 1 }
+    }
+
+    private func last14DaysActivity() -> [DayActivity] {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let dayFormatter = DateFormatter()
+        dayFormatter.dateFormat = "d"
+
+        return (0..<14).compactMap { offset -> DayActivity? in
+            guard let date = Calendar.current.date(byAdding: .day, value: -13 + offset, to: Date()) else { return nil }
+            let dateString = formatter.string(from: date)
+            let entry = viewModel.recentEntries.first { $0.dateString == dateString }
+            let score: Int
+            if entry?.isFullyCompleted == true {
+                score = 2
+            } else if (entry?.anchorCompleted == true) || (entry?.bloomCompleted == true) {
+                score = 1
+            } else {
+                score = 0
+            }
+            return DayActivity(date: date, label: dayFormatter.string(from: date), score: score)
         }
     }
 
@@ -521,6 +830,201 @@ struct JourneyProgressCard: View {
     }
 }
 
+// MARK: - Goal Card
+struct GoalCard: View {
+    let goal: SpiritualGoal
+    @ObservedObject var viewModel: AppViewModel
+    @State private var showDeleteConfirm = false
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: goal.category.icon)
+                    .foregroundColor(goal.isCompleted ? ABTheme.warmGold : ABTheme.sageGreen)
+                    .frame(width: 24)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(goal.title)
+                        .font(.system(.subheadline, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+                        .strikethrough(goal.isCompleted)
+
+                    Text(goal.isCompleted
+                         ? "Completed!"
+                         : "\(goal.completedDays)/\(goal.targetDays) days")
+                        .font(.caption2)
+                        .foregroundColor(goal.isCompleted ? ABTheme.warmGold : ABTheme.secondaryText)
+                }
+
+                Spacer()
+
+                if !goal.isCompleted {
+                    Button {
+                        guard let id = goal.id else { return }
+                        Task { await viewModel.incrementGoal(id) }
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title3)
+                            .foregroundColor(ABTheme.sageGreen)
+                    }
+                } else {
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(ABTheme.warmGold)
+                }
+            }
+
+            // Progress bar
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(ABTheme.sageGreen.opacity(0.12))
+                        .frame(height: 4)
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(goal.isCompleted ? ABTheme.warmGold : ABTheme.sageGreen)
+                        .frame(width: geo.size.width * CGFloat(goal.progressPercentage), height: 4)
+                }
+            }
+            .frame(height: 4)
+        }
+        .padding(10)
+        .background(ABTheme.cardBackground)
+        .cornerRadius(ABTheme.cornerRadiusSmall)
+        .contextMenu {
+            Button(role: .destructive) {
+                guard let id = goal.id else { return }
+                Task { await viewModel.deleteGoal(id) }
+            } label: {
+                Label("Delete Goal", systemImage: "trash")
+            }
+        }
+    }
+}
+
+// MARK: - Create Goal View
+struct CreateGoalView: View {
+    @ObservedObject var viewModel: AppViewModel
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var title = ""
+    @State private var selectedCategory: GoalCategory = .prayer
+    @State private var targetDays = 7
+    @State private var isSaving = false
+
+    private let targetOptions = [7, 14, 21, 30, 40, 60, 90]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: ABTheme.paddingLarge) {
+                    // Category picker
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Category")
+                            .font(ABTheme.subheadlineFont)
+                            .foregroundColor(ABTheme.primaryText)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            ForEach(GoalCategory.allCases, id: \.self) { category in
+                                Button {
+                                    selectedCategory = category
+                                } label: {
+                                    VStack(spacing: 4) {
+                                        Image(systemName: category.icon)
+                                            .font(.title3)
+                                        Text(category.rawValue)
+                                            .font(.system(.caption2, design: .serif))
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.8)
+                                    }
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(selectedCategory == category ? ABTheme.sageGreen : ABTheme.cardBackground)
+                                    .foregroundColor(selectedCategory == category ? .white : ABTheme.primaryText)
+                                    .cornerRadius(ABTheme.cornerRadiusSmall)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+
+                    // Goal title
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Your Goal")
+                            .font(ABTheme.subheadlineFont)
+                            .foregroundColor(ABTheme.primaryText)
+
+                        TextField("e.g., Pray for 10 minutes daily", text: $title)
+                            .font(ABTheme.bodyFont)
+                            .padding()
+                            .background(ABTheme.softWhite)
+                            .cornerRadius(ABTheme.cornerRadiusSmall)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                                    .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+
+                    // Target days
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Duration")
+                            .font(ABTheme.subheadlineFont)
+                            .foregroundColor(ABTheme.primaryText)
+
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(targetOptions, id: \.self) { days in
+                                    Button {
+                                        targetDays = days
+                                    } label: {
+                                        Text("\(days) days")
+                                            .font(.system(.caption, design: .serif, weight: .semibold))
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 10)
+                                            .background(targetDays == days ? ABTheme.sageGreen : ABTheme.cardBackground)
+                                            .foregroundColor(targetDays == days ? .white : ABTheme.primaryText)
+                                            .cornerRadius(20)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+
+                    // Create button
+                    Button {
+                        isSaving = true
+                        Task {
+                            await viewModel.createGoal(
+                                title: title.trimmingCharacters(in: .whitespacesAndNewlines),
+                                category: selectedCategory,
+                                targetDays: targetDays
+                            )
+                            dismiss()
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "target")
+                            Text("Set This Goal")
+                        }
+                    }
+                    .buttonStyle(ABPrimaryButtonStyle())
+                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                }
+                .padding(ABTheme.paddingLarge)
+            }
+            .abScreenBackground()
+            .navigationTitle("New Spiritual Goal")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     ProgressStatsView(viewModel: AppViewModel(firestoreService: FirestoreService()))
+        .environmentObject(SubscriptionManager())
 }

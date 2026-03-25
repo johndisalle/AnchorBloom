@@ -3,12 +3,17 @@ import Combine
 import UserNotifications
 
 // MARK: - Notification Manager
-/// Handles local push notifications for morning anchor and evening bloom reminders
+/// Handles local push notifications for morning anchor, evening bloom, and premium scripture reminders
 final class NotificationManager: ObservableObject {
     @Published var isAuthorized = false
 
     static let morningIdentifier = "morning_anchor_reminder"
     static let eveningIdentifier = "evening_bloom_reminder"
+    static let scriptureIdentifiers = [
+        "scripture_reminder_midmorning",
+        "scripture_reminder_afternoon",
+        "scripture_reminder_evening"
+    ]
 
     // MARK: - Request Authorization
     func requestAuthorization() async -> Bool {
@@ -62,16 +67,64 @@ final class NotificationManager: ObservableObject {
         UNUserNotificationCenter.current().add(request)
     }
 
+    // MARK: - Premium Scripture Reminders
+    /// Schedules 3 scripture-based reminders throughout the day for premium users
+    func schedulePremiumScriptureReminders() {
+        let times: [(hour: Int, minute: Int)] = [
+            (10, 0),   // Mid-morning
+            (13, 0),   // Afternoon
+            (17, 0)    // Late afternoon
+        ]
+
+        let titles = [
+            "Scripture for your heart 📖",
+            "A word for your afternoon 🌿",
+            "Evening truth to carry 🕊️"
+        ]
+
+        for (index, identifier) in Self.scriptureIdentifiers.enumerated() {
+            let reminder = DailyPrompt.scriptureReminder(for: Date(), slot: index)
+
+            let content = UNMutableNotificationContent()
+            content.title = titles[index]
+            content.body = "\"\(reminder.scripture)\" — \(reminder.reference)"
+            content.sound = .default
+            content.categoryIdentifier = "SCRIPTURE_REMINDER"
+
+            var components = DateComponents()
+            components.hour = times[index].hour
+            components.minute = times[index].minute
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+
+            let request = UNNotificationRequest(
+                identifier: identifier,
+                content: content,
+                trigger: trigger
+            )
+
+            UNUserNotificationCenter.current().add(request)
+        }
+    }
+
+    /// Cancels only the premium scripture reminders
+    func cancelPremiumReminders() {
+        UNUserNotificationCenter.current()
+            .removePendingNotificationRequests(withIdentifiers: Self.scriptureIdentifiers)
+    }
+
     // MARK: - Cancel All Notifications
     func cancelAllNotifications() {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
     // MARK: - Update Reminders
-    func updateReminders(morning: Date?, evening: Date?, enabled: Bool) {
+    func updateReminders(morning: Date?, evening: Date?, enabled: Bool, isPremium: Bool = false, scriptureRemindersEnabled: Bool = true) {
         cancelAllNotifications()
         guard enabled else { return }
         if let morningTime = morning { scheduleMorningReminder(at: morningTime) }
         if let eveningTime = evening { scheduleEveningReminder(at: eveningTime) }
+        if isPremium && scriptureRemindersEnabled {
+            schedulePremiumScriptureReminders()
+        }
     }
 }

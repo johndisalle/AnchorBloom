@@ -12,6 +12,7 @@ struct SettingsView: View {
     @State private var morningReminder = Calendar.current.date(from: DateComponents(hour: 7, minute: 0)) ?? Date()
     @State private var eveningReminder = Calendar.current.date(from: DateComponents(hour: 20, minute: 0)) ?? Date()
     @State private var notificationsEnabled = true
+    @AppStorage("scriptureRemindersEnabled") private var scriptureRemindersEnabled = true
     @State private var showSubscription = false
     @State private var showDeleteConfirmation = false
     @State private var showSignOutConfirmation = false
@@ -150,6 +151,26 @@ struct SettingsView: View {
                         .foregroundColor(ABTheme.blush)
                 }
                 .onChange(of: eveningReminder) { _, _ in updateReminders() }
+
+                if subscriptionManager.isPremium {
+                    Toggle(isOn: $scriptureRemindersEnabled) {
+                        Label("Scripture Reminders", systemImage: "book.fill")
+                            .foregroundColor(ABTheme.sageGreen)
+                    }
+                    .tint(ABTheme.sageGreen)
+                    .onChange(of: scriptureRemindersEnabled) { _, _ in updateReminders() }
+
+                    if scriptureRemindersEnabled {
+                        HStack {
+                            Image(systemName: "info.circle")
+                                .font(.caption2)
+                                .foregroundColor(ABTheme.secondaryText)
+                            Text("3 daily scripture verses at 10am, 1pm, and 5pm")
+                                .font(.caption2)
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                    }
+                }
             }
         }
         .listRowBackground(ABTheme.cardBackground)
@@ -238,7 +259,9 @@ struct SettingsView: View {
         notificationManager.updateReminders(
             morning: morningReminder,
             evening: eveningReminder,
-            enabled: notificationsEnabled
+            enabled: notificationsEnabled,
+            isPremium: subscriptionManager.isPremium,
+            scriptureRemindersEnabled: scriptureRemindersEnabled
         )
     }
 }

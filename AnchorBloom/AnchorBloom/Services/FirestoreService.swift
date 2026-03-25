@@ -236,6 +236,50 @@ final class FirestoreService: ObservableObject {
         return snapshot.documents.compactMap { try? $0.data(as: CircleComment.self) }
     }
 
+    // MARK: - Goal Operations
+
+    private var goalsCollection: CollectionReference { db.collection("goals") }
+
+    /// Creates a new spiritual goal
+    func saveGoal(_ goal: SpiritualGoal) async throws {
+        if let goalID = goal.id {
+            try goalsCollection.document(goalID).setData(from: goal, merge: true)
+        } else {
+            try goalsCollection.addDocument(from: goal)
+        }
+    }
+
+    /// Fetches all goals for the current user
+    func fetchGoals() async throws -> [SpiritualGoal] {
+        guard let userID = currentUserID else { return [] }
+
+        let snapshot = try await goalsCollection
+            .whereField("userID", isEqualTo: userID)
+            .order(by: "createdAt", descending: true)
+            .getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: SpiritualGoal.self) }
+    }
+
+    /// Increments a goal's completed days
+    func incrementGoalProgress(goalID: String) async throws {
+        let docRef = goalsCollection.document(goalID)
+        let document = try await docRef.getDocument()
+        guard var goal = try? document.data(as: SpiritualGoal.self) else { return }
+
+        goal.completedDays += 1
+        if goal.completedDays >= goal.targetDays {
+            goal.isCompleted = true
+            goal.completedAt = Date()
+        }
+        try docRef.setData(from: goal, merge: true)
+    }
+
+    /// Deletes a goal
+    func deleteGoal(goalID: String) async throws {
+        try await goalsCollection.document(goalID).delete()
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress
