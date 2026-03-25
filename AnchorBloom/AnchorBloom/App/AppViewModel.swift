@@ -73,22 +73,18 @@ final class AppViewModel: ObservableObject {
     }
 
     // MARK: - Log Drift Entry
-    /// Returns true if the drift was saved successfully
-    func logDrift(category: DriftCategory, note: String?, prayerPlayed: Bool) async -> Bool {
-        guard var entry = todayEntry else { return false }
+    /// Saves drift to Firestore WITHOUT updating @Published properties,
+    /// so no parent re-render occurs and the UI stays stable.
+    func logDrift(category: DriftCategory, note: String?, prayerPlayed: Bool) async {
+        guard var entry = todayEntry else { return }
 
         var drift = DriftEntry(category: category, note: note)
         drift.prayerPlayed = prayerPlayed
         entry.driftEntries.append(drift)
 
-        do {
-            try await firestoreService.saveDailyEntry(entry)
-            todayEntry = entry
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            return false
-        }
+        try? await firestoreService.saveDailyEntry(entry)
+        // NOT setting self.todayEntry here — that would trigger a
+        // re-render which resets local @State in the view
     }
 
     // MARK: - Check Day Completion & Update Streak
@@ -158,25 +154,19 @@ final class AppViewModel: ObservableObject {
         return Journey.allJourneys.first { $0.id == activeID }
     }
 
-    /// Begin a new journey — sets it as the active journey.
-    /// Returns true if journey was successfully started.
-    func beginJourney(_ journeyID: String) async -> Bool {
-        guard var profile = userProfile else { return false }
+    /// Begin a new journey — saves to Firestore WITHOUT updating @Published
+    /// properties, so no parent re-render occurs and the UI stays stable.
+    func beginJourney(_ journeyID: String) async {
+        guard var profile = userProfile else { return }
 
         profile.activeJourneyID = journeyID
-        // Initialize progress if not already started
         if profile.journeyProgress[journeyID] == nil {
             profile.journeyProgress[journeyID] = 0
         }
 
-        do {
-            try await firestoreService.saveUserProfile(profile)
-            userProfile = profile
-            return true
-        } catch {
-            errorMessage = error.localizedDescription
-            return false
-        }
+        try? await firestoreService.saveUserProfile(profile)
+        // NOT setting self.userProfile here — that would trigger a
+        // re-render which dismisses sheets / pops navigation
     }
 
     /// Mark a journey day as complete and advance progress

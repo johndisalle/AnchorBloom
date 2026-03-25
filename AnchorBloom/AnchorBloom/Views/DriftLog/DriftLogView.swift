@@ -223,7 +223,7 @@ struct DriftLogView: View {
 
         // Save in background
         Task {
-            let _ = await viewModel.logDrift(
+            await viewModel.logDrift(
                 category: category,
                 note: note,
                 prayerPlayed: false

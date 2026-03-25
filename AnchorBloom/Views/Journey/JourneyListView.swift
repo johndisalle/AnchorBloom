@@ -371,7 +371,7 @@ struct JourneyDetailView: View {
                     } else if !journeyStarted {
                         Button {
                             journeyStarted = true
-                            Task { let _ = await viewModel.beginJourney(journey.id) }
+                            Task { await viewModel.beginJourney(journey.id) }
                         } label: {
                             HStack {
                                 Image(systemName: "play.fill")
