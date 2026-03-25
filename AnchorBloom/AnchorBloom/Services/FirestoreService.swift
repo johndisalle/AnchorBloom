@@ -147,6 +147,19 @@ final class FirestoreService: ObservableObject {
         return snapshot.documents.compactMap { try? $0.data(as: SisterCircle.self) }
     }
 
+    /// Fetches public circles for discovery (excludes circles the user already belongs to)
+    func fetchPublicCircles() async throws -> [SisterCircle] {
+        let snapshot = try await circlesCollection
+            .whereField("isPrivate", isEqualTo: false)
+            .limit(to: 50)
+            .getDocuments()
+
+        let userID = currentUserID ?? ""
+        return snapshot.documents
+            .compactMap { try? $0.data(as: SisterCircle.self) }
+            .filter { !$0.memberIDs.contains(userID) }
+    }
+
     /// Joins a circle by invite code
     func joinCircle(inviteCode: String) async throws -> SisterCircle? {
         guard let userID = currentUserID else { return nil }
