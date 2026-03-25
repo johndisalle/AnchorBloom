@@ -16,6 +16,7 @@ struct SettingsView: View {
     @State private var showSubscription = false
     @State private var showDeleteConfirmation = false
     @State private var showSignOutConfirmation = false
+    @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
     var body: some View {
         NavigationStack {
@@ -43,6 +44,9 @@ struct SettingsView: View {
 
                 // Subscription section
                 subscriptionSection
+
+                // Appearance section
+                appearanceSection
 
                 // Reminders section
                 remindersSection
@@ -133,6 +137,29 @@ struct SettingsView: View {
                 Task { await subscriptionManager.restorePurchases() }
             }
             .foregroundColor(ABTheme.sageGreen)
+        }
+        .listRowBackground(ABTheme.cardBackground)
+    }
+
+    // MARK: - Appearance Section
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker(selection: $appearanceMode) {
+                ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                    Label(mode.rawValue, systemImage: mode.icon)
+                        .tag(mode)
+                }
+            } label: {
+                Label {
+                    Text("Theme")
+                        .font(.system(.body, design: .serif))
+                        .foregroundColor(ABTheme.primaryText)
+                } icon: {
+                    Image(systemName: appearanceMode.icon)
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .tint(ABTheme.sageGreen)
         }
         .listRowBackground(ABTheme.cardBackground)
     }
