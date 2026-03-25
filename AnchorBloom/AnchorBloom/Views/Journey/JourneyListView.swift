@@ -242,6 +242,7 @@ struct JourneyDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showProgressView = false
     @State private var isBeginning = false
+    @State private var showError = false
 
     private var progress: Int {
         viewModel.journeyProgress(for: journey.id)
@@ -342,7 +343,12 @@ struct JourneyDetailView: View {
                             Task {
                                 await viewModel.beginJourney(journey.id)
                                 isBeginning = false
-                                dismiss()
+                                // Check if journey was actually set
+                                if viewModel.activeJourney?.id == journey.id {
+                                    dismiss()
+                                } else {
+                                    showError = true
+                                }
                             }
                         } label: {
                             HStack {
@@ -357,6 +363,11 @@ struct JourneyDetailView: View {
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
                         .disabled(isBeginning)
+                        .alert("Couldn't Start Journey", isPresented: $showError) {
+                            Button("OK") {}
+                        } message: {
+                            Text(viewModel.errorMessage ?? "Please make sure you're signed in and try again.")
+                        }
                     }
 
                     Spacer().frame(height: 40)

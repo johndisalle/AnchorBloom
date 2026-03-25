@@ -11,6 +11,7 @@ final class AppViewModel: ObservableObject {
     @Published var recentEntries: [DailyEntry] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var driftJustLogged = false
 
     private let firestoreService: FirestoreService
 
@@ -74,7 +75,14 @@ final class AppViewModel: ObservableObject {
 
     // MARK: - Log Drift Entry
     func logDrift(category: DriftCategory, note: String?, prayerPlayed: Bool) async {
-        guard var entry = todayEntry else { return }
+        // Ensure today's entry is loaded
+        if todayEntry == nil {
+            await loadUserData()
+        }
+        guard var entry = todayEntry else {
+            errorMessage = "Could not load today's entry. Please try again."
+            return
+        }
 
         var drift = DriftEntry(category: category, note: note)
         drift.prayerPlayed = prayerPlayed
@@ -83,6 +91,7 @@ final class AppViewModel: ObservableObject {
         do {
             try await firestoreService.saveDailyEntry(entry)
             todayEntry = entry
+            driftJustLogged = true
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -157,7 +166,14 @@ final class AppViewModel: ObservableObject {
 
     /// Begin a new journey — sets it as the active journey
     func beginJourney(_ journeyID: String) async {
-        guard var profile = userProfile else { return }
+        // Ensure profile is loaded before mutating
+        if userProfile == nil {
+            await loadUserData()
+        }
+        guard var profile = userProfile else {
+            errorMessage = "Could not load your profile. Please try again."
+            return
+        }
 
         profile.activeJourneyID = journeyID
         // Initialize progress if not already started

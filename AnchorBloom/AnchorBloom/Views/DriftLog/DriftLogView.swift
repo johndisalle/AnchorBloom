@@ -201,6 +201,11 @@ struct DriftLogView: View {
                 note: driftNote.isEmpty ? nil : driftNote,
                 prayerPlayed: false
             )
+
+            // Only show confirmation if the drift was actually logged
+            guard viewModel.driftJustLogged else { return }
+            viewModel.driftJustLogged = false
+
             driftNote = ""
             selectedCategory = nil
 
