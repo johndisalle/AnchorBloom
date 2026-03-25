@@ -164,7 +164,7 @@ struct DriftLogView: View {
                 } label: {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                        Text("TEST - Log & Anchor")
+                        Text("Log & Anchor")
                     }
                 }
                 .buttonStyle(ABPrimaryButtonStyle())

@@ -375,7 +375,7 @@ struct JourneyDetailView: View {
                         } label: {
                             HStack {
                                 Image(systemName: "play.fill")
-                                Text("TEST - Begin This Journey")
+                                Text("Begin This Journey")
                             }
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
