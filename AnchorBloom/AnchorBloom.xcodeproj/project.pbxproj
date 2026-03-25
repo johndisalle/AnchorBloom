@@ -40,6 +40,7 @@
 		A1000031000000000000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000031000000000000001 /* SettingsView.swift */; };
 		A1000034000000000000001 /* JourneyDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000034100000000000001 /* JourneyDayView.swift */; };
 		A1000035000000000000001 /* JourneyProgressView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000035100000000000001 /* JourneyProgressView.swift */; };
+		A1000036000000000000001 /* SpiritualGoal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000036000000000000001 /* SpiritualGoal.swift */; };
 		A1000032000000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000032000000000000001 /* Assets.xcassets */; };
 		A1000033000000000000001 /* GoogleService-Info.plist.example in Resources */ = {isa = PBXBuildFile; fileRef = B1000033000000000000001 /* GoogleService-Info.plist.example */; };
 		A1000040000000000000001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D1000001000000000000001 /* FirebaseAuth */; };
@@ -58,6 +59,7 @@
 		B1000008000000000000001 /* Journey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Journey.swift; sourceTree = "<group>"; };
 		B1000009000000000000001 /* Streak.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Streak.swift; sourceTree = "<group>"; };
 		B1000010000000000000001 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		B1000036000000000000001 /* SpiritualGoal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpiritualGoal.swift; sourceTree = "<group>"; };
 		B1000011000000000000001 /* PreviewData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewData.swift; sourceTree = "<group>"; };
 		B1000012000000000000001 /* AppStoreAssets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppStoreAssets.swift; sourceTree = "<group>"; };
 		B1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JourneyContent_ArmorOfGrace.swift; sourceTree = "<group>"; };
@@ -156,6 +158,7 @@
 				B1000007000000000000001 /* DailyPrompt.swift */,
 				B1000008000000000000001 /* Journey.swift */,
 				B1000009000000000000001 /* Streak.swift */,
+				B1000036000000000000001 /* SpiritualGoal.swift */,
 				B1000010000000000000001 /* UserProfile.swift */,
 			);
 			path = Models;
@@ -380,6 +383,7 @@
 				A1000008000000000000001 /* Journey.swift in Sources */,
 				A1000009000000000000001 /* Streak.swift in Sources */,
 				A1000010000000000000001 /* UserProfile.swift in Sources */,
+				A1000036000000000000001 /* SpiritualGoal.swift in Sources */,
 				A1000011000000000000001 /* PreviewData.swift in Sources */,
 				A1000012000000000000001 /* AppStoreAssets.swift in Sources */,
 				A1000013000000000000001 /* JourneyContent_ArmorOfGrace.swift in Sources */,
