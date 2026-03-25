@@ -371,11 +371,11 @@ struct JourneyDetailView: View {
                     } else if !journeyStarted {
                         Button {
                             journeyStarted = true
-                            Task { await viewModel.beginJourney(journey.id) }
+                            // Firestore save removed for testing
                         } label: {
                             HStack {
                                 Image(systemName: "play.fill")
-                                Text("Begin This Journey")
+                                Text("TEST - Begin This Journey")
                             }
                         }
                         .buttonStyle(ABPrimaryButtonStyle())

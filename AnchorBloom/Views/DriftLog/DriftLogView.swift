@@ -158,11 +158,13 @@ struct DriftLogView: View {
                 }
 
                 Button {
-                    logDrift(category: category)
+                    driftLogged = true
+                    driftNote = ""
+                    // Firestore save removed for testing
                 } label: {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
-                        Text("Log & Anchor")
+                        Text("TEST - Log & Anchor")
                     }
                 }
                 .buttonStyle(ABPrimaryButtonStyle())
