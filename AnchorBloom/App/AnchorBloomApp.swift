@@ -42,24 +42,36 @@ struct AnchorBloomApp: App {
 struct RootView: View {
     @EnvironmentObject var authManager: AuthManager
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("hasSeenWelcome") private var hasSeenWelcome = false
+
     var body: some View {
         Group {
             if !hasCompletedOnboarding {
                 OnboardingView()
             } else if authManager.isAuthenticated {
-                MainTabView()
+                if !hasSeenWelcome {
+                    WelcomeView {
+                        hasSeenWelcome = true
+                    }
+                } else {
+                    MainTabView()
+                }
             } else {
                 AuthView()
             }
         }
         .animation(.easeInOut(duration: 0.3), value: authManager.isAuthenticated)
         .animation(.easeInOut(duration: 0.3), value: hasCompletedOnboarding)
+        .animation(.easeInOut(duration: 0.3), value: hasSeenWelcome)
     }
 }
 
 // MARK: - Main Tab View
 struct MainTabView: View {
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
+    @AppStorage("hasSeenPremiumWelcome") private var hasSeenPremiumWelcome = false
     @State private var selectedTab = 0
+    @State private var showPremiumWelcome = false
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -94,6 +106,14 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(ABTheme.sageGreen)
+        .onChange(of: subscriptionManager.isPremium) {
+            if subscriptionManager.isPremium && !hasSeenPremiumWelcome {
+                showPremiumWelcome = true
+                hasSeenPremiumWelcome = true
+            }
+        }
+        .sheet(isPresented: $showPremiumWelcome) {
+            WelcomePremiumView()
+        }
     }
 }
-
