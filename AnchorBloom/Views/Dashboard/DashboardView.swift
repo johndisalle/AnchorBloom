@@ -5,7 +5,7 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
-    @EnvironmentObject var viewModel: AppViewModel
+    @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
     @State private var showAnchorSheet = false
     @State private var showBloomSheet = false
     @State private var showProgressView = false
@@ -358,9 +358,8 @@ struct BadgeCardSmall: View {
 }
 
 #Preview {
-    let service = FirestoreService()
     DashboardView()
-        .environmentObject(service)
+        .environmentObject(FirestoreService())
         .environmentObject(SubscriptionManager())
         .environmentObject(AppViewModel(firestoreService: service))
 }

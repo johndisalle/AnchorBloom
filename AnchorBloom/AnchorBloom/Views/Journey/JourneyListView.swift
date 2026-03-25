@@ -5,7 +5,7 @@ import SwiftUI
 struct JourneyListView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var firestoreService: FirestoreService
-    @EnvironmentObject var viewModel: AppViewModel
+    @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
 
     @State private var selectedJourney: Journey?
 
@@ -237,7 +237,7 @@ struct JourneyDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showProgressView = false
     @State private var isBeginning = false
-    @State private var showError = false
+    @State private var showJourneyStarted = false
 
     private var progress: Int {
         viewModel.journeyProgress(for: journey.id)
@@ -336,13 +336,10 @@ struct JourneyDetailView: View {
                         Button {
                             isBeginning = true
                             Task {
-                                await viewModel.beginJourney(journey.id)
+                                let success = await viewModel.beginJourney(journey.id)
                                 isBeginning = false
-                                // Check if journey was actually set
-                                if viewModel.activeJourney?.id == journey.id {
-                                    dismiss()
-                                } else {
-                                    showError = true
+                                if success {
+                                    showJourneyStarted = true
                                 }
                             }
                         } label: {
@@ -358,11 +355,6 @@ struct JourneyDetailView: View {
                         }
                         .buttonStyle(ABPrimaryButtonStyle())
                         .disabled(isBeginning)
-                        .alert("Couldn't Start Journey", isPresented: $showError) {
-                            Button("OK") {}
-                        } message: {
-                            Text(viewModel.errorMessage ?? "Please make sure you're signed in and try again.")
-                        }
                     }
 
                     Spacer().frame(height: 40)
@@ -379,6 +371,13 @@ struct JourneyDetailView: View {
             }
             .fullScreenCover(isPresented: $showProgressView) {
                 JourneyProgressView(journey: journey, viewModel: viewModel)
+            }
+            .alert("Journey Started!", isPresented: $showJourneyStarted) {
+                Button("Start Day 1") {
+                    showProgressView = true
+                }
+            } message: {
+                Text("You've begun \"\(journey.title)\" — a 30-day journey. Let's go!")
             }
         }
     }
@@ -403,9 +402,7 @@ struct JourneyBullet: View {
 }
 
 #Preview {
-    let service = FirestoreService()
     JourneyListView()
         .environmentObject(SubscriptionManager())
-        .environmentObject(service)
-        .environmentObject(AppViewModel(firestoreService: service))
+        .environmentObject(FirestoreService())
 }

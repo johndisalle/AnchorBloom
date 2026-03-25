@@ -4,13 +4,12 @@ import SwiftUI
 /// One-tap drift entries with anchoring prayer text
 struct DriftLogView: View {
     @EnvironmentObject var firestoreService: FirestoreService
-    @EnvironmentObject var viewModel: AppViewModel
+    @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
 
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
-    @State private var showHistory = false
-    @State private var showConfirmation = false
-    @State private var confirmedCategory: DriftCategory?
+    @State private var showDriftLogged = false
+    @State private var loggedCategoryName = ""
 
     var body: some View {
         NavigationStack {
@@ -40,13 +39,10 @@ struct DriftLogView: View {
             .task {
                 await viewModel.loadUserData()
             }
-            .overlay(alignment: .top) {
-                if showConfirmation, let category = confirmedCategory {
-                    DriftConfirmationBanner(category: category)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                        .padding(.top, 8)
-                        .padding(.horizontal, ABTheme.paddingMedium)
-                }
+            .alert("Drift Logged & Anchored", isPresented: $showDriftLogged) {
+                Button("Amen") {}
+            } message: {
+                Text("You acknowledged your \(loggedCategoryName.lowercased()) drift. God sees you and He's holding you steady.")
             }
         }
     }
@@ -190,31 +186,18 @@ struct DriftLogView: View {
 
     // MARK: - Log Drift
     private func logDrift(category: DriftCategory) {
-        let cat = category
+        let categoryName = category.rawValue
         Task {
-            await viewModel.logDrift(
-                category: cat,
+            let success = await viewModel.logDrift(
+                category: category,
                 note: driftNote.isEmpty ? nil : driftNote,
                 prayerPlayed: false
             )
-
-            // Only show confirmation if the drift was actually logged
-            guard viewModel.driftJustLogged else { return }
-            viewModel.driftJustLogged = false
-
-            driftNote = ""
-            selectedCategory = nil
-
-            // Show confirmation banner
-            confirmedCategory = cat
-            withAnimation(.spring(response: 0.4)) {
-                showConfirmation = true
-            }
-
-            // Auto-dismiss after 2.5 seconds
-            try? await Task.sleep(nanoseconds: 2_500_000_000)
-            withAnimation(.easeOut(duration: 0.3)) {
-                showConfirmation = false
+            if success {
+                driftNote = ""
+                selectedCategory = nil
+                loggedCategoryName = categoryName
+                showDriftLogged = true
             }
         }
     }
@@ -250,38 +233,7 @@ struct DriftCategoryButton: View {
     }
 }
 
-// MARK: - Drift Confirmation Banner
-struct DriftConfirmationBanner: View {
-    let category: DriftCategory
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.title3)
-                .foregroundColor(.white)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Drift Logged & Anchored")
-                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                    .foregroundColor(.white)
-
-                Text("You acknowledged your \(category.rawValue.lowercased()) drift. God sees you.")
-                    .font(.system(.caption2, design: .serif))
-                    .foregroundColor(.white.opacity(0.85))
-            }
-
-            Spacer()
-        }
-        .padding(ABTheme.paddingMedium)
-        .background(ABTheme.sageGreen)
-        .cornerRadius(ABTheme.cornerRadius)
-        .shadow(color: ABTheme.sageGreen.opacity(0.3), radius: 8, x: 0, y: 4)
-    }
-}
-
 #Preview {
-    let service = FirestoreService()
     DriftLogView()
-        .environmentObject(service)
-        .environmentObject(AppViewModel(firestoreService: service))
+        .environmentObject(FirestoreService())
 }

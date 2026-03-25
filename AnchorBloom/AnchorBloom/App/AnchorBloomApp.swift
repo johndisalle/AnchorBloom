@@ -55,25 +55,8 @@ struct RootView: View {
 }
 
 // MARK: - Main Tab View
-/// Creates the shared AppViewModel here (not in App.init) so Firebase is configured
 struct MainTabView: View {
-    @EnvironmentObject var firestoreService: FirestoreService
     @State private var selectedTab = 0
-
-    var body: some View {
-        MainTabContent(firestoreService: firestoreService, selectedTab: $selectedTab)
-    }
-}
-
-/// Inner view that owns the @StateObject for AppViewModel
-struct MainTabContent: View {
-    @StateObject var viewModel: AppViewModel
-    @Binding var selectedTab: Int
-
-    init(firestoreService: FirestoreService, selectedTab: Binding<Int>) {
-        _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: firestoreService))
-        _selectedTab = selectedTab
-    }
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -108,9 +91,5 @@ struct MainTabContent: View {
                 .tag(4)
         }
         .tint(ABTheme.sageGreen)
-        .environmentObject(viewModel)
-        .task {
-            await viewModel.loadUserData()
-        }
     }
 }

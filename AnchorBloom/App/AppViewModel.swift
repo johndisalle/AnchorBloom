@@ -11,7 +11,6 @@ final class AppViewModel: ObservableObject {
     @Published var recentEntries: [DailyEntry] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    @Published var driftJustLogged = false
 
     private let firestoreService: FirestoreService
 
@@ -74,15 +73,9 @@ final class AppViewModel: ObservableObject {
     }
 
     // MARK: - Log Drift Entry
-    func logDrift(category: DriftCategory, note: String?, prayerPlayed: Bool) async {
-        // Ensure today's entry is loaded
-        if todayEntry == nil {
-            await loadUserData()
-        }
-        guard var entry = todayEntry else {
-            errorMessage = "Could not load today's entry. Please try again."
-            return
-        }
+    /// Returns true if the drift was saved successfully
+    func logDrift(category: DriftCategory, note: String?, prayerPlayed: Bool) async -> Bool {
+        guard var entry = todayEntry else { return false }
 
         var drift = DriftEntry(category: category, note: note)
         drift.prayerPlayed = prayerPlayed
@@ -91,9 +84,10 @@ final class AppViewModel: ObservableObject {
         do {
             try await firestoreService.saveDailyEntry(entry)
             todayEntry = entry
-            driftJustLogged = true
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 
@@ -164,16 +158,10 @@ final class AppViewModel: ObservableObject {
         return Journey.allJourneys.first { $0.id == activeID }
     }
 
-    /// Begin a new journey — sets it as the active journey
-    func beginJourney(_ journeyID: String) async {
-        // Ensure profile is loaded before mutating
-        if userProfile == nil {
-            await loadUserData()
-        }
-        guard var profile = userProfile else {
-            errorMessage = "Could not load your profile. Please try again."
-            return
-        }
+    /// Begin a new journey — sets it as the active journey.
+    /// Returns true if journey was successfully started.
+    func beginJourney(_ journeyID: String) async -> Bool {
+        guard var profile = userProfile else { return false }
 
         profile.activeJourneyID = journeyID
         // Initialize progress if not already started
@@ -184,8 +172,10 @@ final class AppViewModel: ObservableObject {
         do {
             try await firestoreService.saveUserProfile(profile)
             userProfile = profile
+            return true
         } catch {
             errorMessage = error.localizedDescription
+            return false
         }
     }
 
