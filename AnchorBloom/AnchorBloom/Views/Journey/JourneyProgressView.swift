@@ -40,7 +40,7 @@ struct JourneyProgressView: View {
                                 Image(systemName: currentDay == 0 ? "play.fill" : "arrow.right")
                                 Text(currentDay == 0 ? "Begin Day 1" : "Continue Day \(nextDay)")
                             }
-                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .font(.system(.body, design: .serif).weight(.semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
@@ -93,7 +93,7 @@ struct JourneyProgressView: View {
                 .foregroundColor(ABTheme.secondaryText)
 
             Text("Day \(currentDay) of \(journey.totalDays)")
-                .font(.system(.caption, design: .serif, weight: .semibold))
+                .font(.system(.caption, design: .serif).weight(.semibold))
                 .foregroundColor(ABTheme.sageGreen)
         }
     }
@@ -182,7 +182,7 @@ struct DayCell: View {
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(.white)
                     Text("\(day)")
-                        .font(.system(size: 10, design: .serif, weight: .medium))
+                        .font(.system(size: 10, weight: .medium, design: .serif))
                         .foregroundColor(.white.opacity(0.8))
                 }
             } else if state == .current {
@@ -191,7 +191,7 @@ struct DayCell: View {
                         .font(.system(size: 9))
                         .foregroundColor(.white)
                     Text("\(day)")
-                        .font(.system(size: 10, design: .serif, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold, design: .serif))
                         .foregroundColor(.white)
                 }
             } else {
