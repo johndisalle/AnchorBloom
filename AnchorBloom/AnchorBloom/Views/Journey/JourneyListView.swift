@@ -5,14 +5,9 @@ import SwiftUI
 struct JourneyListView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var firestoreService: FirestoreService
-    @StateObject private var viewModel: AppViewModel
+    @EnvironmentObject var viewModel: AppViewModel
 
     @State private var selectedJourney: Journey?
-
-    init() {
-        // Initialized with a placeholder; real service comes from environment
-        _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: FirestoreService()))
-    }
 
     var body: some View {
         NavigationStack {
@@ -408,7 +403,9 @@ struct JourneyBullet: View {
 }
 
 #Preview {
+    let service = FirestoreService()
     JourneyListView()
         .environmentObject(SubscriptionManager())
-        .environmentObject(FirestoreService())
+        .environmentObject(service)
+        .environmentObject(AppViewModel(firestoreService: service))
 }

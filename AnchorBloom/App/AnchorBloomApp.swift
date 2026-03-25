@@ -21,6 +21,13 @@ struct AnchorBloomApp: App {
     @StateObject private var firestoreService = FirestoreService()
     @StateObject private var subscriptionManager = SubscriptionManager()
     @StateObject private var notificationManager = NotificationManager()
+    @StateObject private var appViewModel: AppViewModel
+
+    init() {
+        let service = FirestoreService()
+        _firestoreService = StateObject(wrappedValue: service)
+        _appViewModel = StateObject(wrappedValue: AppViewModel(firestoreService: service))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -29,6 +36,7 @@ struct AnchorBloomApp: App {
                 .environmentObject(firestoreService)
                 .environmentObject(subscriptionManager)
                 .environmentObject(notificationManager)
+                .environmentObject(appViewModel)
                 .preferredColorScheme(.light)
         }
     }
@@ -56,6 +64,7 @@ struct RootView: View {
 
 // MARK: - Main Tab View
 struct MainTabView: View {
+    @EnvironmentObject var viewModel: AppViewModel
     @State private var selectedTab = 0
 
     var body: some View {
@@ -91,5 +100,8 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(ABTheme.sageGreen)
+        .task {
+            await viewModel.loadUserData()
+        }
     }
 }

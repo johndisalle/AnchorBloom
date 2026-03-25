@@ -4,17 +4,13 @@ import SwiftUI
 /// One-tap drift entries with anchoring prayer text
 struct DriftLogView: View {
     @EnvironmentObject var firestoreService: FirestoreService
-    @StateObject private var viewModel: AppViewModel
+    @EnvironmentObject var viewModel: AppViewModel
 
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
     @State private var showHistory = false
     @State private var showConfirmation = false
     @State private var confirmedCategory: DriftCategory?
-
-    init() {
-        _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: FirestoreService()))
-    }
 
     var body: some View {
         NavigationStack {
@@ -284,6 +280,8 @@ struct DriftConfirmationBanner: View {
 }
 
 #Preview {
+    let service = FirestoreService()
     DriftLogView()
-        .environmentObject(FirestoreService())
+        .environmentObject(service)
+        .environmentObject(AppViewModel(firestoreService: service))
 }

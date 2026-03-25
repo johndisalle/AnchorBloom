@@ -5,16 +5,11 @@ import SwiftUI
 struct DashboardView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
-    @StateObject private var viewModel: AppViewModel
+    @EnvironmentObject var viewModel: AppViewModel
     @State private var showAnchorSheet = false
     @State private var showBloomSheet = false
     @State private var showProgressView = false
     @State private var showJourneyProgress = false
-
-    init() {
-        // Will be properly initialized with environment object
-        _viewModel = StateObject(wrappedValue: AppViewModel(firestoreService: FirestoreService()))
-    }
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -363,7 +358,9 @@ struct BadgeCardSmall: View {
 }
 
 #Preview {
+    let service = FirestoreService()
     DashboardView()
-        .environmentObject(FirestoreService())
+        .environmentObject(service)
         .environmentObject(SubscriptionManager())
+        .environmentObject(AppViewModel(firestoreService: service))
 }
