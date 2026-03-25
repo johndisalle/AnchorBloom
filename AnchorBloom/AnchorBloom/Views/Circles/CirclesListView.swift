@@ -8,6 +8,7 @@ struct CirclesListView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
     @State private var circles: [SisterCircle] = []
+    @State private var publicCircles: [SisterCircle] = []
     @State private var showCreateCircle = false
     @State private var showJoinCircle = false
     @State private var selectedCircle: SisterCircle?
@@ -82,17 +83,40 @@ struct CirclesListView: View {
                         .cornerRadius(ABTheme.cornerRadiusSmall)
                     }
 
-                    // Circles list
+                    // My Circles
                     if isLoading {
                         ProgressView()
                             .tint(ABTheme.sageGreen)
                             .padding(.top, 40)
-                    } else if circles.isEmpty {
+                    } else if circles.isEmpty && publicCircles.isEmpty {
                         emptyState
                     } else {
-                        ForEach(circles) { circle in
-                            CircleCardView(circle: circle) {
-                                selectedCircle = circle
+                        if !circles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("My Circles")
+                                    .font(ABTheme.subheadlineFont)
+                                    .foregroundColor(ABTheme.primaryText)
+
+                                ForEach(circles) { circle in
+                                    CircleCardView(circle: circle) {
+                                        selectedCircle = circle
+                                    }
+                                }
+                            }
+                        }
+
+                        // Public circles for discovery
+                        if !publicCircles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Discover Public Circles")
+                                    .font(ABTheme.subheadlineFont)
+                                    .foregroundColor(ABTheme.primaryText)
+
+                                ForEach(publicCircles) { circle in
+                                    CircleCardView(circle: circle, showPublicBadge: true) {
+                                        selectedCircle = circle
+                                    }
+                                }
                             }
                         }
                     }
@@ -151,6 +175,7 @@ struct CirclesListView: View {
         defer { isLoading = false }
         do {
             circles = try await firestoreService.fetchUserCircles()
+            publicCircles = try await firestoreService.fetchPublicCircles()
         } catch {
             // Handle error silently for MVP
         }
@@ -160,6 +185,7 @@ struct CirclesListView: View {
 // MARK: - Circle Card
 struct CircleCardView: View {
     let circle: SisterCircle
+    var showPublicBadge: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -177,9 +203,25 @@ struct CircleCardView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(circle.name)
-                        .font(.system(.body, design: .serif, weight: .semibold))
-                        .foregroundColor(ABTheme.primaryText)
+                    HStack(spacing: 6) {
+                        Text(circle.name)
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.primaryText)
+
+                        if showPublicBadge {
+                            HStack(spacing: 2) {
+                                Image(systemName: "globe")
+                                    .font(.system(size: 9))
+                                Text("Public")
+                                    .font(.system(size: 9, weight: .medium, design: .serif))
+                            }
+                            .foregroundColor(ABTheme.sageGreen)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(ABTheme.sageGreen.opacity(0.1))
+                            .cornerRadius(6)
+                        }
+                    }
 
                     Text(circle.description)
                         .font(.caption)
@@ -230,8 +272,13 @@ struct CreateCircleView: View {
                         HStack {
                             Image(systemName: isPrivate ? "lock.fill" : "globe")
                                 .foregroundColor(ABTheme.sageGreen)
-                            Text("Private Circle")
-                                .font(ABTheme.bodyFont)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(isPrivate ? "Private Circle" : "Public Circle")
+                                    .font(ABTheme.bodyFont)
+                                Text(isPrivate ? "Members join by invite code only" : "Visible to all users for browsing")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
                         }
                     }
                     .tint(ABTheme.sageGreen)
@@ -371,15 +418,31 @@ struct CircleDetailView: View {
     @State private var showNewPost = false
     @State private var isLoading = false
 
+    private var isMember: Bool {
+        let userID = FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
+        return circle.memberIDs.contains(userID) || circle.creatorID == userID
+    }
+
+    /// Premium members who are part of the circle can post
+    private var canPost: Bool {
+        subscriptionManager.isPremium && isMember
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: ABTheme.paddingMedium) {
                     // Circle header
                     VStack(spacing: 8) {
-                        Text(circle.name)
-                            .font(ABTheme.headlineFont)
-                            .foregroundColor(ABTheme.primaryText)
+                        HStack(spacing: 6) {
+                            Text(circle.name)
+                                .font(ABTheme.headlineFont)
+                                .foregroundColor(ABTheme.primaryText)
+
+                            Image(systemName: circle.isPrivate ? "lock.fill" : "globe")
+                                .font(.caption)
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
 
                         Text(circle.description)
                             .font(ABTheme.captionFont)
@@ -387,7 +450,7 @@ struct CircleDetailView: View {
 
                         HStack(spacing: 12) {
                             Label("\(circle.memberCount) members", systemImage: "person.2.fill")
-                            if let code = circle.inviteCode {
+                            if isMember, let code = circle.inviteCode {
                                 Label(code, systemImage: "key.fill")
                             }
                         }
@@ -396,8 +459,23 @@ struct CircleDetailView: View {
                     }
                     .padding(.top, ABTheme.paddingSmall)
 
-                    // New post button (premium only)
-                    if subscriptionManager.isPremium {
+                    // Read-only notice for non-members viewing public circles
+                    if !isMember && !circle.isPrivate {
+                        HStack(spacing: 8) {
+                            Image(systemName: "eye.fill")
+                                .foregroundColor(ABTheme.sageGreen)
+                                .font(.caption)
+                            Text("You're browsing this public circle. Join to participate!")
+                                .font(.system(.caption, design: .serif))
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.sageGreen.opacity(0.08))
+                        .cornerRadius(ABTheme.cornerRadiusSmall)
+                    }
+
+                    // New post button (premium members only)
+                    if canPost {
                         Button {
                             showNewPost = true
                         } label: {
@@ -407,6 +485,18 @@ struct CircleDetailView: View {
                             }
                         }
                         .buttonStyle(ABSecondaryButtonStyle())
+                    } else if isMember && !subscriptionManager.isPremium {
+                        HStack(spacing: 8) {
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(ABTheme.warmGold)
+                                .font(.caption)
+                            Text("Upgrade to Premium to post and comment")
+                                .font(.system(.caption, design: .serif))
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                        .padding(ABTheme.paddingSmall)
+                        .background(ABTheme.warmGoldLight.opacity(0.2))
+                        .cornerRadius(ABTheme.cornerRadiusSmall)
                     }
 
                     // Posts
