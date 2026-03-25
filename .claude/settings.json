@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '⚠️  REMINDER: Verify Swift parameter ordering and imports before saving. Check CLAUDE.md build rules.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '✅ File saved. Before committing, grep for known error patterns (wrong param order, missing imports).'"
+          }
+        ]
+      }
+    ]
+  }
+}
