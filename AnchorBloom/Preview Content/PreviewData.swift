@@ -17,7 +17,8 @@ struct PreviewData {
         totalDaysCompleted: 38,
         earnedBadgeIDs: ["first_root", "seedling", "rooted", "flourishing", "first_anchor", "anchor_10", "first_bloom", "bloom_10", "first_prayer"],
         journeyProgress: [:],
-        circleIDs: ["circle_1"]
+        circleIDs: ["circle_1"],
+        blockedUserIDs: []
     )
 
     static let freeUser = UserProfile(
@@ -32,7 +33,8 @@ struct PreviewData {
         totalDaysCompleted: 5,
         earnedBadgeIDs: ["first_root", "seedling", "first_anchor", "first_bloom"],
         journeyProgress: [:],
-        circleIDs: []
+        circleIDs: [],
+        blockedUserIDs: []
     )
 
     // MARK: - Sample Daily Entries
@@ -74,6 +76,7 @@ struct PreviewData {
             "user_4": "Joy",
             "user_5": "Mercy"
         ],
+        adminIDs: ["user_1"],
         createdAt: Calendar.current.date(byAdding: .day, value: -30, to: Date())!,
         isPrivate: true,
         inviteCode: "BLOOM7",
