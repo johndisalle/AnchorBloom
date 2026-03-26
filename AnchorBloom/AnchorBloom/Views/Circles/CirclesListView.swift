@@ -683,18 +683,15 @@ struct CircleDetailView: View {
         isJoining = true
         Task {
             do {
-                _ = try await firestoreService.joinCircle(inviteCode: circle.inviteCode ?? "")
+                if !circle.isPrivate {
+                    try await firestoreService.joinPublicCircle(circleID: circleID)
+                } else {
+                    _ = try await firestoreService.joinCircle(inviteCode: circle.inviteCode ?? "")
+                }
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
                 didJoin = true
             } catch {
-                // If invite code join fails, try direct join for public circles
-                if !circle.isPrivate {
-                    try? await firestoreService.joinPublicCircle(circleID: circleID)
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                    didJoin = true
-                } else {
-                    errorMessage = error.localizedDescription
-                }
+                errorMessage = error.localizedDescription
             }
             isJoining = false
         }

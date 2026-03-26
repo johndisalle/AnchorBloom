@@ -195,7 +195,7 @@ final class FirestoreService: ObservableObject {
 
     /// Joins a public circle directly by ID (no invite code needed)
     func joinPublicCircle(circleID: String) async throws {
-        guard let userID = currentUserID else { return }
+        guard let userID = currentUserID else { throw FirestoreError.notAuthenticated }
         let docRef = circlesCollection.document(circleID)
         let document = try await docRef.getDocument()
         guard var circle = try? document.data(as: SisterCircle.self) else {

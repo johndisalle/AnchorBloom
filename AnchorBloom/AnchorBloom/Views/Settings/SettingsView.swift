@@ -328,8 +328,10 @@ struct SettingsView: View {
                 Button("Sign Out", role: .destructive) {
                     do {
                         try authManager.signOut()
-                        // Reset onboarding flags so next user gets the full experience
+                        // Reset all user state so next user gets a fresh experience
                         UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
+                        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                        UserDefaults.standard.set(false, forKey: "hasSeenPremiumWelcome")
                     } catch {
                         deleteErrorMessage = error.localizedDescription
                         showDeleteError = true
@@ -360,6 +362,7 @@ struct SettingsView: View {
                             // Reset all local state for fresh start
                             UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
                             UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+                            UserDefaults.standard.set(false, forKey: "hasSeenPremiumWelcome")
                         } catch {
                             deleteErrorMessage = error.localizedDescription
                             showDeleteError = true
