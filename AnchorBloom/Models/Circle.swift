@@ -42,8 +42,56 @@ struct CirclePost: Codable, Identifiable {
     var createdAt: Date
     var likedByIDs: [String]
     var commentCount: Int
+    var isAnonymous: Bool
 
     var likeCount: Int { likedByIDs.count }
+
+    var displayName: String {
+        isAnonymous ? "A Sister in Christ" : authorName
+    }
+}
+
+// MARK: - Daily Circle Prompts
+/// Rotating prompts shown when creating a new post
+enum CirclePrompts {
+    static let prompts: [String] = [
+        "What truth is God teaching you in this season?",
+        "How did you see God's faithfulness today?",
+        "What scripture has been on your heart this week?",
+        "Share a moment of grace you experienced recently.",
+        "What area of growth is God working on in your life?",
+        "How can your sisters pray for you today?",
+        "What lie have you been replacing with God's truth?",
+        "Share something that made you grateful this week.",
+        "What worship song has been ministering to your spirit?",
+        "How has God surprised you recently?",
+        "What is one way you stepped out in faith this week?",
+        "Share an encouragement for a sister who is struggling.",
+        "What does God's love look like in your life right now?",
+        "What fear are you surrendering to God today?",
+        "How has community strengthened your walk with Christ?",
+        "What promise of God are you standing on this week?",
+        "Share a testimony of answered prayer.",
+        "What is God whispering to your heart today?",
+        "How are you choosing joy in a hard season?",
+        "What does blooming in purpose look like for you right now?",
+        "Share a lesson you learned the hard way.",
+        "What is one thing you want your sisters to know today?",
+        "How has forgiveness set you free recently?",
+        "What role are you growing into as a woman of God?",
+        "Share a verse that changed your perspective this week.",
+        "What act of kindness did you witness or give today?",
+        "How are you resting in God's timing?",
+        "What battle has God already won for you?",
+        "Share a prayer for the women in this circle.",
+        "What is one word God has placed on your heart for this season?",
+    ]
+
+    /// Returns today's prompt based on the day of the year
+    static var todayPrompt: String {
+        let day = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+        return prompts[(day - 1) % prompts.count]
+    }
 }
 
 enum CirclePostType: String, Codable, CaseIterable {

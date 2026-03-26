@@ -807,16 +807,16 @@ struct CirclePostView: View {
             // Author + type + actions menu
             HStack {
                 Circle()
-                    .fill(ABTheme.blush.opacity(0.3))
+                    .fill(post.isAnonymous ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
                     .frame(width: 32, height: 32)
                     .overlay(
-                        Text(String(post.authorName.prefix(1)))
-                            .font(.system(.caption, design: .serif, weight: .bold))
-                            .foregroundColor(ABTheme.blush)
+                        Image(systemName: post.isAnonymous ? "person.fill.questionmark" : "person.fill")
+                            .font(.caption)
+                            .foregroundColor(post.isAnonymous ? ABTheme.secondaryText : ABTheme.blush)
                     )
 
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(post.authorName)
+                    Text(post.displayName)
                         .font(.system(.caption, design: .serif, weight: .semibold))
                         .foregroundColor(ABTheme.primaryText)
                     Text(post.createdAt, style: .relative)
@@ -847,10 +847,12 @@ struct CirclePostView: View {
                             Label("Report Post", systemImage: "flag")
                         }
 
-                        Button {
-                            showBlockAlert = true
-                        } label: {
-                            Label("Block \(post.authorName)", systemImage: "hand.raised")
+                        if !post.isAnonymous {
+                            Button {
+                                showBlockAlert = true
+                            } label: {
+                                Label("Block \(post.authorName)", systemImage: "hand.raised")
+                            }
                         }
                     }
 
@@ -1009,15 +1011,15 @@ struct CommentThreadView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(ABTheme.blush.opacity(0.3))
+                                    .fill(post.isAnonymous ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
                                     .frame(width: 28, height: 28)
                                     .overlay(
-                                        Text(String(post.authorName.prefix(1)))
-                                            .font(.system(.caption2, design: .serif, weight: .bold))
-                                            .foregroundColor(ABTheme.blush)
+                                        Image(systemName: post.isAnonymous ? "person.fill.questionmark" : "person.fill")
+                                            .font(.system(size: 11))
+                                            .foregroundColor(post.isAnonymous ? ABTheme.secondaryText : ABTheme.blush)
                                     )
 
-                                Text(post.authorName)
+                                Text(post.displayName)
                                     .font(.system(.caption, design: .serif, weight: .semibold))
                                     .foregroundColor(ABTheme.primaryText)
 
@@ -1402,11 +1404,51 @@ struct NewPostView: View {
     @State private var content = ""
     @State private var selectedType: CirclePostType = .encouragement
     @State private var scriptureRef = ""
+    @State private var isAnonymous = false
+    @State private var showPrompt = true
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
+                    // Daily prompt
+                    if showPrompt {
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Image(systemName: "sparkles")
+                                    .foregroundColor(ABTheme.warmGold)
+                                Text("Today's Prompt")
+                                    .font(.system(.caption, design: .serif, weight: .semibold))
+                                    .foregroundColor(ABTheme.warmGold)
+                                Spacer()
+                                Button {
+                                    withAnimation { showPrompt = false }
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.caption2)
+                                        .foregroundColor(ABTheme.secondaryText)
+                                }
+                            }
+
+                            Text(CirclePrompts.todayPrompt)
+                                .font(.system(.body, design: .serif).italic())
+                                .foregroundColor(ABTheme.primaryText)
+                                .lineSpacing(3)
+
+                            Button {
+                                content = CirclePrompts.todayPrompt + "\n\n"
+                                showPrompt = false
+                            } label: {
+                                Text("Use this prompt")
+                                    .font(.system(.caption, design: .serif, weight: .medium))
+                                    .foregroundColor(ABTheme.sageGreen)
+                            }
+                        }
+                        .padding(ABTheme.paddingMedium)
+                        .background(ABTheme.warmGoldLight.opacity(0.2))
+                        .cornerRadius(ABTheme.cornerRadiusSmall)
+                    }
+
                     // Post type picker
                     VStack(alignment: .leading, spacing: 8) {
                         Text("What are you sharing?")
@@ -1417,6 +1459,7 @@ struct NewPostView: View {
                             HStack(spacing: 8) {
                                 ForEach(CirclePostType.allCases, id: \.self) { type in
                                     Button {
+                                        UISelectionFeedbackGenerator().selectionChanged()
                                         selectedType = type
                                     } label: {
                                         HStack(spacing: 4) {
@@ -1451,6 +1494,23 @@ struct NewPostView: View {
                     // Optional scripture
                     ABTextField(text: $scriptureRef, placeholder: "Scripture reference (optional)", icon: "book.fill")
 
+                    // Anonymous toggle
+                    Toggle(isOn: $isAnonymous) {
+                        HStack(spacing: 8) {
+                            Image(systemName: isAnonymous ? "eye.slash.fill" : "eye.fill")
+                                .foregroundColor(ABTheme.sageGreen)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Post Anonymously")
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(ABTheme.primaryText)
+                                Text(isAnonymous ? "Your name will be hidden from sisters" : "Your name will be shown on this post")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                        }
+                    }
+                    .tint(ABTheme.sageGreen)
+
                     // Post button
                     Button("Share with Sisters") {
                         createPost()
@@ -1473,19 +1533,23 @@ struct NewPostView: View {
     }
 
     private func createPost() {
+        let userID = FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
+        let userName = FirebaseAuth.Auth.auth().currentUser?.displayName ?? "Sister"
         let post = CirclePost(
             circleID: circleID,
-            authorID: "",
-            authorName: "You",
+            authorID: userID,
+            authorName: userName,
             type: selectedType,
             content: content,
             scriptureReference: scriptureRef.isEmpty ? nil : scriptureRef,
             createdAt: Date(),
             likedByIDs: [],
-            commentCount: 0
+            commentCount: 0,
+            isAnonymous: isAnonymous
         )
         Task {
             try? await firestoreService.createPost(post)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             onCreated(post)
             dismiss()
         }

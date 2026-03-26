@@ -95,7 +95,8 @@ struct PreviewData {
             scriptureReference: "Proverbs 22:6",
             createdAt: Calendar.current.date(byAdding: .hour, value: -3, to: Date())!,
             likedByIDs: ["user_1", "user_3", "user_4"],
-            commentCount: 2
+            commentCount: 2,
+            isAnonymous: false
         ),
         CirclePost(
             circleID: "circle_1",
@@ -105,7 +106,8 @@ struct PreviewData {
             content: "Sisters, please pray for my marriage. We're going through a really hard season and I need God to move. I'm standing firm but I'm weary.",
             createdAt: Calendar.current.date(byAdding: .hour, value: -8, to: Date())!,
             likedByIDs: ["user_1", "user_2", "user_4", "user_5"],
-            commentCount: 5
+            commentCount: 5,
+            isAnonymous: true
         ),
         CirclePost(
             circleID: "circle_1",
@@ -116,7 +118,8 @@ struct PreviewData {
             scriptureReference: "Philippians 1:6",
             createdAt: Calendar.current.date(byAdding: .day, value: -1, to: Date())!,
             likedByIDs: ["user_2", "user_3"],
-            commentCount: 1
+            commentCount: 1,
+            isAnonymous: false
         ),
     ]
 
