@@ -126,20 +126,23 @@ struct AuthView: View {
                            let nonce = currentNonce {
                             Task {
                                 do {
+                                    authManager.isLoading = true
                                     try await authManager.signInWithApple(
                                         credential: appleIDCredential,
                                         nonce: nonce
                                     )
-                                    // Create profile if needed
+                                    // Create profile if needed (best-effort)
                                     let name = [
                                         appleIDCredential.fullName?.givenName,
                                         appleIDCredential.fullName?.familyName
                                     ].compactMap { $0 }.joined(separator: " ")
-                                    try await firestoreService.createInitialProfile(
+                                    try? await firestoreService.createInitialProfile(
                                         displayName: name.isEmpty ? "Beloved" : name,
                                         email: appleIDCredential.email ?? ""
                                     )
+                                    authManager.isLoading = false
                                 } catch {
+                                    authManager.isLoading = false
                                     authManager.errorMessage = error.localizedDescription
                                 }
                             }
