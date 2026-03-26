@@ -528,23 +528,20 @@ struct CircleDetailView: View {
                         }
                     }
 
-                    // Read-only notice for non-members viewing public circles
-                    if !isMember && !circle.isPrivate {
+                    // Notices and post button
+                    if !subscriptionManager.isPremium {
                         HStack(spacing: 8) {
-                            Image(systemName: "eye.fill")
-                                .foregroundColor(ABTheme.sageGreen)
+                            Image(systemName: "crown.fill")
+                                .foregroundColor(ABTheme.warmGold)
                                 .font(.caption)
-                            Text("You're browsing this public circle. Join to participate!")
+                            Text("Upgrade to Premium to post, comment, and react")
                                 .font(.system(.caption, design: .serif))
                                 .foregroundColor(ABTheme.secondaryText)
                         }
                         .padding(ABTheme.paddingMedium)
-                        .background(ABTheme.sageGreen.opacity(0.08))
+                        .background(ABTheme.warmGoldLight.opacity(0.2))
                         .cornerRadius(ABTheme.cornerRadiusSmall)
-                    }
-
-                    // New post button (premium members only)
-                    if canPost {
+                    } else if canPost {
                         Button {
                             showNewPost = true
                         } label: {
@@ -554,18 +551,6 @@ struct CircleDetailView: View {
                             }
                         }
                         .buttonStyle(ABSecondaryButtonStyle())
-                    } else if isMember && !subscriptionManager.isPremium {
-                        HStack(spacing: 8) {
-                            Image(systemName: "crown.fill")
-                                .foregroundColor(ABTheme.warmGold)
-                                .font(.caption)
-                            Text("Upgrade to Premium to post and comment")
-                                .font(.system(.caption, design: .serif))
-                                .foregroundColor(ABTheme.secondaryText)
-                        }
-                        .padding(ABTheme.paddingSmall)
-                        .background(ABTheme.warmGoldLight.opacity(0.2))
-                        .cornerRadius(ABTheme.cornerRadiusSmall)
                     }
 
                     // Posts (filtered by blocked users)
@@ -587,6 +572,7 @@ struct CircleDetailView: View {
                                 post: post,
                                 circleID: circle.id,
                                 isCircleAdmin: isAdmin,
+                                isPremium: subscriptionManager.isPremium,
                                 blockedUserIDs: blockedUserIDs,
                                 onDeleted: {
                                     posts.removeAll { $0.id == post.id }
@@ -759,6 +745,7 @@ struct CirclePostView: View {
     let post: CirclePost
     var circleID: String?
     var isCircleAdmin: Bool = false
+    var isPremium: Bool = false
     var blockedUserIDs: [String] = []
     var onDeleted: (() -> Void)?
     var onBlockedUser: ((String) -> Void)?
@@ -774,15 +761,17 @@ struct CirclePostView: View {
     @State private var showReportSheet = false
     @State private var showDeletePostAlert = false
     @State private var showBlockAlert = false
+    @State private var showUpgradePrompt = false
 
     private var isOwnPost: Bool {
         post.authorID == (FirebaseAuth.Auth.auth().currentUser?.uid ?? "")
     }
 
-    init(post: CirclePost, circleID: String? = nil, isCircleAdmin: Bool = false, blockedUserIDs: [String] = [], onDeleted: (() -> Void)? = nil, onBlockedUser: ((String) -> Void)? = nil) {
+    init(post: CirclePost, circleID: String? = nil, isCircleAdmin: Bool = false, isPremium: Bool = false, blockedUserIDs: [String] = [], onDeleted: (() -> Void)? = nil, onBlockedUser: ((String) -> Void)? = nil) {
         self.post = post
         self.circleID = circleID
         self.isCircleAdmin = isCircleAdmin
+        self.isPremium = isPremium
         self.blockedUserIDs = blockedUserIDs
         self.onDeleted = onDeleted
         self.onBlockedUser = onBlockedUser
@@ -873,7 +862,11 @@ struct CirclePostView: View {
             // Interaction bar
             HStack(spacing: 16) {
                 Button {
-                    toggleLike()
+                    if isPremium {
+                        toggleLike()
+                    } else {
+                        showUpgradePrompt = true
+                    }
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
@@ -906,7 +899,7 @@ struct CirclePostView: View {
         .sheet(isPresented: $showComments) {
             CommentThreadView(
                 post: post,
-                isPremium: subscriptionManager.isPremium,
+                isPremium: isPremium,
                 isCircleAdmin: isCircleAdmin,
                 circleID: circleID,
                 blockedUserIDs: blockedUserIDs,
@@ -914,6 +907,9 @@ struct CirclePostView: View {
             ) {
                 commentCount += 1
             }
+        }
+        .sheet(isPresented: $showUpgradePrompt) {
+            SubscriptionView()
         }
         .sheet(isPresented: $showReportSheet) {
             ReportContentView(
