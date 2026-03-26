@@ -82,18 +82,22 @@ struct AuthView: View {
                 // Primary button
                 Button(isSignUp ? "Create Account" : "Sign In") {
                     Task {
-                        if isSignUp {
-                            try await authManager.signUp(
-                                email: email,
-                                password: password,
-                                displayName: displayName
-                            )
-                            try await firestoreService.createInitialProfile(
-                                displayName: displayName,
-                                email: email
-                            )
-                        } else {
-                            try await authManager.signIn(email: email, password: password)
+                        do {
+                            if isSignUp {
+                                try await authManager.signUp(
+                                    email: email,
+                                    password: password,
+                                    displayName: displayName
+                                )
+                                try await firestoreService.createInitialProfile(
+                                    displayName: displayName,
+                                    email: email
+                                )
+                            } else {
+                                try await authManager.signIn(email: email, password: password)
+                            }
+                        } catch {
+                            authManager.errorMessage = error.localizedDescription
                         }
                     }
                 }
@@ -121,23 +125,27 @@ struct AuthView: View {
                         if let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential,
                            let nonce = currentNonce {
                             Task {
-                                try await authManager.signInWithApple(
-                                    credential: appleIDCredential,
-                                    nonce: nonce
-                                )
-                                // Create profile if needed
-                                let name = [
-                                    appleIDCredential.fullName?.givenName,
-                                    appleIDCredential.fullName?.familyName
-                                ].compactMap { $0 }.joined(separator: " ")
-                                try await firestoreService.createInitialProfile(
-                                    displayName: name.isEmpty ? "Beloved" : name,
-                                    email: appleIDCredential.email ?? ""
-                                )
+                                do {
+                                    try await authManager.signInWithApple(
+                                        credential: appleIDCredential,
+                                        nonce: nonce
+                                    )
+                                    // Create profile if needed
+                                    let name = [
+                                        appleIDCredential.fullName?.givenName,
+                                        appleIDCredential.fullName?.familyName
+                                    ].compactMap { $0 }.joined(separator: " ")
+                                    try await firestoreService.createInitialProfile(
+                                        displayName: name.isEmpty ? "Beloved" : name,
+                                        email: appleIDCredential.email ?? ""
+                                    )
+                                } catch {
+                                    authManager.errorMessage = error.localizedDescription
+                                }
                             }
                         }
-                    case .failure:
-                        break
+                    case .failure(let error):
+                        authManager.errorMessage = error.localizedDescription
                     }
                 }
                 .signInWithAppleButtonStyle(.black)
