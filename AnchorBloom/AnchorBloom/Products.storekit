@@ -87,7 +87,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.anchorbloom.premium.monthly",
+          "productID" : "com.anchorbloom.premium.monthly.v2",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Premium Monthly",
           "subscriptionGroupID" : "B1A2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D",
@@ -115,7 +115,7 @@
               "locale" : "en_US"
             }
           ],
-          "productID" : "com.anchorbloom.premium.yearly",
+          "productID" : "com.anchorbloom.premium.yearly.v2",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Premium Yearly",
           "subscriptionGroupID" : "B1A2C3D4-5E6F-7A8B-9C0D-1E2F3A4B5C6D",
