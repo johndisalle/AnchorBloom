@@ -10,6 +10,7 @@ struct SisterCircle: Codable, Identifiable {
     var creatorID: String
     var memberIDs: [String]
     var memberNames: [String: String] // userID -> displayName
+    var adminIDs: [String] // userIDs with admin privileges (creator auto-included)
     var createdAt: Date
     var isPrivate: Bool
     var inviteCode: String?
@@ -18,6 +19,11 @@ struct SisterCircle: Codable, Identifiable {
 
     var memberCount: Int { memberIDs.count }
     var isFull: Bool { memberIDs.count >= maxMembers }
+
+    /// Check if a user is an admin (creator or explicit admin)
+    func isAdmin(_ userID: String) -> Bool {
+        creatorID == userID || adminIDs.contains(userID)
+    }
 
     static let maxFreeCircles = 2
     static let defaultMaxMembers = 12
@@ -66,4 +72,49 @@ struct CircleComment: Codable, Identifiable {
     var authorName: String
     var content: String
     var createdAt: Date
+}
+
+// MARK: - Content Report
+/// A report filed by a user against a post, comment, or user
+struct ContentReport: Codable, Identifiable {
+    @DocumentID var id: String?
+    var reporterID: String
+    var reportedUserID: String
+    var contentID: String?       // post or comment ID (nil for user-level reports)
+    var contentType: ReportContentType
+    var reason: ReportReason
+    var details: String?         // optional free-text description
+    var circleID: String?
+    var status: ReportStatus
+    var createdAt: Date
+}
+
+enum ReportContentType: String, Codable {
+    case post
+    case comment
+    case user
+}
+
+enum ReportReason: String, Codable, CaseIterable {
+    case inappropriate = "Inappropriate Content"
+    case harassment = "Harassment or Bullying"
+    case spam = "Spam"
+    case hateSpeech = "Hate Speech"
+    case other = "Other"
+
+    var icon: String {
+        switch self {
+        case .inappropriate: return "exclamationmark.triangle.fill"
+        case .harassment: return "hand.raised.fill"
+        case .spam: return "xmark.bin.fill"
+        case .hateSpeech: return "exclamationmark.bubble.fill"
+        case .other: return "ellipsis.circle.fill"
+        }
+    }
+}
+
+enum ReportStatus: String, Codable {
+    case pending
+    case reviewed
+    case dismissed
 }

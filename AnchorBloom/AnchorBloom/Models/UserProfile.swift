@@ -29,6 +29,9 @@ struct UserProfile: Codable, Identifiable {
     // Circle memberships
     var circleIDs: [String]
 
+    // Moderation
+    var blockedUserIDs: [String]
+
     static var empty: UserProfile {
         UserProfile(
             email: "",
@@ -42,7 +45,8 @@ struct UserProfile: Codable, Identifiable {
             totalDaysCompleted: 0,
             earnedBadgeIDs: [],
             journeyProgress: [:],
-            circleIDs: []
+            circleIDs: [],
+            blockedUserIDs: []
         )
     }
 }

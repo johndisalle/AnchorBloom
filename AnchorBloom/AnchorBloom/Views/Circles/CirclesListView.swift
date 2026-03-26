@@ -310,12 +310,14 @@ struct CreateCircleView: View {
         isSaving = true
         let inviteCode = String((0..<6).map { _ in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".randomElement()! })
 
+        let creatorID = Auth.auth().currentUser?.uid ?? ""
         let circle = SisterCircle(
             name: name,
             description: description,
-            creatorID: Auth.auth().currentUser?.uid ?? "",
+            creatorID: creatorID,
             memberIDs: [],
             memberNames: [:],
+            adminIDs: [creatorID],
             createdAt: Date(),
             isPrivate: isPrivate,
             inviteCode: inviteCode,
@@ -421,13 +423,23 @@ struct CircleDetailView: View {
     @State private var posts: [CirclePost] = []
     @State private var showNewPost = false
     @State private var isLoading = false
+    @State private var showDeleteCircleAlert = false
+    @State private var showManageMembers = false
+    @State private var showLeaveAlert = false
+    @State private var blockedUserIDs: [String] = []
 
-    private var isMember: Bool {
-        let userID = FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
-        return circle.memberIDs.contains(userID) || circle.creatorID == userID
+    private var currentUserID: String {
+        FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
     }
 
-    /// Premium members who are part of the circle can post
+    private var isMember: Bool {
+        circle.memberIDs.contains(currentUserID) || circle.creatorID == currentUserID
+    }
+
+    private var isAdmin: Bool {
+        circle.isAdmin(currentUserID)
+    }
+
     private var canPost: Bool {
         subscriptionManager.isPremium && isMember
     }
@@ -462,6 +474,59 @@ struct CircleDetailView: View {
                         .foregroundColor(ABTheme.secondaryText)
                     }
                     .padding(.top, ABTheme.paddingSmall)
+
+                    // Admin controls
+                    if isAdmin {
+                        HStack(spacing: 10) {
+                            Button {
+                                showManageMembers = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "person.2.badge.gearshape")
+                                        .font(.caption2)
+                                    Text("Members")
+                                        .font(.system(.caption, design: .serif, weight: .medium))
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(ABTheme.sageGreen.opacity(0.1))
+                                .foregroundColor(ABTheme.sageGreen)
+                                .cornerRadius(20)
+                            }
+
+                            Button {
+                                showDeleteCircleAlert = true
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "trash")
+                                        .font(.caption2)
+                                    Text("Delete Circle")
+                                        .font(.system(.caption, design: .serif, weight: .medium))
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(ABTheme.destructive.opacity(0.1))
+                                .foregroundColor(ABTheme.destructive)
+                                .cornerRadius(20)
+                            }
+                        }
+                    } else if isMember {
+                        Button {
+                            showLeaveAlert = true
+                        } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.right.circle")
+                                    .font(.caption2)
+                                Text("Leave Circle")
+                                    .font(.system(.caption, design: .serif, weight: .medium))
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(ABTheme.destructive.opacity(0.1))
+                            .foregroundColor(ABTheme.destructive)
+                            .cornerRadius(20)
+                        }
+                    }
 
                     // Read-only notice for non-members viewing public circles
                     if !isMember && !circle.isPrivate {
@@ -503,10 +568,10 @@ struct CircleDetailView: View {
                         .cornerRadius(ABTheme.cornerRadiusSmall)
                     }
 
-                    // Posts
+                    // Posts (filtered by blocked users)
                     if isLoading {
                         ProgressView().tint(ABTheme.sageGreen)
-                    } else if posts.isEmpty {
+                    } else if filteredPosts.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "bubble.left.and.bubble.right.fill")
                                 .font(.title)
@@ -517,8 +582,19 @@ struct CircleDetailView: View {
                         }
                         .padding(.top, 40)
                     } else {
-                        ForEach(posts) { post in
-                            CirclePostView(post: post)
+                        ForEach(filteredPosts) { post in
+                            CirclePostView(
+                                post: post,
+                                circleID: circle.id,
+                                isCircleAdmin: isAdmin,
+                                blockedUserIDs: blockedUserIDs,
+                                onDeleted: {
+                                    posts.removeAll { $0.id == post.id }
+                                },
+                                onBlockedUser: { userID in
+                                    blockedUserIDs.append(userID)
+                                }
+                            )
                         }
                     }
 
@@ -535,6 +611,7 @@ struct CircleDetailView: View {
                 }
             }
             .task {
+                blockedUserIDs = await firestoreService.fetchBlockedUserIDs()
                 await loadPosts()
             }
             .sheet(isPresented: $showNewPost) {
@@ -542,7 +619,39 @@ struct CircleDetailView: View {
                     posts.insert(post, at: 0)
                 }
             }
+            .sheet(isPresented: $showManageMembers) {
+                ManageMembersView(circle: circle)
+            }
+            .alert("Delete Circle?", isPresented: $showDeleteCircleAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Delete", role: .destructive) {
+                    Task {
+                        guard let circleID = circle.id else { return }
+                        try? await firestoreService.deleteCircle(circleID: circleID)
+                        UINotificationFeedbackGenerator().notificationOccurred(.success)
+                        dismiss()
+                    }
+                }
+            } message: {
+                Text("This will permanently delete \"\(circle.name)\" and all its posts. This cannot be undone.")
+            }
+            .alert("Leave Circle?", isPresented: $showLeaveAlert) {
+                Button("Cancel", role: .cancel) {}
+                Button("Leave", role: .destructive) {
+                    Task {
+                        guard let circleID = circle.id else { return }
+                        try? await firestoreService.leaveCircle(circleID: circleID)
+                        dismiss()
+                    }
+                }
+            } message: {
+                Text("You'll need a new invite code to rejoin this circle.")
+            }
         }
+    }
+
+    private var filteredPosts: [CirclePost] {
+        posts.filter { !blockedUserIDs.contains($0.authorID) }
     }
 
     private func loadPosts() async {
@@ -554,9 +663,106 @@ struct CircleDetailView: View {
     }
 }
 
+// MARK: - Manage Members View (Admin)
+struct ManageMembersView: View {
+    let circle: SisterCircle
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var removingMemberID: String?
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(circle.memberIDs, id: \.self) { memberID in
+                        let name = circle.memberNames[memberID] ?? "Member"
+                        let isCreator = memberID == circle.creatorID
+
+                        HStack {
+                            Circle()
+                                .fill(ABTheme.blush.opacity(0.2))
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    Text(String(name.prefix(1)).uppercased())
+                                        .font(.system(.caption, design: .serif, weight: .bold))
+                                        .foregroundColor(ABTheme.blush)
+                                )
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(name)
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(ABTheme.primaryText)
+                                if isCreator {
+                                    Text("Creator")
+                                        .font(.caption2)
+                                        .foregroundColor(ABTheme.warmGold)
+                                } else if circle.adminIDs.contains(memberID) {
+                                    Text("Admin")
+                                        .font(.caption2)
+                                        .foregroundColor(ABTheme.sageGreen)
+                                }
+                            }
+
+                            Spacer()
+
+                            if !isCreator {
+                                Button {
+                                    removingMemberID = memberID
+                                } label: {
+                                    Image(systemName: "person.badge.minus")
+                                        .foregroundColor(ABTheme.destructive)
+                                        .font(.caption)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    Text("\(circle.memberCount) Members")
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(ABTheme.cream)
+            .navigationTitle("Manage Members")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .alert("Remove Member?", isPresented: Binding(
+                get: { removingMemberID != nil },
+                set: { if !$0 { removingMemberID = nil } }
+            )) {
+                Button("Cancel", role: .cancel) { removingMemberID = nil }
+                Button("Remove", role: .destructive) {
+                    if let memberID = removingMemberID, let circleID = circle.id {
+                        Task {
+                            try? await firestoreService.removeMember(circleID: circleID, memberID: memberID)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            removingMemberID = nil
+                        }
+                    }
+                }
+            } message: {
+                if let memberID = removingMemberID {
+                    Text("Remove \(circle.memberNames[memberID] ?? "this member") from the circle?")
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Circle Post View
 struct CirclePostView: View {
     let post: CirclePost
+    var circleID: String?
+    var isCircleAdmin: Bool = false
+    var blockedUserIDs: [String] = []
+    var onDeleted: (() -> Void)?
+    var onBlockedUser: ((String) -> Void)?
+
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
@@ -564,16 +770,29 @@ struct CirclePostView: View {
     @State private var likeCount: Int
     @State private var showComments = false
     @State private var commentCount: Int
+    @State private var showPostActions = false
+    @State private var showReportSheet = false
+    @State private var showDeletePostAlert = false
+    @State private var showBlockAlert = false
 
-    init(post: CirclePost) {
+    private var isOwnPost: Bool {
+        post.authorID == (FirebaseAuth.Auth.auth().currentUser?.uid ?? "")
+    }
+
+    init(post: CirclePost, circleID: String? = nil, isCircleAdmin: Bool = false, blockedUserIDs: [String] = [], onDeleted: (() -> Void)? = nil, onBlockedUser: ((String) -> Void)? = nil) {
         self.post = post
+        self.circleID = circleID
+        self.isCircleAdmin = isCircleAdmin
+        self.blockedUserIDs = blockedUserIDs
+        self.onDeleted = onDeleted
+        self.onBlockedUser = onBlockedUser
         _likeCount = State(initialValue: post.likeCount)
         _commentCount = State(initialValue: post.commentCount)
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // Author + type
+            // Author + type + actions menu
             HStack {
                 Circle()
                     .fill(ABTheme.blush.opacity(0.3))
@@ -606,6 +825,36 @@ struct CirclePostView: View {
                 .padding(.vertical, 4)
                 .background(ABTheme.sageGreen.opacity(0.1))
                 .cornerRadius(8)
+
+                // Actions menu (report, block, delete)
+                Menu {
+                    if !isOwnPost {
+                        Button {
+                            showReportSheet = true
+                        } label: {
+                            Label("Report Post", systemImage: "flag")
+                        }
+
+                        Button {
+                            showBlockAlert = true
+                        } label: {
+                            Label("Block \(post.authorName)", systemImage: "hand.raised")
+                        }
+                    }
+
+                    if isCircleAdmin || isOwnPost {
+                        Button(role: .destructive) {
+                            showDeletePostAlert = true
+                        } label: {
+                            Label("Delete Post", systemImage: "trash")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.caption)
+                        .foregroundColor(ABTheme.secondaryText)
+                        .padding(8)
+                }
             }
 
             // Content
@@ -623,7 +872,6 @@ struct CirclePostView: View {
 
             // Interaction bar
             HStack(spacing: 16) {
-                // Like button
                 Button {
                     toggleLike()
                 } label: {
@@ -638,7 +886,6 @@ struct CirclePostView: View {
                 }
                 .buttonStyle(.plain)
 
-                // Comment button
                 Button {
                     showComments = true
                 } label: {
@@ -659,10 +906,46 @@ struct CirclePostView: View {
         .sheet(isPresented: $showComments) {
             CommentThreadView(
                 post: post,
-                isPremium: subscriptionManager.isPremium
+                isPremium: subscriptionManager.isPremium,
+                isCircleAdmin: isCircleAdmin,
+                circleID: circleID,
+                blockedUserIDs: blockedUserIDs,
+                onBlockedUser: onBlockedUser
             ) {
                 commentCount += 1
             }
+        }
+        .sheet(isPresented: $showReportSheet) {
+            ReportContentView(
+                reportedUserID: post.authorID,
+                contentID: post.id,
+                contentType: .post,
+                circleID: circleID
+            )
+        }
+        .alert("Delete Post?", isPresented: $showDeletePostAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                guard let postID = post.id else { return }
+                Task {
+                    try? await firestoreService.deletePost(postID: postID)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    onDeleted?()
+                }
+            }
+        } message: {
+            Text("This post and all its comments will be permanently deleted.")
+        }
+        .alert("Block \(post.authorName)?", isPresented: $showBlockAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Block", role: .destructive) {
+                Task {
+                    try? await firestoreService.blockUser(userID: post.authorID)
+                    onBlockedUser?(post.authorID)
+                }
+            }
+        } message: {
+            Text("You won't see posts or comments from this user. You can unblock them in Settings.")
         }
     }
 
@@ -681,6 +964,10 @@ struct CirclePostView: View {
 struct CommentThreadView: View {
     let post: CirclePost
     let isPremium: Bool
+    var isCircleAdmin: Bool = false
+    var circleID: String?
+    var blockedUserIDs: [String] = []
+    var onBlockedUser: ((String) -> Void)?
     let onCommentAdded: () -> Void
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var firestoreService: FirestoreService
@@ -690,10 +977,13 @@ struct CommentThreadView: View {
     @State private var isLoading = false
     @State private var isSending = false
 
+    private var filteredComments: [CircleComment] {
+        comments.filter { !blockedUserIDs.contains($0.authorID) }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Comments list
                 ScrollView {
                     VStack(spacing: 0) {
                         // Original post at top
@@ -734,7 +1024,7 @@ struct CommentThreadView: View {
                             ProgressView()
                                 .tint(ABTheme.sageGreen)
                                 .padding(.top, 30)
-                        } else if comments.isEmpty {
+                        } else if filteredComments.isEmpty {
                             VStack(spacing: 8) {
                                 Image(systemName: "bubble.left.and.bubble.right")
                                     .font(.title2)
@@ -748,8 +1038,17 @@ struct CommentThreadView: View {
                             }
                             .padding(.top, 30)
                         } else {
-                            ForEach(comments) { comment in
-                                CommentRow(comment: comment)
+                            ForEach(filteredComments) { comment in
+                                CommentRow(
+                                    comment: comment,
+                                    postID: post.id,
+                                    circleID: circleID,
+                                    isCircleAdmin: isCircleAdmin,
+                                    onDeleted: {
+                                        comments.removeAll { $0.id == comment.id }
+                                    },
+                                    onBlockedUser: onBlockedUser
+                                )
                                 Divider().padding(.leading, 48)
                             }
                         }
@@ -831,6 +1130,21 @@ struct CommentThreadView: View {
 // MARK: - Comment Row
 struct CommentRow: View {
     let comment: CircleComment
+    var postID: String?
+    var circleID: String?
+    var isCircleAdmin: Bool = false
+    var onDeleted: (() -> Void)?
+    var onBlockedUser: ((String) -> Void)?
+
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var showReportSheet = false
+    @State private var showDeleteAlert = false
+    @State private var showBlockAlert = false
+
+    private var isOwnComment: Bool {
+        comment.authorID == (FirebaseAuth.Auth.auth().currentUser?.uid ?? "")
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -860,9 +1174,201 @@ struct CommentRow: View {
             }
 
             Spacer()
+
+            // Actions menu
+            Menu {
+                if !isOwnComment {
+                    Button {
+                        showReportSheet = true
+                    } label: {
+                        Label("Report Comment", systemImage: "flag")
+                    }
+
+                    Button {
+                        showBlockAlert = true
+                    } label: {
+                        Label("Block \(comment.authorName)", systemImage: "hand.raised")
+                    }
+                }
+
+                if isCircleAdmin || isOwnComment {
+                    Button(role: .destructive) {
+                        showDeleteAlert = true
+                    } label: {
+                        Label("Delete Comment", systemImage: "trash")
+                    }
+                }
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.system(size: 10))
+                    .foregroundColor(ABTheme.secondaryText.opacity(0.6))
+                    .padding(6)
+            }
         }
         .padding(.horizontal, ABTheme.paddingMedium)
         .padding(.vertical, 8)
+        .sheet(isPresented: $showReportSheet) {
+            ReportContentView(
+                reportedUserID: comment.authorID,
+                contentID: comment.id,
+                contentType: .comment,
+                circleID: circleID
+            )
+        }
+        .alert("Delete Comment?", isPresented: $showDeleteAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                guard let commentID = comment.id, let postID = postID else { return }
+                Task {
+                    try? await firestoreService.deleteComment(commentID: commentID, postID: postID)
+                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                    onDeleted?()
+                }
+            }
+        }
+        .alert("Block \(comment.authorName)?", isPresented: $showBlockAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Block", role: .destructive) {
+                Task {
+                    try? await firestoreService.blockUser(userID: comment.authorID)
+                    onBlockedUser?(comment.authorID)
+                }
+            }
+        } message: {
+            Text("You won't see posts or comments from this user. You can unblock them in Settings.")
+        }
+    }
+}
+
+// MARK: - Report Content View
+struct ReportContentView: View {
+    let reportedUserID: String
+    var contentID: String?
+    let contentType: ReportContentType
+    var circleID: String?
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var selectedReason: ReportReason?
+    @State private var details = ""
+    @State private var isSubmitting = false
+    @State private var submitted = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: ABTheme.paddingLarge) {
+                if submitted {
+                    // Success state
+                    VStack(spacing: 16) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 48))
+                            .foregroundColor(ABTheme.sageGreen)
+
+                        Text("Report Submitted")
+                            .font(ABTheme.headlineFont)
+                            .foregroundColor(ABTheme.primaryText)
+
+                        Text("Thank you for helping keep our community safe. We'll review this report soon.")
+                            .font(ABTheme.captionFont)
+                            .foregroundColor(ABTheme.secondaryText)
+                            .multilineTextAlignment(.center)
+
+                        Button("Done") { dismiss() }
+                            .buttonStyle(ABPrimaryButtonStyle())
+                    }
+                    .padding(ABTheme.paddingLarge)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: ABTheme.paddingLarge) {
+                            Text("Why are you reporting this \(contentType.rawValue)?")
+                                .font(ABTheme.subheadlineFont)
+                                .foregroundColor(ABTheme.primaryText)
+
+                            // Reason selection
+                            ForEach(ReportReason.allCases, id: \.self) { reason in
+                                Button {
+                                    selectedReason = reason
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: reason.icon)
+                                            .font(.body)
+                                            .frame(width: 24)
+                                            .foregroundColor(selectedReason == reason ? ABTheme.sageGreen : ABTheme.secondaryText)
+
+                                        Text(reason.rawValue)
+                                            .font(ABTheme.bodyFont)
+                                            .foregroundColor(ABTheme.primaryText)
+
+                                        Spacer()
+
+                                        if selectedReason == reason {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(ABTheme.sageGreen)
+                                        }
+                                    }
+                                    .padding(ABTheme.paddingMedium)
+                                    .background(selectedReason == reason ? ABTheme.sageGreen.opacity(0.08) : ABTheme.softWhite)
+                                    .cornerRadius(ABTheme.cornerRadiusSmall)
+                                }
+                                .buttonStyle(.plain)
+                            }
+
+                            // Optional details
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Additional details (optional)")
+                                    .font(ABTheme.captionFont)
+                                    .foregroundColor(ABTheme.secondaryText)
+
+                                TextEditor(text: $details)
+                                    .font(ABTheme.bodyFont)
+                                    .frame(minHeight: 80)
+                                    .padding(ABTheme.paddingSmall)
+                                    .background(ABTheme.softWhite)
+                                    .cornerRadius(ABTheme.cornerRadiusSmall)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                                            .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
+                                    )
+                            }
+
+                            Button("Submit Report") {
+                                submitReport()
+                            }
+                            .buttonStyle(ABPrimaryButtonStyle())
+                            .disabled(selectedReason == nil || isSubmitting)
+                        }
+                        .padding(ABTheme.paddingLarge)
+                    }
+                }
+            }
+            .abScreenBackground()
+            .navigationTitle("Report")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+        }
+    }
+
+    private func submitReport() {
+        guard let reason = selectedReason else { return }
+        isSubmitting = true
+        Task {
+            try? await firestoreService.submitReport(
+                reportedUserID: reportedUserID,
+                contentID: contentID,
+                contentType: contentType,
+                reason: reason,
+                details: details.isEmpty ? nil : details,
+                circleID: circleID
+            )
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            withAnimation { submitted = true }
+        }
     }
 }
 

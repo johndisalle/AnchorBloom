@@ -344,6 +344,126 @@ final class FirestoreService: ObservableObject {
         return snapshot.documents.compactMap { try? $0.data(as: BookmarkedVerse.self) }
     }
 
+    // MARK: - Moderation: Delete Circle
+
+    /// Deletes a circle and all its posts/comments (admin only)
+    func deleteCircle(circleID: String) async throws {
+        // Delete all posts in this circle
+        let postsSnapshot = try await postsCollection
+            .whereField("circleID", isEqualTo: circleID)
+            .getDocuments()
+        for doc in postsSnapshot.documents {
+            // Delete comments on each post
+            let commentsSnapshot = try await commentsCollection
+                .whereField("postID", isEqualTo: doc.documentID)
+                .getDocuments()
+            for commentDoc in commentsSnapshot.documents {
+                try await commentDoc.reference.delete()
+            }
+            try await doc.reference.delete()
+        }
+        // Delete the circle itself
+        try await circlesCollection.document(circleID).delete()
+    }
+
+    /// Removes a member from a circle (admin only)
+    func removeMember(circleID: String, memberID: String) async throws {
+        let docRef = circlesCollection.document(circleID)
+        try await docRef.updateData([
+            "memberIDs": FieldValue.arrayRemove([memberID]),
+            "memberNames.\(memberID)": FieldValue.delete()
+        ])
+    }
+
+    /// Leaves a circle voluntarily
+    func leaveCircle(circleID: String) async throws {
+        guard let userID = currentUserID else { return }
+        try await removeMember(circleID: circleID, memberID: userID)
+    }
+
+    // MARK: - Moderation: Delete Content
+
+    /// Deletes a post and its comments (admin only)
+    func deletePost(postID: String) async throws {
+        // Delete all comments on this post
+        let commentsSnapshot = try await commentsCollection
+            .whereField("postID", isEqualTo: postID)
+            .getDocuments()
+        for doc in commentsSnapshot.documents {
+            try await doc.reference.delete()
+        }
+        try await postsCollection.document(postID).delete()
+    }
+
+    /// Deletes a single comment (admin only)
+    func deleteComment(commentID: String, postID: String) async throws {
+        try await commentsCollection.document(commentID).delete()
+        // Decrement comment count on the post
+        let postRef = postsCollection.document(postID)
+        try await postRef.updateData(["commentCount": FieldValue.increment(Int64(-1))])
+    }
+
+    // MARK: - Moderation: Reporting
+
+    private var reportsCollection: CollectionReference { db.collection("reports") }
+
+    /// Files a report against content or a user
+    func submitReport(
+        reportedUserID: String,
+        contentID: String?,
+        contentType: ReportContentType,
+        reason: ReportReason,
+        details: String?,
+        circleID: String?
+    ) async throws {
+        guard let userID = currentUserID else { return }
+        let report = ContentReport(
+            reporterID: userID,
+            reportedUserID: reportedUserID,
+            contentID: contentID,
+            contentType: contentType,
+            reason: reason,
+            details: details,
+            circleID: circleID,
+            status: .pending,
+            createdAt: Date()
+        )
+        try reportsCollection.addDocument(from: report)
+    }
+
+    /// Fetches a user's display name by ID
+    func fetchDisplayName(userID: String) async throws -> String? {
+        let document = try await usersCollection.document(userID).getDocument()
+        let profile = try document.data(as: UserProfile.self)
+        return profile.displayName
+    }
+
+    // MARK: - Moderation: Block / Unblock
+
+    /// Blocks a user (adds to current user's blocked list)
+    func blockUser(userID blockedID: String) async throws {
+        guard let userID = currentUserID else { return }
+        let docRef = usersCollection.document(userID)
+        try await docRef.updateData([
+            "blockedUserIDs": FieldValue.arrayUnion([blockedID])
+        ])
+    }
+
+    /// Unblocks a user
+    func unblockUser(userID unblockedID: String) async throws {
+        guard let userID = currentUserID else { return }
+        let docRef = usersCollection.document(userID)
+        try await docRef.updateData([
+            "blockedUserIDs": FieldValue.arrayRemove([unblockedID])
+        ])
+    }
+
+    /// Fetches the current user's blocked user IDs
+    func fetchBlockedUserIDs() async -> [String] {
+        guard let profile = try? await fetchUserProfile() else { return [] }
+        return profile.blockedUserIDs
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress

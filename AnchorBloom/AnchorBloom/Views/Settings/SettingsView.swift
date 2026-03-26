@@ -5,6 +5,7 @@ import FirebaseAuth
 /// App settings: subscription, reminders, theme, account, export
 struct SettingsView: View {
     @EnvironmentObject var authManager: AuthManager
+    @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var notificationManager: NotificationManager
 
@@ -16,6 +17,7 @@ struct SettingsView: View {
     @State private var showSubscription = false
     @State private var showDeleteConfirmation = false
     @State private var showSignOutConfirmation = false
+    @State private var showBlockedUsers = false
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
     var body: some View {
@@ -54,6 +56,9 @@ struct SettingsView: View {
                 // About section
                 aboutSection
 
+                // Privacy & Safety
+                privacySection
+
                 // Account section
                 accountSection
             }
@@ -65,7 +70,35 @@ struct SettingsView: View {
             .sheet(isPresented: $showSubscription) {
                 SubscriptionView()
             }
+            .sheet(isPresented: $showBlockedUsers) {
+                BlockedUsersView()
+            }
         }
+    }
+
+    // MARK: - Privacy & Safety Section
+    private var privacySection: some View {
+        Section("Privacy & Safety") {
+            Button {
+                showBlockedUsers = true
+            } label: {
+                HStack {
+                    Label {
+                        Text("Blocked Users")
+                            .font(.system(.body, design: .serif))
+                            .foregroundColor(ABTheme.primaryText)
+                    } icon: {
+                        Image(systemName: "hand.raised.fill")
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+            }
+        }
+        .listRowBackground(ABTheme.cardBackground)
     }
 
     // MARK: - Profile Section
@@ -440,9 +473,115 @@ struct PremiumFeatureRow: View {
     }
 }
 
+// MARK: - Blocked Users View
+struct BlockedUsersView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var blockedUserIDs: [String] = []
+    @State private var blockedProfiles: [String: String] = [:] // userID -> displayName
+    @State private var isLoading = false
+    @State private var unblockingID: String?
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .tint(ABTheme.sageGreen)
+                } else if blockedUserIDs.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "hand.raised.slash")
+                            .font(.system(size: 48))
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+
+                        Text("No blocked users")
+                            .font(ABTheme.subheadlineFont)
+                            .foregroundColor(ABTheme.primaryText)
+
+                        Text("Users you block will appear here.\nYou can unblock them at any time.")
+                            .font(ABTheme.captionFont)
+                            .foregroundColor(ABTheme.secondaryText)
+                            .multilineTextAlignment(.center)
+                    }
+                } else {
+                    List {
+                        ForEach(blockedUserIDs, id: \.self) { userID in
+                            HStack {
+                                Circle()
+                                    .fill(ABTheme.secondaryText.opacity(0.2))
+                                    .frame(width: 32, height: 32)
+                                    .overlay(
+                                        Text(String((blockedProfiles[userID] ?? "?").prefix(1)).uppercased())
+                                            .font(.system(.caption, design: .serif, weight: .bold))
+                                            .foregroundColor(ABTheme.secondaryText)
+                                    )
+
+                                Text(blockedProfiles[userID] ?? "User")
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(ABTheme.primaryText)
+
+                                Spacer()
+
+                                Button("Unblock") {
+                                    unblockingID = userID
+                                }
+                                .font(.system(.caption, design: .serif, weight: .semibold))
+                                .foregroundColor(ABTheme.sageGreen)
+                            }
+                        }
+                    }
+                    .scrollContentBackground(.hidden)
+                }
+            }
+            .abScreenBackground()
+            .navigationTitle("Blocked Users")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .task {
+                isLoading = true
+                blockedUserIDs = await firestoreService.fetchBlockedUserIDs()
+                // Fetch display names for blocked users
+                for userID in blockedUserIDs {
+                    if let name = try? await firestoreService.fetchDisplayName(userID: userID) {
+                        blockedProfiles[userID] = name
+                    }
+                }
+                isLoading = false
+            }
+            .alert("Unblock User?", isPresented: Binding(
+                get: { unblockingID != nil },
+                set: { if !$0 { unblockingID = nil } }
+            )) {
+                Button("Cancel", role: .cancel) { unblockingID = nil }
+                Button("Unblock") {
+                    if let userID = unblockingID {
+                        Task {
+                            try? await firestoreService.unblockUser(userID: userID)
+                            blockedUserIDs.removeAll { $0 == userID }
+                            blockedProfiles.removeValue(forKey: userID)
+                            unblockingID = nil
+                        }
+                    }
+                }
+            } message: {
+                if let userID = unblockingID {
+                    Text("Unblock \(blockedProfiles[userID] ?? "this user")? You'll see their posts and comments again.")
+                }
+            }
+        }
+    }
+}
+
 #Preview {
     SettingsView()
         .environmentObject(AuthManager())
+        .environmentObject(FirestoreService())
         .environmentObject(SubscriptionManager())
         .environmentObject(NotificationManager())
 }
