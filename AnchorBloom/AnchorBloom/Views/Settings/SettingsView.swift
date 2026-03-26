@@ -328,6 +328,8 @@ struct SettingsView: View {
                 Button("Sign Out", role: .destructive) {
                     do {
                         try authManager.signOut()
+                        // Reset onboarding flags so next user gets the full experience
+                        UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
                     } catch {
                         deleteErrorMessage = error.localizedDescription
                         showDeleteError = true
@@ -355,6 +357,9 @@ struct SettingsView: View {
                             try? await firestoreService.deleteAllUserData()
                             // Then delete the auth account (critical)
                             try await authManager.deleteAccount()
+                            // Reset all local state for fresh start
+                            UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
+                            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
                         } catch {
                             deleteErrorMessage = error.localizedDescription
                             showDeleteError = true
