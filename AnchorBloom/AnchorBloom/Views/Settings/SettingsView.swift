@@ -18,6 +18,8 @@ struct SettingsView: View {
     @State private var showDeleteConfirmation = false
     @State private var showSignOutConfirmation = false
     @State private var showBlockedUsers = false
+    @State private var showDeleteError = false
+    @State private var deleteErrorMessage = ""
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
     var body: some View {
@@ -334,13 +336,28 @@ struct SettingsView: View {
                     .foregroundColor(ABTheme.destructive)
             }
             .confirmationDialog(
-                "Delete your account? This cannot be undone.",
+                "Delete your account? This cannot be undone. All your data, reflections, and progress will be permanently removed.",
                 isPresented: $showDeleteConfirmation,
                 titleVisibility: .visible
             ) {
                 Button("Delete Account", role: .destructive) {
-                    Task { try? await authManager.deleteAccount() }
+                    Task {
+                        do {
+                            // Delete Firestore data first
+                            try await firestoreService.deleteAllUserData()
+                            // Then delete the auth account
+                            try await authManager.deleteAccount()
+                        } catch {
+                            deleteErrorMessage = error.localizedDescription
+                            showDeleteError = true
+                        }
+                    }
                 }
+            }
+            .alert("Unable to Delete Account", isPresented: $showDeleteError) {
+                Button("OK") {}
+            } message: {
+                Text("\(deleteErrorMessage)\n\nFor security, Apple requires you to sign out and sign back in before deleting your account. Please sign out, sign in again, then try deleting.")
             }
         }
         .listRowBackground(ABTheme.cardBackground)

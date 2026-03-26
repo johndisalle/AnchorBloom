@@ -118,6 +118,10 @@ final class AuthManager: ObservableObject {
     // MARK: - Delete Account
     func deleteAccount() async throws {
         guard let user = currentUser else { return }
+        isLoading = true
+        errorMessage = nil
+        defer { isLoading = false }
+
         do {
             try await user.delete()
         } catch {

@@ -476,6 +476,34 @@ final class FirestoreService: ObservableObject {
         return profile.blockedUserIDs
     }
 
+    // MARK: - Account Deletion (Data Cleanup)
+
+    /// Deletes all Firestore data for the current user
+    func deleteAllUserData() async throws {
+        guard let userID = currentUserID else { return }
+
+        // Delete daily entries
+        let entries = try await entriesCollection
+            .whereField("userID", isEqualTo: userID)
+            .getDocuments()
+        for doc in entries.documents { try await doc.reference.delete() }
+
+        // Delete bookmarks
+        let bookmarks = try await bookmarksCollection
+            .whereField("userID", isEqualTo: userID)
+            .getDocuments()
+        for doc in bookmarks.documents { try await doc.reference.delete() }
+
+        // Delete goals
+        let goals = try await goalsCollection
+            .whereField("userID", isEqualTo: userID)
+            .getDocuments()
+        for doc in goals.documents { try await doc.reference.delete() }
+
+        // Delete user profile
+        try await usersCollection.document(userID).delete()
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress
