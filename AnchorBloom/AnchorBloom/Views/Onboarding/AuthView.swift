@@ -89,10 +89,12 @@ struct AuthView: View {
                                     password: password,
                                     displayName: displayName
                                 )
-                                try await firestoreService.createInitialProfile(
-                                    displayName: displayName,
-                                    email: email
-                                )
+                                Task.detached {
+                                    try? await firestoreService.createInitialProfile(
+                                        displayName: displayName,
+                                        email: email
+                                    )
+                                }
                             } else {
                                 try await authManager.signIn(email: email, password: password)
                             }
@@ -131,16 +133,18 @@ struct AuthView: View {
                                         credential: appleIDCredential,
                                         nonce: nonce
                                     )
-                                    // Create profile if needed (best-effort)
+                                    authManager.isLoading = false
+                                    // Create profile after auth succeeds (non-blocking)
                                     let name = [
                                         appleIDCredential.fullName?.givenName,
                                         appleIDCredential.fullName?.familyName
                                     ].compactMap { $0 }.joined(separator: " ")
-                                    try? await firestoreService.createInitialProfile(
-                                        displayName: name.isEmpty ? "Beloved" : name,
-                                        email: appleIDCredential.email ?? ""
-                                    )
-                                    authManager.isLoading = false
+                                    Task.detached {
+                                        try? await firestoreService.createInitialProfile(
+                                            displayName: name.isEmpty ? "Beloved" : name,
+                                            email: appleIDCredential.email ?? ""
+                                        )
+                                    }
                                 } catch {
                                     authManager.isLoading = false
                                     authManager.errorMessage = error.localizedDescription

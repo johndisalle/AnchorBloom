@@ -35,12 +35,23 @@ final class FirestoreService: ObservableObject {
     /// Creates initial profile after sign up
     func createInitialProfile(displayName: String, email: String) async throws {
         guard let userID = currentUserID else { return }
-        var profile = UserProfile.empty
-        profile.displayName = displayName
-        profile.email = email
-        profile.morningReminderTime = Calendar.current.date(from: DateComponents(hour: 7, minute: 0))
-        profile.eveningReminderTime = Calendar.current.date(from: DateComponents(hour: 20, minute: 0))
-        try usersCollection.document(userID).setData(from: profile)
+        // Use raw dictionary to avoid Codable Date encoding issues with Firestore
+        let profileData: [String: Any] = [
+            "email": email,
+            "displayName": displayName,
+            "isPremium": false,
+            "createdAt": Timestamp(date: Date()),
+            "lastActiveAt": Timestamp(date: Date()),
+            "notificationsEnabled": true,
+            "currentStreak": 0,
+            "longestStreak": 0,
+            "totalDaysCompleted": 0,
+            "earnedBadgeIDs": [String](),
+            "journeyProgress": [String: Int](),
+            "circleIDs": [String](),
+            "blockedUserIDs": [String]()
+        ]
+        try await usersCollection.document(userID).setData(profileData)
     }
 
     // MARK: - Daily Entry Operations
