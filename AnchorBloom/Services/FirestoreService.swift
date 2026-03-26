@@ -193,6 +193,24 @@ final class FirestoreService: ObservableObject {
         return circle
     }
 
+    /// Joins a public circle directly by ID (no invite code needed)
+    func joinPublicCircle(circleID: String) async throws {
+        guard let userID = currentUserID else { return }
+        let docRef = circlesCollection.document(circleID)
+        let document = try await docRef.getDocument()
+        guard var circle = try? document.data(as: SisterCircle.self) else {
+            throw FirestoreError.circleNotFound
+        }
+        guard !circle.isPrivate else { throw FirestoreError.circleNotFound }
+        guard !circle.isFull else { throw FirestoreError.circleFull }
+        guard !circle.memberIDs.contains(userID) else { return }
+
+        let userName = Auth.auth().currentUser?.displayName ?? "Sister"
+        circle.memberIDs.append(userID)
+        circle.memberNames[userID] = userName
+        try docRef.setData(from: circle, merge: true)
+    }
+
     // MARK: - Circle Posts
 
     /// Creates a post in a circle

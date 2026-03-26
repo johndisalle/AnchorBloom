@@ -42,12 +42,12 @@ struct CirclePost: Codable, Identifiable {
     var createdAt: Date
     var likedByIDs: [String]
     var commentCount: Int
-    var isAnonymous: Bool
+    var isAnonymous: Bool?
 
     var likeCount: Int { likedByIDs.count }
 
     var displayName: String {
-        isAnonymous ? "A Sister in Christ" : authorName
+        (isAnonymous ?? false) ? "A Sister in Christ" : authorName
     }
 }
 

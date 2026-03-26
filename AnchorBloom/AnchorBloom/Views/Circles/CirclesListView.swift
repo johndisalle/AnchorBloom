@@ -424,18 +424,20 @@ struct CircleDetailView: View {
     @State private var posts: [CirclePost] = []
     @State private var showNewPost = false
     @State private var isLoading = false
+    @State private var isJoining = false
     @State private var showDeleteCircleAlert = false
     @State private var showManageMembers = false
     @State private var showLeaveAlert = false
     @State private var blockedUserIDs: [String] = []
     @State private var errorMessage: String?
+    @State private var didJoin = false
 
     private var currentUserID: String {
         FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
     }
 
     private var isMember: Bool {
-        circle.memberIDs.contains(currentUserID) || circle.creatorID == currentUserID
+        didJoin || circle.memberIDs.contains(currentUserID) || circle.creatorID == currentUserID
     }
 
     private var isAdmin: Bool {
@@ -528,6 +530,24 @@ struct CircleDetailView: View {
                             .foregroundColor(ABTheme.destructive)
                             .cornerRadius(20)
                         }
+                    } else if !isMember {
+                        // Join button for non-members viewing public circles
+                        Button {
+                            joinThisCircle()
+                        } label: {
+                            HStack(spacing: 6) {
+                                if isJoining {
+                                    ProgressView()
+                                        .tint(.white)
+                                        .scaleEffect(0.7)
+                                } else {
+                                    Image(systemName: "person.badge.plus")
+                                }
+                                Text("Join This Circle")
+                            }
+                        }
+                        .buttonStyle(ABPrimaryButtonStyle())
+                        .disabled(isJoining)
                     }
 
                     // Notices and post button
@@ -656,6 +676,28 @@ struct CircleDetailView: View {
 
     private var filteredPosts: [CirclePost] {
         posts.filter { !blockedUserIDs.contains($0.authorID) }
+    }
+
+    private func joinThisCircle() {
+        guard let circleID = circle.id else { return }
+        isJoining = true
+        Task {
+            do {
+                _ = try await firestoreService.joinCircle(inviteCode: circle.inviteCode ?? "")
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                didJoin = true
+            } catch {
+                // If invite code join fails, try direct join for public circles
+                if !circle.isPrivate {
+                    try? await firestoreService.joinPublicCircle(circleID: circleID)
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
+                    didJoin = true
+                } else {
+                    errorMessage = error.localizedDescription
+                }
+            }
+            isJoining = false
+        }
     }
 
     private func loadPosts() async {
@@ -807,12 +849,12 @@ struct CirclePostView: View {
             // Author + type + actions menu
             HStack {
                 Circle()
-                    .fill(post.isAnonymous ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
+                    .fill((post.isAnonymous ?? false) ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
                     .frame(width: 32, height: 32)
                     .overlay(
-                        Image(systemName: post.isAnonymous ? "person.fill.questionmark" : "person.fill")
+                        Image(systemName: (post.isAnonymous ?? false) ? "person.fill.questionmark" : "person.fill")
                             .font(.caption)
-                            .foregroundColor(post.isAnonymous ? ABTheme.secondaryText : ABTheme.blush)
+                            .foregroundColor((post.isAnonymous ?? false) ? ABTheme.secondaryText : ABTheme.blush)
                     )
 
                 VStack(alignment: .leading, spacing: 1) {
@@ -847,7 +889,7 @@ struct CirclePostView: View {
                             Label("Report Post", systemImage: "flag")
                         }
 
-                        if !post.isAnonymous {
+                        if !(post.isAnonymous ?? false) {
                             Button {
                                 showBlockAlert = true
                             } label: {
@@ -1011,12 +1053,12 @@ struct CommentThreadView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack(spacing: 8) {
                                 Circle()
-                                    .fill(post.isAnonymous ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
+                                    .fill((post.isAnonymous ?? false) ? ABTheme.secondaryText.opacity(0.2) : ABTheme.blush.opacity(0.3))
                                     .frame(width: 28, height: 28)
                                     .overlay(
-                                        Image(systemName: post.isAnonymous ? "person.fill.questionmark" : "person.fill")
+                                        Image(systemName: (post.isAnonymous ?? false) ? "person.fill.questionmark" : "person.fill")
                                             .font(.system(size: 11))
-                                            .foregroundColor(post.isAnonymous ? ABTheme.secondaryText : ABTheme.blush)
+                                            .foregroundColor((post.isAnonymous ?? false) ? ABTheme.secondaryText : ABTheme.blush)
                                     )
 
                                 Text(post.displayName)
