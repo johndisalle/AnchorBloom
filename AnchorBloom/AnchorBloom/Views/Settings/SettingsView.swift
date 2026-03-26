@@ -343,9 +343,9 @@ struct SettingsView: View {
                 Button("Delete Account", role: .destructive) {
                     Task {
                         do {
-                            // Delete Firestore data first
-                            try await firestoreService.deleteAllUserData()
-                            // Then delete the auth account
+                            // Best-effort: clean up Firestore data first
+                            try? await firestoreService.deleteAllUserData()
+                            // Then delete the auth account (critical)
                             try await authManager.deleteAccount()
                         } catch {
                             deleteErrorMessage = error.localizedDescription
