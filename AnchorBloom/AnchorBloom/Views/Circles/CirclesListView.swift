@@ -311,12 +311,13 @@ struct CreateCircleView: View {
         let inviteCode = String((0..<6).map { _ in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".randomElement()! })
 
         let creatorID = Auth.auth().currentUser?.uid ?? ""
+        let creatorName = Auth.auth().currentUser?.displayName ?? "You"
         let circle = SisterCircle(
             name: name,
             description: description,
             creatorID: creatorID,
-            memberIDs: [],
-            memberNames: [:],
+            memberIDs: [creatorID],
+            memberNames: [creatorID: creatorName],
             adminIDs: [creatorID],
             createdAt: Date(),
             isPrivate: isPrivate,
@@ -427,6 +428,7 @@ struct CircleDetailView: View {
     @State private var showManageMembers = false
     @State private var showLeaveAlert = false
     @State private var blockedUserIDs: [String] = []
+    @State private var errorMessage: String?
 
     private var currentUserID: String {
         FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
@@ -606,16 +608,20 @@ struct CircleDetailView: View {
                 }
             }
             .sheet(isPresented: $showManageMembers) {
-                ManageMembersView(circle: circle)
+                ManageMembersView(circle: circle, blockedUserIDs: blockedUserIDs)
             }
             .alert("Delete Circle?", isPresented: $showDeleteCircleAlert) {
                 Button("Cancel", role: .cancel) {}
                 Button("Delete", role: .destructive) {
                     Task {
                         guard let circleID = circle.id else { return }
-                        try? await firestoreService.deleteCircle(circleID: circleID)
-                        UINotificationFeedbackGenerator().notificationOccurred(.success)
-                        dismiss()
+                        do {
+                            try await firestoreService.deleteCircle(circleID: circleID)
+                            UINotificationFeedbackGenerator().notificationOccurred(.success)
+                            dismiss()
+                        } catch {
+                            errorMessage = error.localizedDescription
+                        }
                     }
                 }
             } message: {
@@ -626,12 +632,24 @@ struct CircleDetailView: View {
                 Button("Leave", role: .destructive) {
                     Task {
                         guard let circleID = circle.id else { return }
-                        try? await firestoreService.leaveCircle(circleID: circleID)
-                        dismiss()
+                        do {
+                            try await firestoreService.leaveCircle(circleID: circleID)
+                            dismiss()
+                        } catch {
+                            errorMessage = error.localizedDescription
+                        }
                     }
                 }
             } message: {
                 Text("You'll need a new invite code to rejoin this circle.")
+            }
+            .alert("Error", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK") { errorMessage = nil }
+            } message: {
+                Text(errorMessage ?? "")
             }
         }
     }
@@ -652,16 +670,21 @@ struct CircleDetailView: View {
 // MARK: - Manage Members View (Admin)
 struct ManageMembersView: View {
     let circle: SisterCircle
+    var blockedUserIDs: [String] = []
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var firestoreService: FirestoreService
 
     @State private var removingMemberID: String?
 
+    private var visibleMemberIDs: [String] {
+        circle.memberIDs.filter { !blockedUserIDs.contains($0) }
+    }
+
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    ForEach(circle.memberIDs, id: \.self) { memberID in
+                    ForEach(visibleMemberIDs, id: \.self) { memberID in
                         let name = circle.memberNames[memberID] ?? "Member"
                         let isCreator = memberID == circle.creatorID
 

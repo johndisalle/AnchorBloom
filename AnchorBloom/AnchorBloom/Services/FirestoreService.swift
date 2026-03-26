@@ -348,6 +348,12 @@ final class FirestoreService: ObservableObject {
 
     /// Deletes a circle and all its posts/comments (admin only)
     func deleteCircle(circleID: String) async throws {
+        guard let userID = currentUserID else { throw FirestoreError.notAuthenticated }
+        // Verify caller is admin
+        let doc = try await circlesCollection.document(circleID).getDocument()
+        if let circle = try? doc.data(as: SisterCircle.self), !circle.isAdmin(userID) {
+            throw FirestoreError.notAuthorized
+        }
         // Delete all posts in this circle
         let postsSnapshot = try await postsCollection
             .whereField("circleID", isEqualTo: circleID)
@@ -375,9 +381,14 @@ final class FirestoreService: ObservableObject {
         ])
     }
 
-    /// Leaves a circle voluntarily
+    /// Leaves a circle voluntarily (creators cannot leave, they must delete)
     func leaveCircle(circleID: String) async throws {
         guard let userID = currentUserID else { return }
+        // Verify user is not the creator
+        let doc = try await circlesCollection.document(circleID).getDocument()
+        if let circle = try? doc.data(as: SisterCircle.self), circle.creatorID == userID {
+            throw FirestoreError.cannotLeaveOwnCircle
+        }
         try await removeMember(circleID: circleID, memberID: userID)
     }
 
@@ -417,6 +428,7 @@ final class FirestoreService: ObservableObject {
         circleID: String?
     ) async throws {
         guard let userID = currentUserID else { return }
+        guard userID != reportedUserID else { return } // Can't report yourself
         let report = ContentReport(
             reporterID: userID,
             reportedUserID: reportedUserID,
@@ -499,15 +511,19 @@ final class FirestoreService: ObservableObject {
 // MARK: - Firestore Errors
 enum FirestoreError: LocalizedError {
     case notAuthenticated
+    case notAuthorized
     case circleNotFound
     case circleFull
+    case cannotLeaveOwnCircle
     case documentNotFound
 
     var errorDescription: String? {
         switch self {
         case .notAuthenticated: return "Please sign in to continue."
+        case .notAuthorized: return "You don't have permission to do that."
         case .circleNotFound: return "Circle not found. Check your invite code."
         case .circleFull: return "This circle is full."
+        case .cannotLeaveOwnCircle: return "Circle creators cannot leave. Delete the circle instead."
         case .documentNotFound: return "Data not found."
         }
     }
