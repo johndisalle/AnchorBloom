@@ -323,10 +323,18 @@ struct SettingsView: View {
                 Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
                     .foregroundColor(ABTheme.primaryText)
             }
-            .confirmationDialog("Sign Out?", isPresented: $showSignOutConfirmation) {
+            .alert("Sign Out?", isPresented: $showSignOutConfirmation) {
+                Button("Cancel", role: .cancel) {}
                 Button("Sign Out", role: .destructive) {
-                    try? authManager.signOut()
+                    do {
+                        try authManager.signOut()
+                    } catch {
+                        deleteErrorMessage = error.localizedDescription
+                        showDeleteError = true
+                    }
                 }
+            } message: {
+                Text("Are you sure you want to sign out?")
             }
 
             Button {
