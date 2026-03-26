@@ -159,7 +159,15 @@ struct AuthView: View {
                         .tint(ABTheme.sageGreen)
                 }
 
-                Spacer()
+                // Legal links
+                HStack(spacing: 16) {
+                    Link("Terms of Service", destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/terms.md")!)
+                    Text("·").foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                    Link("Privacy Policy", destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/privacy.md")!)
+                }
+                .font(.system(size: 11, weight: .medium, design: .serif))
+                .foregroundColor(ABTheme.sageGreen)
+                .padding(.bottom, 20)
             }
         }
         .abScreenBackground()
