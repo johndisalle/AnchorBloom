@@ -267,7 +267,7 @@ struct SettingsView: View {
                     .foregroundColor(ABTheme.secondaryText)
             }
 
-            Link(destination: URL(string: "https://anchorbloom.app/privacy")!) {
+            Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/privacy.md")!) {
                 HStack {
                     Label("Privacy Policy", systemImage: "hand.raised.fill")
                         .foregroundColor(ABTheme.primaryText)
@@ -278,9 +278,20 @@ struct SettingsView: View {
                 }
             }
 
-            Link(destination: URL(string: "https://anchorbloom.app/terms")!) {
+            Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/terms.md")!) {
                 HStack {
                     Label("Terms of Service", systemImage: "doc.text.fill")
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+            }
+
+            Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/support.md")!) {
+                HStack {
+                    Label("Customer Support", systemImage: "questionmark.circle.fill")
                         .foregroundColor(ABTheme.primaryText)
                     Spacer()
                     Image(systemName: "arrow.up.right")
