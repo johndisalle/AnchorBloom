@@ -342,12 +342,8 @@ struct DriftHistoryView: View {
         switch category {
         case .comparison:
             return "You're becoming aware of comparison's pull. Remember: God made you uniquely on purpose."
-        case .fear:
-            return "Noticing fear is the first step to overcoming it. God has not given you a spirit of fear."
         case .perfectionism:
             return "Grace over perfection. His power is made perfect in your weakness."
-        case .overwhelm:
-            return "You're learning to recognize overwhelm before it takes root. Be still and know."
         case .envy:
             return "Awareness of envy opens the door to gratitude. Count your blessings today."
         case .peoplepleasing:
@@ -360,6 +356,20 @@ struct DriftHistoryView: View {
             return "Patience is a fruit that grows slowly. You're right on schedule."
         case .doubt:
             return "Even honest doubt can deepen faith. Keep bringing it to Him."
+        case .temptation:
+            return "Recognizing temptation is half the battle. God always provides a way out."
+        case .selfReliance:
+            return "Leaning on God isn't weakness — it's the strongest thing you can do."
+        case .lust:
+            return "Your awareness is a victory. God is purifying your heart one step at a time."
+        case .avoidance:
+            return "Courage isn't the absence of fear — it's moving forward with God beside you."
+        case .anxiety:
+            return "Cast your cares on Him. He's big enough to carry every one of them."
+        case .distraction:
+            return "Refocusing on God is never wasted. Fix your eyes on Jesus today."
+        case .laziness:
+            return "God gave you this day on purpose. Even one small step honors Him."
         }
     }
 }
