@@ -42,8 +42,11 @@ struct DashboardView: View {
                     // Header
                     headerSection
 
-                    // TODAY'S SCRIPTURE (immediate spiritual value)
+                    // TODAY'S SCRIPTURE
                     todayScriptureCard
+
+                    // Tree visualization (growth meter)
+                    treeSection
 
                     // PRIMARY ACTION — what they should do NOW
                     if timeBasedAction == "anchor" && !(viewModel.todayEntry?.anchorCompleted ?? false) {
@@ -66,16 +69,34 @@ struct DashboardView: View {
                         }
                     }
 
-                    // Daily action cards (both)
-                    dailyActionsSection
+                    // Morning Anchor card
+                    DailyActionCard(
+                        title: "Morning Anchor",
+                        subtitle: "Root yourself in God's truth",
+                        icon: "sunrise.fill",
+                        color: ABTheme.warmGold,
+                        isCompleted: viewModel.todayEntry?.anchorCompleted ?? false,
+                        completedText: "Anchored"
+                    ) {
+                        showAnchorSheet = true
+                    }
+
+                    // Evening Bloom card
+                    DailyActionCard(
+                        title: "Evening Bloom",
+                        subtitle: "Reflect on how you bloomed today",
+                        icon: "camera.macro",
+                        color: ABTheme.blush,
+                        isCompleted: viewModel.todayEntry?.bloomCompleted ?? false,
+                        completedText: "Bloomed"
+                    ) {
+                        showBloomSheet = true
+                    }
 
                     // Active journey card
                     if let journey = viewModel.activeJourney {
                         activeJourneyCard(journey)
                     }
-
-                    // Tree visualization
-                    treeSection
 
                     // Active goals (premium)
                     if subscriptionManager.isPremium {
@@ -324,34 +345,6 @@ struct DashboardView: View {
         .abCard()
     }
 
-    // MARK: - Daily Actions
-    private var dailyActionsSection: some View {
-        VStack(spacing: ABTheme.paddingMedium) {
-            // Morning Anchor Card
-            DailyActionCard(
-                title: "Morning Anchor",
-                subtitle: "Root yourself in God's truth",
-                icon: "sunrise.fill",
-                color: ABTheme.warmGold,
-                isCompleted: viewModel.todayEntry?.anchorCompleted ?? false,
-                completedText: "Anchored"
-            ) {
-                showAnchorSheet = true
-            }
-
-            // Evening Bloom Card
-            DailyActionCard(
-                title: "Evening Bloom",
-                subtitle: "Reflect on how you bloomed today",
-                icon: "camera.macro",
-                color: ABTheme.blush,
-                isCompleted: viewModel.todayEntry?.bloomCompleted ?? false,
-                completedText: "Bloomed"
-            ) {
-                showBloomSheet = true
-            }
-        }
-    }
 
     // MARK: - Stats Row
     private var statsRow: some View {
