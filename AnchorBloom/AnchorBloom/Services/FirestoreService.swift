@@ -183,6 +183,8 @@ final class FirestoreService: ObservableObject {
 
     /// Posts today's daily prompt to the Global Sisterhood if one hasn't been posted today
     private func seedDailyPromptPost() async {
+        guard let userID = currentUserID else { return }
+
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         let todayString = formatter.string(from: Date())
@@ -198,18 +200,18 @@ final class FirestoreService: ObservableObject {
         }
 
         let prompt = CirclePrompts.todayPrompt
-        let postData: [String: Any] = [
-            "circleID": Self.globalCircleID,
-            "authorID": "system",
-            "authorName": "Anchor & Bloom",
-            "type": "Encouragement",
-            "content": "Today's Prompt: \(prompt)\n\nShare your heart below, sister. You can post anonymously if you'd like.",
-            "createdAt": Timestamp(date: Date()),
-            "likedByIDs": [String](),
-            "commentCount": 0,
-            "isAnonymous": false
-        ]
-        try? await docRef.setData(postData)
+        let post = CirclePost(
+            circleID: Self.globalCircleID,
+            authorID: userID,
+            authorName: "Anchor & Bloom",
+            type: .encouragement,
+            content: "Today's Prompt: \(prompt)\n\nShare your heart below, sister. You can post anonymously if you'd like.",
+            createdAt: Date(),
+            likedByIDs: [],
+            commentCount: 0,
+            isAnonymous: false
+        )
+        try? docRef.setData(from: post)
     }
 
     // MARK: - Circle Operations
