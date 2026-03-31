@@ -139,6 +139,75 @@ final class FirestoreService: ObservableObject {
         try await saveUserProfile(profile)
     }
 
+    // MARK: - Global Sisterhood
+
+    static let globalCircleID = "global_sisterhood"
+
+    /// Ensures the user is a member of the Global Sisterhood circle.
+    /// Creates the circle if it doesn't exist. Auto-joins the user.
+    func ensureGlobalSisterhood() async {
+        guard let userID = currentUserID else { return }
+        let docRef = circlesCollection.document(Self.globalCircleID)
+        let doc = try? await docRef.getDocument()
+
+        if doc?.exists != true {
+            // Create the Global Sisterhood circle
+            let data: [String: Any] = [
+                "name": "Global Sisterhood",
+                "description": "A circle for all Anchor & Bloom sisters. Share, encourage, and pray together.",
+                "creatorID": "system",
+                "memberIDs": [userID],
+                "memberNames": [userID: Auth.auth().currentUser?.displayName ?? "Sister"],
+                "adminIDs": ["system"],
+                "createdAt": Timestamp(date: Date()),
+                "isPrivate": false,
+                "maxMembers": 100000,
+                "coverImageName": "default"
+            ]
+            try? await docRef.setData(data)
+        } else {
+            // Join if not already a member
+            let circle = try? doc?.data(as: SisterCircle.self)
+            if let circle = circle, !circle.memberIDs.contains(userID) {
+                let userName = Auth.auth().currentUser?.displayName ?? "Sister"
+                try? await docRef.updateData([
+                    "memberIDs": FieldValue.arrayUnion([userID]),
+                    "memberNames.\(userID)": userName
+                ])
+            }
+        }
+
+        // Seed today's daily prompt post if it doesn't exist
+        await seedDailyPromptPost()
+    }
+
+    /// Posts today's daily prompt to the Global Sisterhood if one hasn't been posted today
+    private func seedDailyPromptPost() async {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        let todayString = formatter.string(from: Date())
+        let promptPostID = "daily_prompt_\(todayString)"
+
+        let docRef = postsCollection.document(promptPostID)
+        let doc = try? await docRef.getDocument()
+
+        if doc?.exists != true {
+            let prompt = CirclePrompts.todayPrompt
+            let postData: [String: Any] = [
+                "circleID": Self.globalCircleID,
+                "authorID": "system",
+                "authorName": "Anchor & Bloom",
+                "type": "Encouragement",
+                "content": "Today's Prompt: \(prompt)\n\nShare your heart below, sister. You can post anonymously if you'd like.",
+                "createdAt": Timestamp(date: Date()),
+                "likedByIDs": [String](),
+                "commentCount": 0,
+                "isAnonymous": false
+            ]
+            try? await docRef.setData(postData)
+        }
+    }
+
     // MARK: - Circle Operations
 
     /// Creates a new sister circle

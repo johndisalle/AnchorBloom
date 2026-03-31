@@ -1,41 +1,10 @@
 import SwiftUI
 
 // MARK: - Onboarding View
-/// Welcome screens introducing the app's vision and core features
+/// Emotional 3-screen onboarding that creates conviction and excitement before sign-up
 struct OnboardingView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentPage = 0
-
-    private let pages: [OnboardingPage] = [
-        OnboardingPage(
-            title: "Anchor & Bloom",
-            subtitle: "Rooted in Christ.\nBlooming into who God created you to be.",
-            scripture: "\"Be on your guard; stand firm in the faith;\nbe courageous; be strong.\nDo everything in love.\"\n— 1 Corinthians 16:13-14",
-            iconName: "tree.fill",
-            accentColor: ABTheme.sageGreen
-        ),
-        OnboardingPage(
-            title: "Anchor Your Morning",
-            subtitle: "Start each day rooted in Scripture and truth. Identify the lies the enemy whispers — comparison, fear, perfectionism — and stand firm in who God says you are.",
-            scripture: "\"She is clothed with strength and dignity;\nshe can laugh at the days to come.\"\n— Proverbs 31:25",
-            iconName: "sunrise.fill",
-            accentColor: ABTheme.warmGold
-        ),
-        OnboardingPage(
-            title: "Bloom Each Evening",
-            subtitle: "Reflect on how you nurtured, spoke truth, cultivated peace, and advanced God's kingdom today. Celebrate the woman He's growing you to be.",
-            scripture: "\"She speaks with wisdom,\nand faithful instruction is on her tongue.\"\n— Proverbs 31:26",
-            iconName: "camera.macro",
-            accentColor: ABTheme.blush
-        ),
-        OnboardingPage(
-            title: "Grow Together",
-            subtitle: "Join Sister Circles for encouragement. Track your growth with a blooming tree. Walk guided 30-day journeys into deeper faith.",
-            scripture: "\"As iron sharpens iron,\nso one person sharpens another.\"\n— Proverbs 27:17",
-            iconName: "heart.circle.fill",
-            accentColor: ABTheme.sageGreen
-        )
-    ]
 
     var body: some View {
         ZStack {
@@ -43,120 +12,137 @@ struct OnboardingView: View {
 
             VStack(spacing: 0) {
                 TabView(selection: $currentPage) {
-                    ForEach(pages.indices, id: \.self) { index in
-                        OnboardingPageView(page: pages[index])
-                            .tag(index)
-                    }
+                    // Page 1: The Pain Point
+                    OnboardingEmotionalPage(
+                        headline: "You were never meant\nto carry it alone.",
+                        body: "The comparison. The exhaustion. The quiet voice saying you're not enough.\n\nSister, that voice is a lie.",
+                        scripture: "\"Come to me, all you who are weary and burdened, and I will give you rest.\"",
+                        reference: "Matthew 11:28",
+                        iconName: "heart.slash",
+                        accentColor: ABTheme.blush
+                    )
+                    .tag(0)
+
+                    // Page 2: The Promise
+                    OnboardingEmotionalPage(
+                        headline: "What if every morning\nstarted with God's truth?",
+                        body: "Imagine replacing fear with faith. Comparison with calling. Doubt with the unshakeable knowledge that the God of the universe chose you.\n\nThat's what this app is for.",
+                        scripture: "\"She is clothed with strength and dignity; she can laugh at the days to come.\"",
+                        reference: "Proverbs 31:25",
+                        iconName: "sunrise.fill",
+                        accentColor: ABTheme.warmGold
+                    )
+                    .tag(1)
+
+                    // Page 3: The Invitation
+                    OnboardingEmotionalPage(
+                        headline: "Root yourself in Christ.\nBloom into who He\ncreated you to be.",
+                        body: "Daily scripture anchors. Evening reflections. A community of women walking this road with you.\n\nYour growth starts today.",
+                        scripture: "\"I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit.\"",
+                        reference: "John 15:5",
+                        iconName: "tree.fill",
+                        accentColor: ABTheme.sageGreen,
+                        showCTA: true,
+                        onBegin: {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                hasCompletedOnboarding = true
+                            }
+                        }
+                    )
+                    .tag(2)
                 }
                 .tabViewStyle(.page(indexDisplayMode: .never))
-                .animation(.easeInOut, value: currentPage)
+                .animation(.easeInOut(duration: 0.4), value: currentPage)
 
-                // Page indicator and buttons
+                // Page dots + navigation
                 VStack(spacing: ABTheme.paddingLarge) {
-                    // Custom page dots
                     HStack(spacing: 8) {
-                        ForEach(pages.indices, id: \.self) { index in
-                            Circle()
-                                .fill(index == currentPage ? ABTheme.sageGreen : ABTheme.sageGreen.opacity(0.25))
-                                .frame(width: index == currentPage ? 10 : 7, height: index == currentPage ? 10 : 7)
+                        ForEach(0..<3, id: \.self) { index in
+                            Capsule()
+                                .fill(index == currentPage ? ABTheme.sageGreen : ABTheme.sageGreen.opacity(0.2))
+                                .frame(width: index == currentPage ? 24 : 8, height: 8)
                                 .animation(.spring(response: 0.3), value: currentPage)
                         }
                     }
 
-                    if currentPage == pages.count - 1 {
-                        Button("Begin Your Journey") {
-                            withAnimation {
-                                hasCompletedOnboarding = true
+                    if currentPage < 2 {
+                        Button {
+                            withAnimation { currentPage += 1 }
+                        } label: {
+                            HStack(spacing: 8) {
+                                Text("Continue")
+                                Image(systemName: "arrow.right")
                             }
-                        }
-                        .buttonStyle(ABPrimaryButtonStyle())
-                        .padding(.horizontal, ABTheme.paddingXLarge)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    } else {
-                        HStack {
-                            Button("Skip") {
-                                withAnimation {
-                                    hasCompletedOnboarding = true
-                                }
-                            }
-                            .foregroundColor(ABTheme.secondaryText)
-                            .font(.system(.body, design: .serif))
-
-                            Spacer()
-
-                            Button {
-                                withAnimation {
-                                    currentPage += 1
-                                }
-                            } label: {
-                                HStack(spacing: 6) {
-                                    Text("Next")
-                                    Image(systemName: "arrow.right")
-                                }
-                                .foregroundColor(ABTheme.sageGreen)
-                                .font(.system(.body, design: .serif, weight: .semibold))
-                            }
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(ABTheme.sageGreen)
+                            .cornerRadius(ABTheme.cornerRadius)
                         }
                         .padding(.horizontal, ABTheme.paddingXLarge)
                     }
                 }
-                .padding(.bottom, ABTheme.paddingXLarge)
+                .padding(.bottom, 40)
             }
         }
     }
 }
 
-// MARK: - Onboarding Page Data
-struct OnboardingPage {
-    let title: String
-    let subtitle: String
+// MARK: - Emotional Onboarding Page
+struct OnboardingEmotionalPage: View {
+    let headline: String
+    let body: String
     let scripture: String
+    let reference: String
     let iconName: String
     let accentColor: Color
-}
-
-// MARK: - Onboarding Page View
-struct OnboardingPageView: View {
-    let page: OnboardingPage
+    var showCTA: Bool = false
+    var onBegin: (() -> Void)? = nil
 
     var body: some View {
-        VStack(spacing: ABTheme.paddingLarge) {
-            Spacer()
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: 28) {
+                Spacer().frame(height: 40)
 
-            // Icon with decorative ring
-            ZStack {
-                Circle()
-                    .stroke(page.accentColor.opacity(0.2), lineWidth: 2)
-                    .frame(width: 140, height: 140)
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(accentColor.opacity(0.1))
+                        .frame(width: 100, height: 100)
 
-                Circle()
-                    .fill(page.accentColor.opacity(0.1))
-                    .frame(width: 120, height: 120)
+                    Image(systemName: iconName)
+                        .font(.system(size: 40))
+                        .foregroundColor(accentColor)
+                }
 
-                Image(systemName: page.iconName)
-                    .font(.system(size: 48))
-                    .foregroundColor(page.accentColor)
-            }
+                // Headline
+                Text(headline)
+                    .font(.system(size: 26, weight: .bold, design: .serif))
+                    .foregroundColor(ABTheme.primaryText)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
 
-            // Title
-            Text(page.title)
-                .font(ABTheme.titleFont)
-                .foregroundColor(ABTheme.primaryText)
-                .multilineTextAlignment(.center)
+                // Body
+                Text(body)
+                    .font(.system(size: 16, design: .serif))
+                    .foregroundColor(ABTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(6)
+                    .padding(.horizontal, ABTheme.paddingLarge)
 
-            // Subtitle
-            Text(page.subtitle)
-                .font(ABTheme.bodyFont)
-                .foregroundColor(ABTheme.secondaryText)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, ABTheme.paddingLarge)
-                .lineSpacing(4)
+                // Scripture card
+                VStack(spacing: 8) {
+                    Text(scripture)
+                        .font(.system(size: 15, design: .serif).italic())
+                        .foregroundColor(ABTheme.sageGreenDark)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
 
-            // Scripture
-            Text(page.scripture)
-                .font(ABTheme.scriptureFont)
-                .foregroundColor(ABTheme.sageGreenDark)
-                .multilineTextAlignment(.center)
+                    Text("— \(reference)")
+                        .font(.system(size: 13, weight: .semibold, design: .serif))
+                        .foregroundColor(ABTheme.sageGreen)
+                }
                 .padding(.horizontal, ABTheme.paddingLarge)
                 .padding(.vertical, ABTheme.paddingMedium)
                 .background(
@@ -165,8 +151,32 @@ struct OnboardingPageView: View {
                 )
                 .padding(.horizontal, ABTheme.paddingMedium)
 
-            Spacer()
-            Spacer()
+                // CTA button on last page
+                if showCTA {
+                    Button {
+                        onBegin?()
+                    } label: {
+                        Text("Begin Your Journey")
+                            .font(.system(.body, design: .serif, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 18)
+                            .background(
+                                LinearGradient(
+                                    colors: [ABTheme.sageGreen, ABTheme.sageGreenDark],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(ABTheme.cornerRadius)
+                            .shadow(color: ABTheme.sageGreen.opacity(0.3), radius: 8, y: 4)
+                    }
+                    .padding(.horizontal, ABTheme.paddingXLarge)
+                    .padding(.top, 8)
+                }
+
+                Spacer().frame(height: 80)
+            }
         }
     }
 }

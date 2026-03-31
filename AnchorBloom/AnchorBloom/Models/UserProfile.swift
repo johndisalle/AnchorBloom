@@ -68,8 +68,8 @@ enum SubscriptionTier: String, Codable {
     var price: String {
         switch self {
         case .free: return "Free"
-        case .premiumMonthly: return "$6.99/month"
-        case .premiumYearly: return "$59.99/year"
+        case .premiumMonthly: return "$3.99/month"
+        case .premiumYearly: return "$29.99/year"
         }
     }
 }

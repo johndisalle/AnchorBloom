@@ -75,7 +75,7 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "6.99",
+          "displayPrice" : "3.99",
           "familyShareable" : false,
           "groupNumber" : 1,
           "internalID" : "A1B2C3D4-0001-0000-0000-000000000001",
@@ -103,14 +103,14 @@
           "codeOffers" : [
 
           ],
-          "displayPrice" : "59.99",
+          "displayPrice" : "29.99",
           "familyShareable" : false,
           "groupNumber" : 2,
           "internalID" : "A1B2C3D4-0002-0000-0000-000000000001",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "All premium features. Save 28% with yearly plan.",
+              "description" : "All premium features. Save 37% with yearly plan.",
               "displayName" : "Yearly Premium",
               "locale" : "en_US"
             }

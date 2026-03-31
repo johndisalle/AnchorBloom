@@ -11,8 +11,8 @@ final class SubscriptionManager: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    static let monthlyProductID = "com.anchorbloom.premium.monthly"
-    static let yearlyProductID = "com.anchorbloom.premium.yearly"
+    static let monthlyProductID = "com.anchorbloom.premium.monthly.v2"
+    static let yearlyProductID = "com.anchorbloom.premium.yearly.v2"
 
     private var updateListenerTask: Task<Void, Error>?
 

@@ -29,9 +29,12 @@ final class NotificationManager: ObservableObject {
 
     // MARK: - Schedule Morning Reminder
     func scheduleMorningReminder(at time: Date) {
+        let prompt = DailyPrompt.morningPrompts[
+            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.morningPrompts.count
+        ]
         let content = UNMutableNotificationContent()
         content.title = "Good morning, beautiful 🌸"
-        content.body = "Time to anchor your heart in God's truth. Your morning reflection is waiting."
+        content.body = "\(prompt.scripture) — \(prompt.scriptureReference)\n\nOpen to anchor your heart in this truth."
         content.sound = .default
         content.categoryIdentifier = "MORNING_ANCHOR"
 
@@ -49,9 +52,12 @@ final class NotificationManager: ObservableObject {
 
     // MARK: - Schedule Evening Reminder
     func scheduleEveningReminder(at time: Date) {
+        let prompt = DailyPrompt.eveningPrompts[
+            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.eveningPrompts.count
+        ]
         let content = UNMutableNotificationContent()
         content.title = "Time to bloom, sister 🌷"
-        content.body = "Reflect on how God worked through you today. Your evening bloom is ready."
+        content.body = "\(prompt.scripture) — \(prompt.scriptureReference)\n\nReflect on how God worked through you today."
         content.sound = .default
         content.categoryIdentifier = "EVENING_BLOOM"
 
@@ -117,8 +123,45 @@ final class NotificationManager: ObservableObject {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
 
+    // MARK: - Weekly Summary Notification
+    static let weeklySummaryIdentifier = "weekly_summary"
+
+    /// Schedules a weekly summary push for Sunday evening at 7pm
+    func scheduleWeeklySummary(streak: Int, anchorCount: Int, totalDays: Int) {
+        let content = UNMutableNotificationContent()
+        content.title = "Your Week in Bloom 🌿"
+
+        if anchorCount >= 7 {
+            content.body = "You anchored every single day this week! \(streak)-day streak and counting. God is doing beautiful things in you, sister."
+        } else if anchorCount >= 5 {
+            content.body = "You anchored \(anchorCount)/7 days this week. \(streak)-day streak! Keep pressing in — consistency is where growth happens."
+        } else if anchorCount > 0 {
+            content.body = "You anchored \(anchorCount)/7 days this week. Every day you show up matters. Tomorrow is a new chance to root deeper."
+        } else {
+            content.body = "Your sisters miss you! Start fresh this week with just one morning anchor. God has a word for you."
+        }
+
+        content.sound = .default
+        content.categoryIdentifier = "WEEKLY_SUMMARY"
+
+        // Sunday at 7pm
+        var components = DateComponents()
+        components.weekday = 1 // Sunday
+        components.hour = 19
+        components.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+
+        let request = UNNotificationRequest(
+            identifier: Self.weeklySummaryIdentifier,
+            content: content,
+            trigger: trigger
+        )
+
+        UNUserNotificationCenter.current().add(request)
+    }
+
     // MARK: - Update Reminders
-    func updateReminders(morning: Date?, evening: Date?, enabled: Bool, isPremium: Bool = false, scriptureRemindersEnabled: Bool = true) {
+    func updateReminders(morning: Date?, evening: Date?, enabled: Bool, isPremium: Bool = false, scriptureRemindersEnabled: Bool = true, streak: Int = 0, weeklyAnchors: Int = 0, totalDays: Int = 0) {
         cancelAllNotifications()
         guard enabled else { return }
         if let morningTime = morning { scheduleMorningReminder(at: morningTime) }
@@ -126,5 +169,7 @@ final class NotificationManager: ObservableObject {
         if isPremium && scriptureRemindersEnabled {
             schedulePremiumScriptureReminders()
         }
+        // Always schedule weekly summary
+        scheduleWeeklySummary(streak: streak, anchorCount: weeklyAnchors, totalDays: totalDays)
     }
 }

@@ -67,7 +67,7 @@ import Foundation
  SISTER CIRCLES
  Join private small groups for encouragement, prayer requests, and celebrating wins together. Because you were never meant to bloom alone.
 
- PREMIUM FEATURES ($6.99/month or $59.99/year)
+ PREMIUM FEATURES ($3.99/month or $29.99/year)
  — Unlimited Sister Circles with full posting
  — Voice-guided anchoring prayer audios
  — All premium 30-day journeys

@@ -158,7 +158,7 @@ struct SettingsView: View {
                         Label("Upgrade to Premium", systemImage: "crown.fill")
                             .foregroundColor(ABTheme.warmGold)
                         Spacer()
-                        Text(subscriptionManager.monthlyProduct?.displayPrice ?? "$6.99/mo")
+                        Text(subscriptionManager.monthlyProduct?.displayPrice ?? "$3.99/mo")
                             .font(.caption)
                             .foregroundColor(ABTheme.secondaryText)
                         Image(systemName: "chevron.right")
@@ -438,7 +438,7 @@ struct SubscriptionView: View {
                                 VStack(spacing: 4) {
                                     Text("Yearly — Best Value")
                                         .font(.system(.body, design: .serif, weight: .bold))
-                                    Text("$59.99/year (save 28%)")
+                                    Text("$29.99/year (save 37%)")
                                         .font(.caption)
                                 }
                             }
@@ -452,7 +452,7 @@ struct SubscriptionView: View {
                                 VStack(spacing: 4) {
                                     Text("Monthly")
                                         .font(.system(.body, design: .serif, weight: .semibold))
-                                    Text("$6.99/month")
+                                    Text("$3.99/month")
                                         .font(.caption)
                                 }
                             }
@@ -462,10 +462,10 @@ struct SubscriptionView: View {
                         // Fallback if products haven't loaded
                         if subscriptionManager.products.isEmpty {
                             VStack(spacing: 12) {
-                                Button("Yearly — $59.99/year (Best Value)") {}
+                                Button("Yearly — $29.99/year (Best Value)") {}
                                     .buttonStyle(ABPremiumButtonStyle())
 
-                                Button("Monthly — $6.99/month") {}
+                                Button("Monthly — $3.99/month") {}
                                     .buttonStyle(ABSecondaryButtonStyle())
                             }
                         }

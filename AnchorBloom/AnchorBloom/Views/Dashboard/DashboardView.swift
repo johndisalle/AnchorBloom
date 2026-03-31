@@ -26,6 +26,15 @@ struct DashboardView: View {
         return formatter.string(from: Date())
     }
 
+    private var timeBasedAction: String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour < 14 {
+            return "anchor" // morning/early afternoon = anchor time
+        } else {
+            return "bloom" // afternoon/evening = bloom time
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -33,16 +42,40 @@ struct DashboardView: View {
                     // Header
                     headerSection
 
-                    // Tree visualization
-                    treeSection
+                    // TODAY'S SCRIPTURE (immediate spiritual value)
+                    todayScriptureCard
+
+                    // PRIMARY ACTION — what they should do NOW
+                    if timeBasedAction == "anchor" && !(viewModel.todayEntry?.anchorCompleted ?? false) {
+                        urgentActionCard(
+                            title: "Anchor Your Morning",
+                            message: "Start your day rooted in truth. Don't let the enemy set the tone — God already has a word for you.",
+                            icon: "sunrise.fill",
+                            color: ABTheme.warmGold
+                        ) {
+                            showAnchorSheet = true
+                        }
+                    } else if timeBasedAction == "bloom" && !(viewModel.todayEntry?.bloomCompleted ?? false) {
+                        urgentActionCard(
+                            title: "Time to Bloom",
+                            message: "Before this day ends, reflect on how God worked through you. Celebrate who He's making you.",
+                            icon: "camera.macro",
+                            color: ABTheme.blush
+                        ) {
+                            showBloomSheet = true
+                        }
+                    }
+
+                    // Daily action cards (both)
+                    dailyActionsSection
 
                     // Active journey card
                     if let journey = viewModel.activeJourney {
                         activeJourneyCard(journey)
                     }
 
-                    // Daily action cards
-                    dailyActionsSection
+                    // Tree visualization
+                    treeSection
 
                     // Active goals (premium)
                     if subscriptionManager.isPremium {
@@ -174,6 +207,79 @@ struct DashboardView: View {
                     .foregroundColor(ABTheme.sageGreen)
             }
             .abCard()
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: - Today's Scripture Card
+    private var todayScriptureCard: some View {
+        let prompt = DailyPrompt.morningPrompts[
+            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.morningPrompts.count
+        ]
+        return VStack(spacing: 10) {
+            Text(prompt.scripture)
+                .font(.system(size: 15, design: .serif).italic())
+                .foregroundColor(ABTheme.sageGreenDark)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+
+            Text("— \(prompt.scriptureReference)")
+                .font(.system(size: 12, weight: .semibold, design: .serif))
+                .foregroundColor(ABTheme.sageGreen)
+        }
+        .padding(ABTheme.paddingMedium)
+        .frame(maxWidth: .infinity)
+        .background(ABTheme.sageGreen.opacity(0.08))
+        .cornerRadius(ABTheme.cornerRadius)
+    }
+
+    // MARK: - Urgent Action Card
+    private func urgentActionCard(title: String, message: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(color.opacity(0.15))
+                            .frame(width: 44, height: 44)
+
+                        Image(systemName: icon)
+                            .font(.title3)
+                            .foregroundColor(color)
+                    }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.system(.body, design: .serif, weight: .bold))
+                            .foregroundColor(ABTheme.primaryText)
+
+                        Text("Tap to begin")
+                            .font(.system(.caption2, design: .serif))
+                            .foregroundColor(color)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(color)
+                }
+
+                Text(message)
+                    .font(.system(size: 14, design: .serif))
+                    .foregroundColor(ABTheme.secondaryText)
+                    .lineSpacing(3)
+            }
+            .padding(ABTheme.paddingMedium)
+            .background(
+                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                    .fill(ABTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                            .stroke(color.opacity(0.3), lineWidth: 1.5)
+                    )
+            )
+            .shadow(color: color.opacity(0.15), radius: 8, y: 3)
         }
         .buttonStyle(.plain)
     }

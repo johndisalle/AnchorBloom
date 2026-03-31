@@ -68,6 +68,7 @@ struct RootView: View {
 
 // MARK: - Main Tab View
 struct MainTabView: View {
+    @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @AppStorage("hasSeenPremiumWelcome") private var hasSeenPremiumWelcome = false
     @State private var selectedTab = 0
@@ -106,6 +107,9 @@ struct MainTabView: View {
                 .tag(4)
         }
         .tint(ABTheme.sageGreen)
+        .task {
+            await firestoreService.ensureGlobalSisterhood()
+        }
         .onChange(of: subscriptionManager.isPremium) {
             if subscriptionManager.isPremium && !hasSeenPremiumWelcome {
                 showPremiumWelcome = true
