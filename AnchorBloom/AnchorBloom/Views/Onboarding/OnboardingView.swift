@@ -15,7 +15,7 @@ struct OnboardingView: View {
                     // Page 1: The Pain Point
                     OnboardingEmotionalPage(
                         headline: "You were never meant\nto carry it alone.",
-                        body: "The comparison. The exhaustion. The quiet voice saying you're not enough.\n\nSister, that voice is a lie.",
+                        message: "The comparison. The exhaustion. The quiet voice saying you're not enough.\n\nSister, that voice is a lie.",
                         scripture: "\"Come to me, all you who are weary and burdened, and I will give you rest.\"",
                         reference: "Matthew 11:28",
                         iconName: "heart.slash",
@@ -26,7 +26,7 @@ struct OnboardingView: View {
                     // Page 2: The Promise
                     OnboardingEmotionalPage(
                         headline: "What if every morning\nstarted with God's truth?",
-                        body: "Imagine replacing fear with faith. Comparison with calling. Doubt with the unshakeable knowledge that the God of the universe chose you.\n\nThat's what this app is for.",
+                        message: "Imagine replacing fear with faith. Comparison with calling. Doubt with the unshakeable knowledge that the God of the universe chose you.\n\nThat's what this app is for.",
                         scripture: "\"She is clothed with strength and dignity; she can laugh at the days to come.\"",
                         reference: "Proverbs 31:25",
                         iconName: "sunrise.fill",
@@ -37,7 +37,7 @@ struct OnboardingView: View {
                     // Page 3: The Invitation
                     OnboardingEmotionalPage(
                         headline: "Root yourself in Christ.\nBloom into who He\ncreated you to be.",
-                        body: "Daily scripture anchors. Evening reflections. A community of women walking this road with you.\n\nYour growth starts today.",
+                        message: "Daily scripture anchors. Evening reflections. A community of women walking this road with you.\n\nYour growth starts today.",
                         scripture: "\"I am the vine; you are the branches. If you remain in me and I in you, you will bear much fruit.\"",
                         reference: "John 15:5",
                         iconName: "tree.fill",
@@ -92,7 +92,7 @@ struct OnboardingView: View {
 // MARK: - Emotional Onboarding Page
 struct OnboardingEmotionalPage: View {
     let headline: String
-    let body: String
+    let message: String
     let scripture: String
     let reference: String
     let iconName: String
@@ -124,7 +124,7 @@ struct OnboardingEmotionalPage: View {
                     .lineSpacing(4)
 
                 // Body
-                Text(body)
+                Text(message)
                     .font(.system(size: 16, design: .serif))
                     .foregroundColor(ABTheme.secondaryText)
                     .multilineTextAlignment(.center)
