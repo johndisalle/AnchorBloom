@@ -58,8 +58,8 @@ struct PreviewData {
     static let partialEntry: DailyEntry = {
         var entry = DailyEntry.new(userID: "user_1", date: Date())
         entry.anchorCompleted = true
-        entry.anchorTags = [.fear]
-        entry.anchorReflection = "Fear about the future was loud this morning. But God reminded me He holds tomorrow."
+        entry.anchorTags = [.anxiety]
+        entry.anchorReflection = "Anxiety about the future was loud this morning. But God reminded me He holds tomorrow."
         return entry
     }()
 
