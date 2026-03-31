@@ -189,23 +189,27 @@ final class FirestoreService: ObservableObject {
         let promptPostID = "daily_prompt_\(todayString)"
 
         let docRef = postsCollection.document(promptPostID)
-        let doc = try? await docRef.getDocument()
 
-        if doc?.exists != true {
-            let prompt = CirclePrompts.todayPrompt
-            let postData: [String: Any] = [
-                "circleID": Self.globalCircleID,
-                "authorID": "system",
-                "authorName": "Anchor & Bloom",
-                "type": "Encouragement",
-                "content": "Today's Prompt: \(prompt)\n\nShare your heart below, sister. You can post anonymously if you'd like.",
-                "createdAt": Timestamp(date: Date()),
-                "likedByIDs": [String](),
-                "commentCount": 0,
-                "isAnonymous": false
-            ]
-            try? await docRef.setData(postData)
+        do {
+            let doc = try await docRef.getDocument()
+            if doc.exists { return } // Already seeded today
+        } catch {
+            // If we can't check, try to create anyway
         }
+
+        let prompt = CirclePrompts.todayPrompt
+        let postData: [String: Any] = [
+            "circleID": Self.globalCircleID,
+            "authorID": "system",
+            "authorName": "Anchor & Bloom",
+            "type": "Encouragement",
+            "content": "Today's Prompt: \(prompt)\n\nShare your heart below, sister. You can post anonymously if you'd like.",
+            "createdAt": Timestamp(date: Date()),
+            "likedByIDs": [String](),
+            "commentCount": 0,
+            "isAnonymous": false
+        ]
+        try? await docRef.setData(postData)
     }
 
     // MARK: - Circle Operations
