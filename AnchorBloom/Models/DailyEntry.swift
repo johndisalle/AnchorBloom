@@ -50,27 +50,37 @@ struct DailyEntry: Codable, Identifiable {
 enum AnchorTag: String, Codable, CaseIterable {
     case comparison = "Comparison"
     case perfectionism = "Perfectionism"
-    case fear = "Fear"
-    case unworthiness = "Unworthiness"
+    case envy = "Envy"
     case peoplepleasing = "People-Pleasing"
-    case control = "Control"
-    case busyness = "Busyness"
-    case selfDoubt = "Self-Doubt"
-    case culturalLies = "Cultural Lies"
+    case anger = "Anger"
+    case selfPity = "Self-Pity"
+    case impatience = "Impatience"
+    case doubt = "Doubt"
+    case temptation = "Temptation"
+    case selfReliance = "Self-Reliance"
+    case lust = "Lust"
+    case avoidance = "Avoidance"
     case anxiety = "Anxiety"
+    case distraction = "Distraction"
+    case laziness = "Laziness"
 
     var icon: String {
         switch self {
         case .comparison: return "arrow.left.arrow.right"
         case .perfectionism: return "checkmark.seal"
-        case .fear: return "exclamationmark.shield"
-        case .unworthiness: return "heart.slash"
+        case .envy: return "eye"
         case .peoplepleasing: return "person.2"
-        case .control: return "hand.raised"
-        case .busyness: return "clock.arrow.circlepath"
-        case .selfDoubt: return "questionmark.circle"
-        case .culturalLies: return "bubble.left.and.exclamationmark.bubble.right"
+        case .anger: return "flame"
+        case .selfPity: return "cloud.rain"
+        case .impatience: return "clock"
+        case .doubt: return "questionmark.circle"
+        case .temptation: return "exclamationmark.triangle"
+        case .selfReliance: return "figure.stand"
+        case .lust: return "heart.slash"
+        case .avoidance: return "arrow.uturn.backward"
         case .anxiety: return "waveform.path.ecg"
+        case .distraction: return "sparkles"
+        case .laziness: return "bed.double"
         }
     }
 
@@ -80,22 +90,32 @@ enum AnchorTag: String, Codable, CaseIterable {
             return "\"I praise you because I am fearfully and wonderfully made.\" — Psalm 139:14"
         case .perfectionism:
             return "\"My grace is sufficient for you, for my power is made perfect in weakness.\" — 2 Corinthians 12:9"
-        case .fear:
-            return "\"For God has not given us a spirit of fear, but of power, love, and a sound mind.\" — 2 Timothy 1:7"
-        case .unworthiness:
-            return "\"See what great love the Father has lavished on us, that we should be called children of God!\" — 1 John 3:1"
+        case .envy:
+            return "\"A heart at peace gives life to the body, but envy rots the bones.\" — Proverbs 14:30"
         case .peoplepleasing:
             return "\"Am I now trying to win the approval of human beings, or of God?\" — Galatians 1:10"
-        case .control:
-            return "\"Trust in the Lord with all your heart and lean not on your own understanding.\" — Proverbs 3:5"
-        case .busyness:
-            return "\"Be still, and know that I am God.\" — Psalm 46:10"
-        case .selfDoubt:
+        case .anger:
+            return "\"My dear brothers and sisters, take note of this: Everyone should be quick to listen, slow to speak and slow to become angry.\" — James 1:19"
+        case .selfPity:
+            return "\"The Lord is close to the brokenhearted and saves those who are crushed in spirit.\" — Psalm 34:18"
+        case .impatience:
+            return "\"But those who hope in the Lord will renew their strength.\" — Isaiah 40:31"
+        case .doubt:
             return "\"I can do all things through Christ who strengthens me.\" — Philippians 4:13"
-        case .culturalLies:
-            return "\"Do not conform to the pattern of this world, but be transformed by the renewing of your mind.\" — Romans 12:2"
+        case .temptation:
+            return "\"No temptation has overtaken you except what is common to mankind. And God is faithful; he will not let you be tempted beyond what you can bear.\" — 1 Corinthians 10:13"
+        case .selfReliance:
+            return "\"Trust in the Lord with all your heart and lean not on your own understanding.\" — Proverbs 3:5"
+        case .lust:
+            return "\"Flee from sexual immorality. Your body is a temple of the Holy Spirit.\" — 1 Corinthians 6:18-19"
+        case .avoidance:
+            return "\"Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged.\" — Joshua 1:9"
         case .anxiety:
             return "\"Cast all your anxiety on him because he cares for you.\" — 1 Peter 5:7"
+        case .distraction:
+            return "\"Let us run with perseverance the race marked out for us, fixing our eyes on Jesus.\" — Hebrews 12:1-2"
+        case .laziness:
+            return "\"Whatever you do, work at it with all your heart, as working for the Lord.\" — Colossians 3:23"
         }
     }
 }
@@ -180,43 +200,58 @@ struct DriftEntry: Codable, Identifiable {
 // MARK: - Drift Categories
 enum DriftCategory: String, Codable, CaseIterable {
     case comparison = "Comparison"
-    case fear = "Fear"
     case perfectionism = "Perfectionism"
-    case overwhelm = "Overwhelm"
     case envy = "Envy"
     case peoplepleasing = "People-Pleasing"
     case anger = "Anger"
     case selfPity = "Self-Pity"
     case impatience = "Impatience"
     case doubt = "Doubt"
+    case temptation = "Temptation"
+    case selfReliance = "Self-Reliance"
+    case lust = "Lust"
+    case avoidance = "Avoidance"
+    case anxiety = "Anxiety"
+    case distraction = "Distraction"
+    case laziness = "Laziness"
 
     var icon: String {
         switch self {
         case .comparison: return "arrow.left.arrow.right.circle.fill"
-        case .fear: return "exclamationmark.triangle.fill"
         case .perfectionism: return "checkmark.seal.fill"
-        case .overwhelm: return "tornado"
         case .envy: return "eye.fill"
         case .peoplepleasing: return "face.smiling.inverse"
         case .anger: return "flame.fill"
         case .selfPity: return "cloud.rain.fill"
         case .impatience: return "clock.fill"
         case .doubt: return "questionmark.diamond.fill"
+        case .temptation: return "exclamationmark.triangle.fill"
+        case .selfReliance: return "figure.stand"
+        case .lust: return "heart.slash.fill"
+        case .avoidance: return "arrow.uturn.backward.circle.fill"
+        case .anxiety: return "waveform.path.ecg"
+        case .distraction: return "sparkles"
+        case .laziness: return "bed.double.fill"
         }
     }
 
     var color: String {
         switch self {
         case .comparison: return "blush"
-        case .fear: return "warmGold"
         case .perfectionism: return "sageGreen"
-        case .overwhelm: return "darkNavy"
         case .envy: return "blush"
         case .peoplepleasing: return "warmGold"
         case .anger: return "blush"
         case .selfPity: return "darkNavy"
         case .impatience: return "warmGold"
         case .doubt: return "sageGreen"
+        case .temptation: return "warmGold"
+        case .selfReliance: return "darkNavy"
+        case .lust: return "blush"
+        case .avoidance: return "darkNavy"
+        case .anxiety: return "warmGold"
+        case .distraction: return "sageGreen"
+        case .laziness: return "darkNavy"
         }
     }
 
@@ -224,12 +259,8 @@ enum DriftCategory: String, Codable, CaseIterable {
         switch self {
         case .comparison:
             return "Lord, anchor my heart in Your truth today. I am fearfully and wonderfully made. Help me to celebrate who You created me to be, and to rejoice in the gifts You've given others without losing sight of my own. I am enough because You are enough. Amen."
-        case .fear:
-            return "Father, I bring this fear to You. You have not given me a spirit of fear but of power, love, and a sound mind. Wrap me in Your peace. I trust You with what I cannot control. You are my refuge and strength. Amen."
         case .perfectionism:
             return "Jesus, I release my need to be perfect. Your grace is sufficient for me. Your power is made perfect in my weakness. Help me to rest in Your finished work and find freedom in Your love. Amen."
-        case .overwhelm:
-            return "Holy Spirit, I feel the weight of too much right now. Remind me that You are the God who carries my burdens. Help me to be still and know that You are God. Order my steps and give me peace. Amen."
         case .envy:
             return "Lord, guard my heart from wanting what belongs to another. You have given me everything I need for life and godliness. Help me to steward my own gifts with gratitude and to bless others generously. Amen."
         case .peoplepleasing:
@@ -242,6 +273,20 @@ enum DriftCategory: String, Codable, CaseIterable {
             return "Lord, teach me to wait on You with grace. Your timing is perfect. Help me to trust the process and to find joy in the journey, not just the destination. Grow patience in me like a deep-rooted tree. Amen."
         case .doubt:
             return "Father, I believe — help my unbelief. When doubts arise, anchor me in Your unchanging Word. You are faithful even when I waver. Strengthen my faith and remind me of all the ways You've been faithful before. Amen."
+        case .temptation:
+            return "Lord, I know no temptation has overtaken me except what is common to mankind. You are faithful — You will not let me be tempted beyond what I can bear. Show me the way out and give me strength to take it. Amen."
+        case .selfReliance:
+            return "Father, forgive me for trying to do this on my own. Apart from You I can do nothing. Teach me to lean on You, to trust Your strength over mine, and to surrender control to Your capable hands. Amen."
+        case .lust:
+            return "Holy Spirit, guard my eyes, my heart, and my mind. My body is Your temple. Help me to flee from what dishonors You and to run toward purity and holiness. Fill the empty places in me with Your love. Amen."
+        case .avoidance:
+            return "Lord, give me courage to face what I've been running from. You have not given me a spirit of fear. Walk with me into the hard places. I trust that You go before me and stand beside me. Amen."
+        case .anxiety:
+            return "Father, I cast all my anxiety on You because You care for me. Quiet the racing thoughts. Replace my worry with worship. You are in control, and I am safe in Your hands. Amen."
+        case .distraction:
+            return "Jesus, fix my eyes on You today. The world is loud, but Your voice is what matters. Help me to set my mind on things above and to run the race marked out for me with perseverance. Amen."
+        case .laziness:
+            return "Lord, stir in me a holy urgency to steward this day well. You have given me gifts, time, and purpose. Help me to work as if working for You — not out of guilt, but out of gratitude for all You've done. Amen."
         }
     }
 }
