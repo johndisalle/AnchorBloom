@@ -302,6 +302,17 @@ struct SettingsView: View {
                 }
             }
 
+            Link(destination: URL(string: "mailto:johntdisalle@outlook.com?subject=Report%20Inappropriate%20Activity%20-%20Anchor%20%26%20Bloom")!) {
+                HStack {
+                    Label("Report Inappropriate Activity", systemImage: "exclamationmark.shield.fill")
+                        .foregroundColor(ABTheme.destructive)
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+            }
+
             Button {
                 if let url = URL(string: "itms-apps://itunes.apple.com/app/id\(Bundle.main.infoDictionary?["APP_STORE_ID"] as? String ?? "")") {
                     UIApplication.shared.open(url)
@@ -332,6 +343,8 @@ struct SettingsView: View {
                         UserDefaults.standard.set(false, forKey: "hasSeenWelcome")
                         UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
                         UserDefaults.standard.set(false, forKey: "hasSeenPremiumWelcome")
+                        UserDefaults.standard.set(false, forKey: "hasAcceptedCircleTerms")
+                        UserDefaults.standard.set(false, forKey: "hasAcceptedCircleTerms")
                     } catch {
                         deleteErrorMessage = error.localizedDescription
                         showDeleteError = true

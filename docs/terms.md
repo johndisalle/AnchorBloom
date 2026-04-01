@@ -37,19 +37,34 @@ Premium features include unlimited Sister Circles with full participation, premi
 ### Kingdom Funded
 All profits from Anchor & Bloom fund service projects and missions. By subscribing, you are supporting faith-based community initiatives.
 
-## 5. User Conduct
+## 5. User Conduct & Zero Tolerance Policy
 
-You agree not to:
-- Post content that is hateful, harassing, threatening, obscene, or otherwise inappropriate
-- Use the App to spam, harass, or bully other users
+**Anchor & Bloom has zero tolerance for objectionable content or abusive users.** You agree not to:
+- Post content that is hateful, harassing, threatening, obscene, sexually explicit, or otherwise inappropriate
+- Use the App to spam, harass, bully, or threaten other users
+- Post objectionable, offensive, or abusive content of any kind
 - Impersonate another person or entity
 - Upload content that infringes on intellectual property rights
 - Attempt to gain unauthorized access to the App or its systems
 - Use the App for any unlawful purpose
+- Use anonymous posting to circumvent community guidelines
 
-## 6. Community Circles
+**Violations of these terms will result in immediate removal of content and may result in permanent account suspension.** We review all reports within 24 hours and take swift action to maintain a safe community.
 
-Sister Circles are community spaces within the App. By participating, you agree to treat all members with respect and kindness. Circle administrators may remove members or content that violates these Terms. Users may report inappropriate content, and we reserve the right to review and take action on reported content, including removal and account suspension.
+## 6. Community Circles & Content Moderation
+
+Sister Circles and the Global Sisterhood are community spaces within the App. By participating, you agree to treat all members with respect and kindness.
+
+### Moderation & Reporting
+- All users can report objectionable content directly within the App using the report feature on any post or comment
+- All users can block abusive users, which immediately hides their content
+- Circle administrators can remove members and delete content that violates these Terms
+- Users can immediately remove their own posts from the feed
+- The developer reviews all content reports within 24 hours and removes objectionable content and ejects offending users
+- To report inappropriate activity directly, contact us at johntdisalle@outlook.com
+
+### Content Filtering
+The App employs automated content filtering to prevent objectionable language from being posted. Users must agree to Community Guidelines before posting content.
 
 ## 7. Content
 

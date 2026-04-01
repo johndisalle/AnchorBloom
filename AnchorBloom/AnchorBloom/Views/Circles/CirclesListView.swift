@@ -1036,6 +1036,7 @@ struct CommentThreadView: View {
     @State private var newComment = ""
     @State private var isLoading = false
     @State private var isSending = false
+    @State private var showCommentContentWarning = false
 
     private var filteredComments: [CircleComment] {
         comments.filter { !blockedUserIDs.contains($0.authorID) }
@@ -1163,6 +1164,11 @@ struct CommentThreadView: View {
             .task {
                 await loadComments()
             }
+            .alert("Content Not Allowed", isPresented: $showCommentContentWarning) {
+                Button("OK") {}
+            } message: {
+                Text("Your comment contains language that doesn't align with our community guidelines. Please revise and try again.")
+            }
         }
     }
 
@@ -1175,6 +1181,10 @@ struct CommentThreadView: View {
 
     private func sendComment() {
         guard let postID = post.id, !newComment.isEmpty else { return }
+        if !ContentFilter.isClean(newComment) {
+            showCommentContentWarning = true
+            return
+        }
         let text = newComment
         newComment = ""
         isSending = true
@@ -1445,9 +1455,51 @@ struct NewPostView: View {
     @State private var scriptureRef = ""
     @State private var isAnonymous = false
     @State private var showPrompt = true
+    @State private var showContentWarning = false
+    @State private var contentWarningText = ""
+    @AppStorage("hasAcceptedCircleTerms") private var hasAcceptedCircleTerms = false
+    @State private var showTermsGate = false
 
     var body: some View {
         NavigationStack {
+            if !hasAcceptedCircleTerms {
+                // Terms acceptance gate
+                VStack(spacing: ABTheme.paddingLarge) {
+                    Spacer()
+
+                    Image(systemName: "doc.text.fill")
+                        .font(.system(size: 48))
+                        .foregroundColor(ABTheme.sageGreen)
+
+                    Text("Community Guidelines")
+                        .font(ABTheme.headlineFont)
+                        .foregroundColor(ABTheme.primaryText)
+
+                    Text("Before posting, please agree to our community standards. Anchor & Bloom has zero tolerance for objectionable, abusive, or inappropriate content. Violations result in immediate removal and account action.")
+                        .font(ABTheme.bodyFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .padding(.horizontal, ABTheme.paddingLarge)
+
+                    Link("Read Full Terms of Use", destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/terms.md")!)
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.sageGreen)
+
+                    Button("I Agree to the Community Guidelines") {
+                        hasAcceptedCircleTerms = true
+                    }
+                    .buttonStyle(ABPrimaryButtonStyle())
+                    .padding(.horizontal, ABTheme.paddingLarge)
+
+                    Button("Cancel") { dismiss() }
+                        .foregroundColor(ABTheme.secondaryText)
+                        .font(.system(.body, design: .serif))
+
+                    Spacer()
+                }
+                .abScreenBackground()
+            } else {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
                     // Daily prompt
@@ -1568,10 +1620,22 @@ struct NewPostView: View {
                         .foregroundColor(ABTheme.sageGreen)
                 }
             }
+            .alert("Content Not Allowed", isPresented: $showContentWarning) {
+                Button("OK") {}
+            } message: {
+                Text("Your post contains language that doesn't align with our community guidelines. Please revise and try again.")
+            }
         }
+        } // end else (terms accepted)
     }
 
     private func createPost() {
+        // Content filter check
+        if !ContentFilter.isClean(content) || !ContentFilter.isClean(scriptureRef) {
+            showContentWarning = true
+            return
+        }
+
         let userID = FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
         let userName = FirebaseAuth.Auth.auth().currentUser?.displayName ?? "Sister"
         let post = CirclePost(
