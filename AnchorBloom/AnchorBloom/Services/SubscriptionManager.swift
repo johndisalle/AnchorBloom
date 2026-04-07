@@ -1,6 +1,7 @@
 import Foundation
 import Combine
 import StoreKit
+import UIKit
 
 // MARK: - Subscription Manager
 /// Handles StoreKit subscriptions for premium features
@@ -86,6 +87,19 @@ final class SubscriptionManager: ObservableObject {
             if case .verified(let transaction) = result {
                 purchasedProductIDs.insert(transaction.productID)
             }
+        }
+    }
+
+    // MARK: - Redeem Offer Code
+    /// Presents the system offer code redemption sheet (iOS 16+)
+    func redeemOfferCode() async {
+        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        do {
+            try await AppStore.presentOfferCodeRedeemSheet(in: windowScene)
+            // After redemption, refresh entitlements to pick up the new subscription
+            await restorePurchases()
+        } catch {
+            errorMessage = "Could not open the offer code redemption. Please try again."
         }
     }
 

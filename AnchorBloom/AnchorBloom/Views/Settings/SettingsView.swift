@@ -172,6 +172,11 @@ struct SettingsView: View {
                 Task { await subscriptionManager.restorePurchases() }
             }
             .foregroundColor(ABTheme.sageGreen)
+
+            Button("Redeem Offer Code") {
+                Task { await subscriptionManager.redeemOfferCode() }
+            }
+            .foregroundColor(ABTheme.warmGold)
         }
         .listRowBackground(ABTheme.cardBackground)
     }
@@ -484,9 +489,17 @@ struct SubscriptionView: View {
                         }
                     }
 
-                    // Restore
-                    Button("Restore Purchases") {
-                        Task { await subscriptionManager.restorePurchases() }
+                    // Restore & Redeem
+                    HStack(spacing: 16) {
+                        Button("Restore Purchases") {
+                            Task { await subscriptionManager.restorePurchases() }
+                        }
+
+                        Text("·").foregroundColor(ABTheme.secondaryText.opacity(0.5))
+
+                        Button("Redeem Code") {
+                            Task { await subscriptionManager.redeemOfferCode() }
+                        }
                     }
                     .font(.caption)
                     .foregroundColor(ABTheme.secondaryText)
