@@ -93,7 +93,7 @@ final class SubscriptionManager: ObservableObject {
     // MARK: - Redeem Offer Code
     /// Presents the system offer code redemption sheet (iOS 16+)
     func redeemOfferCode() async {
-        guard let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
         do {
             try await AppStore.presentOfferCodeRedeemSheet(in: windowScene)
             // After redemption, refresh entitlements to pick up the new subscription
