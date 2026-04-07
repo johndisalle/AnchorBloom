@@ -40,5 +40,29 @@ service cloud.firestore {
       allow update: if request.auth != null && resource.data.userID == request.auth.uid;
       allow delete: if request.auth != null && resource.data.userID == request.auth.uid;
     }
+
+    // Bookmarks: users can only access their own bookmarks
+    match /bookmarks/{bookmarkId} {
+      allow read: if request.auth != null && resource.data.userID == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userID == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.userID == request.auth.uid;
+    }
+
+    // Prayer Requests: all authenticated users can read, pray, and post
+    match /prayerRequests/{requestId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update: if request.auth != null;
+    }
+
+    // Reports: authenticated users can create reports (admins read)
+    match /reports/{reportId} {
+      allow create: if request.auth != null;
+    }
+
+    // Public circles: allow read for discovery (non-members browsing public circles)
+    match /circles/{circleId} {
+      allow read: if request.auth != null && resource.data.isPrivate == false;
+    }
   }
 }

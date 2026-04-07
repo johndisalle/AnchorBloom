@@ -457,11 +457,13 @@ struct SubscriptionView: View {
                         PremiumFeatureRow(icon: "heart.circle.fill", text: "Kingdom Funded — all profits fund service and missions")
                         PremiumFeatureRow(icon: "map.fill", text: "All premium 30-day journeys")
                         PremiumFeatureRow(icon: "person.3.fill", text: "Unlimited Sister Circles — post & comment")
+                        PremiumFeatureRow(icon: "hands.sparkles.fill", text: "Post anonymous prayer requests on the Prayer Wall")
                         PremiumFeatureRow(icon: "book.fill", text: "Deeper daily devotional prompts & reflections")
+                        PremiumFeatureRow(icon: "photo.on.rectangle.angled", text: "Beautiful verse card templates for sharing")
+                        PremiumFeatureRow(icon: "doc.richtext", text: "Export your journal as a keepsake PDF")
                         PremiumFeatureRow(icon: "chart.line.uptrend.xyaxis", text: "Detailed growth insights & weekly spiritual reports")
                         PremiumFeatureRow(icon: "bell.badge.fill", text: "Personalized scripture reminders throughout the day")
                         PremiumFeatureRow(icon: "target", text: "Custom spiritual goals & milestone tracking")
-                        PremiumFeatureRow(icon: "xmark.circle", text: "Ad-free experience")
                     }
                     .abCard()
 

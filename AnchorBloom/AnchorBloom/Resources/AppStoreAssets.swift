@@ -52,9 +52,15 @@ import Foundation
 
  WATCH YOUR GROWTH
  — Beautiful blooming tree that grows with your consistency
- — Streak tracking and milestone badges
+ — Streak rewards: wallpapers at 7 days, a personal Letter from God at 30, a shareable testimony card at 90
  — Weekly summaries of your spiritual growth
  — Calendar view of your faithful days
+
+ PRAYER WALL
+ Post anonymous prayer requests and see your sisters rally around you. Tap "I Prayed" and watch the count grow — "47 sisters prayed for you today." Mark prayers as answered and share your testimony.
+
+ BEAUTIFUL VERSE CARDS
+ Share Scripture on social media with stunning, Instagram-ready verse cards. Choose from multiple aesthetic templates — Dawn, Garden, Twilight, Blossom, and Minimalist — each branded with Anchor & Bloom.
 
  30-DAY GUIDED JOURNEYS
  — Rooted in Identity: Know who you are in Christ
@@ -68,12 +74,15 @@ import Foundation
  Join private small groups for encouragement, prayer requests, and celebrating wins together. Because you were never meant to bloom alone.
 
  PREMIUM FEATURES ($3.99/month or $29.99/year)
- — Unlimited Sister Circles with full posting
- — Voice-guided anchoring prayer audios
+ — Unlimited Sister Circles with full posting & commenting
+ — Post anonymous prayer requests on the Prayer Wall
+ — Beautiful verse card templates for social sharing
+ — Export your journal as a keepsake PDF ("Your Year with God")
  — All premium 30-day journeys
- — Live monthly Q&A access
- — Custom spiritual goals
- — Ad-free experience
+ — Deeper daily devotional prompts & reflections
+ — Personalized scripture reminders throughout the day
+ — Custom spiritual goals & milestone tracking
+ — Detailed growth insights & weekly spiritual reports
 
  "Be on your guard; stand firm in the faith; be courageous; be strong. Do everything in love." — 1 Corinthians 16:13-14
 
@@ -104,9 +113,12 @@ import Foundation
  • Drift Log with anchoring prayers
  • Beautiful blooming tree progress visualization
  • 7 guided 30-day spiritual journeys
- • Sister Circles for community
- • Streak tracking and badges
- • Premium subscription with voice-guided prayers
+ • Sister Circles for community with sharing & search
+ • Anonymous Prayer Wall — pray for your sisters
+ • Streak rewards: wallpapers, Letter from God, testimony cards
+ • Beautiful verse card templates for social sharing
+ • PDF journal export — "Your Year with God"
+ • Enhanced notifications with daily rotating scripture
 
  We'd love your feedback! Leave a review or reach out — we're building this for you.
 

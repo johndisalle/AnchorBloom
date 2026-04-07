@@ -40,11 +40,13 @@ AnchorBloom/
 │   ├── Anchor/             # Morning devotional screen
 │   ├── Bloom/              # Evening reflection screen
 │   ├── DriftLog/           # Quick drift logging with prayer audio
-│   ├── Progress/           # Stats, calendar, badge gallery
+│   ├── Progress/           # Stats, calendar, badge gallery, PDF export
 │   ├── Journey/            # 30-day guided journeys
-│   ├── Circles/            # Sister Circles community
+│   ├── Circles/            # Sister Circles community with search & discovery
+│   ├── PrayerWall/         # Anonymous prayer requests
+│   ├── Rewards/            # Streak milestones, wallpapers, testimony cards
 │   ├── Settings/           # Settings and subscription management
-│   └── Components/         # Reusable components (BloomingTreeView, etc.)
+│   └── Components/         # Reusable components (BloomingTreeView, verse cards, etc.)
 ├── Resources/              # Journey content, App Store assets
 └── Preview Content/        # SwiftUI preview sample data
 ```
@@ -53,12 +55,16 @@ AnchorBloom/
 
 - **Morning Anchor**: Daily Scripture + reflection with tag selection
 - **Evening Bloom**: Biblical womanhood role reflection
-- **Drift Log**: One-tap mood tracking with instant prayer audio
+- **Drift Log**: One-tap mood tracking with anchoring prayers
 - **Blooming Tree**: Visual growth tracker with animated flowers/fruit
-- **30-Day Journeys**: 7 guided spiritual growth paths
-- **Sister Circles**: Private community groups
+- **30-Day Journeys**: 7 guided spiritual growth paths (2 free, 5 premium)
+- **Sister Circles**: Community groups with sharing, search, and drift-topic circles
+- **Prayer Wall**: Anonymous prayer requests with "I Prayed" counters
+- **Streak Rewards**: Wallpapers (7 days), Letter from God (30), testimony cards (90)
+- **Verse Card Templates**: 5 beautiful shareable designs (1 free, 4 premium)
+- **PDF Journal Export**: "Your Year with God" branded devotional PDF (premium)
 - **Badges & Streaks**: Achievement system for consistency
-- **Premium**: $6.99/mo or $59.99/yr via StoreKit 2
+- **Premium**: $3.99/mo or $29.99/yr via StoreKit 2
 
 ## Color Palette
 

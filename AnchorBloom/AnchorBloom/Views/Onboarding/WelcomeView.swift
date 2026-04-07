@@ -23,7 +23,7 @@ struct WelcomeView: View {
         (
             "water.waves",
             "Drift Log",
-            "Feeling off course? One tap to name it — comparison, fear, overwhelm. God meets you with an anchoring prayer right where you are.",
+            "Feeling off course? One tap to name it — comparison, anxiety, doubt. God meets you with an anchoring prayer right where you are.",
             ABTheme.sageGreen
         ),
         (
