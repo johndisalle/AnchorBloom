@@ -611,7 +611,7 @@ struct NewPrayerRequestView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(ABTheme.destructive)
                                     .font(.caption)
-                                Text("Your request contains a word that isn't allowed: "\(violation)". Please revise.")
+                                Text("Your request contains a word that isn't allowed: \"\(violation)\". Please revise.")
                                     .font(.caption)
                                     .foregroundColor(ABTheme.destructive)
                             }
