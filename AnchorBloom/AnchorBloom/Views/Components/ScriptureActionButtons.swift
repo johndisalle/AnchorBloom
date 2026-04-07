@@ -124,6 +124,7 @@ struct VerseShareSheet: View {
 
     @State private var selectedTemplate: VerseCardTemplate = .garden
     @State private var showUpgradePrompt = false
+    @State private var showSubscriptionSheet = false
 
     var body: some View {
         NavigationStack {
@@ -219,10 +220,13 @@ struct VerseShareSheet: View {
                 }
             }
             .alert("Upgrade to Premium", isPresented: $showUpgradePrompt) {
-                Button("Upgrade", role: .none) { showUpgradePrompt = false }
+                Button("Upgrade", role: .none) { showSubscriptionSheet = true }
                 Button("Not Now", role: .cancel) { }
             } message: {
                 Text("Unlock all verse card templates and more with Anchor & Bloom Premium.")
+            }
+            .sheet(isPresented: $showSubscriptionSheet) {
+                SubscriptionView()
             }
         }
     }

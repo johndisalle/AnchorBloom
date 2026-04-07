@@ -16,6 +16,7 @@ struct JournalExportView: View {
     @State private var generatedPDFURL: URL?
     @State private var exportError: String?
     @State private var showError = false
+    @State private var showUpgradeSheet = false
 
     // Date range filter
     @State private var filterStartDate: Date = Calendar.current.date(byAdding: .year, value: -1, to: Date()) ?? Date()
@@ -121,9 +122,12 @@ struct JournalExportView: View {
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
 
-            Button("Upgrade to Premium") { }
+            Button("Upgrade to Premium") { showUpgradeSheet = true }
                 .buttonStyle(ABPremiumButtonStyle())
                 .padding(.top, ABTheme.paddingSmall)
+                .sheet(isPresented: $showUpgradeSheet) {
+                    SubscriptionView()
+                }
         }
         .padding(ABTheme.paddingMedium)
         .abCard()

@@ -60,6 +60,7 @@ struct PrayerWallView: View {
     @State private var selectedCategory: PrayerCategory?
     @State private var showNewPrayerSheet = false
     @State private var showUpgradePrompt = false
+    @State private var loadErrorMessage: String?
 
     private var currentUserID: String {
         Auth.auth().currentUser?.uid ?? ""
@@ -218,18 +219,29 @@ struct PrayerWallView: View {
 
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "hands.sparkles")
-                .font(.system(size: 44))
-                .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+            if let errorMsg = loadErrorMessage {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 44))
+                    .foregroundColor(ABTheme.destructive.opacity(0.5))
 
-            Text("No prayers here yet")
-                .font(ABTheme.subheadlineFont)
-                .foregroundColor(ABTheme.secondaryText)
+                Text(errorMsg)
+                    .font(ABTheme.captionFont)
+                    .foregroundColor(ABTheme.secondaryText)
+                    .multilineTextAlignment(.center)
+            } else {
+                Image(systemName: "hands.sparkles")
+                    .font(.system(size: 44))
+                    .foregroundColor(ABTheme.secondaryText.opacity(0.3))
 
-            Text("Be the first to lift up a prayer request.")
-                .font(ABTheme.captionFont)
-                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
-                .multilineTextAlignment(.center)
+                Text("No prayers here yet")
+                    .font(ABTheme.subheadlineFont)
+                    .foregroundColor(ABTheme.secondaryText)
+
+                Text("Be the first to lift up a prayer request.")
+                    .font(ABTheme.captionFont)
+                    .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                    .multilineTextAlignment(.center)
+            }
         }
         .padding(.top, 40)
     }
@@ -238,6 +250,7 @@ struct PrayerWallView: View {
 
     private func loadPrayerRequests() async {
         isLoading = true
+        loadErrorMessage = nil
         defer { isLoading = false }
 
         do {
@@ -251,7 +264,7 @@ struct PrayerWallView: View {
                 try? $0.data(as: PrayerRequest.self)
             }
         } catch {
-            // Silently fail — the list will just remain empty
+            loadErrorMessage = "Unable to load prayers. Pull down to try again."
         }
     }
 
