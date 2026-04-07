@@ -19,6 +19,7 @@ struct SettingsView: View {
     @State private var showSignOutConfirmation = false
     @State private var showBlockedUsers = false
     @State private var showDeleteError = false
+    @State private var showJournalExport = false
     @State private var deleteErrorMessage = ""
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
@@ -40,6 +41,20 @@ struct SettingsView: View {
                         } icon: {
                             Image(systemName: "bookmark.fill")
                                 .foregroundColor(ABTheme.warmGold)
+                        }
+                    }
+                    if subscriptionManager.isPremium {
+                        Button {
+                            showJournalExport = true
+                        } label: {
+                            Label {
+                                Text("Export Journal (PDF)")
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(ABTheme.primaryText)
+                            } icon: {
+                                Image(systemName: "doc.richtext")
+                                    .foregroundColor(ABTheme.sageGreen)
+                            }
                         }
                     }
                 } header: {
@@ -74,6 +89,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showBlockedUsers) {
                 BlockedUsersView()
+            }
+            .sheet(isPresented: $showJournalExport) {
+                JournalExportView()
             }
         }
     }

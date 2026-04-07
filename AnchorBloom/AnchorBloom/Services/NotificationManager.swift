@@ -28,49 +28,116 @@ final class NotificationManager: ObservableObject {
     }
 
     // MARK: - Schedule Morning Reminder
+    /// Schedules 7 days of unique morning notifications with different scriptures
     func scheduleMorningReminder(at time: Date) {
-        let prompt = DailyPrompt.morningPrompts[
-            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.morningPrompts.count
+        let center = UNUserNotificationCenter.current()
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
+
+        let greetings = [
+            "Good morning, sister",
+            "Rise and shine, beautiful",
+            "Good morning, beloved",
+            "A new day, a new mercy",
+            "God has a word for you today",
+            "Before the world speaks, let Him speak first",
+            "His mercies are new this morning"
         ]
-        let content = UNMutableNotificationContent()
-        content.title = "Good morning, beautiful 🌸"
-        content.body = "\(prompt.scripture) — \(prompt.scriptureReference)\n\nOpen to anchor your heart in this truth."
-        content.sound = .default
-        content.categoryIdentifier = "MORNING_ANCHOR"
 
-        let components = Calendar.current.dateComponents([.hour, .minute], from: time)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        for dayOffset in 0..<7 {
+            let promptIndex = (dayOfYear + dayOffset - 1) % DailyPrompt.morningPrompts.count
+            let prompt = DailyPrompt.morningPrompts[promptIndex]
 
-        let request = UNNotificationRequest(
-            identifier: Self.morningIdentifier,
-            content: content,
-            trigger: trigger
-        )
+            let content = UNMutableNotificationContent()
+            content.title = "\(greetings[dayOffset]) 🌸"
+            content.subtitle = "\(prompt.scriptureReference)"
+            content.body = "\(prompt.scripture)\n\nTap to anchor your heart in this truth."
+            content.sound = .default
+            content.categoryIdentifier = "MORNING_ANCHOR"
 
-        UNUserNotificationCenter.current().add(request)
+            guard let targetDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: Date()) else { continue }
+            var components = Calendar.current.dateComponents([.year, .month, .day], from: targetDate)
+            let timeComponents = Calendar.current.dateComponents([.hour, .minute], from: time)
+            components.hour = timeComponents.hour
+            components.minute = timeComponents.minute
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "\(Self.morningIdentifier)_\(dayOffset)",
+                content: content,
+                trigger: trigger
+            )
+            center.add(request)
+        }
     }
 
     // MARK: - Schedule Evening Reminder
+    /// Schedules 7 days of unique evening notifications with different scriptures
     func scheduleEveningReminder(at time: Date) {
-        let prompt = DailyPrompt.eveningPrompts[
-            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.eveningPrompts.count
-        ]
-        let content = UNMutableNotificationContent()
-        content.title = "Time to bloom, sister 🌷"
-        content.body = "\(prompt.scripture) — \(prompt.scriptureReference)\n\nReflect on how God worked through you today."
-        content.sound = .default
-        content.categoryIdentifier = "EVENING_BLOOM"
+        let center = UNUserNotificationCenter.current()
+        let dayOfYear = Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1
 
-        let components = Calendar.current.dateComponents([.hour, .minute], from: time)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
+        let greetings = [
+            "Time to bloom, sister",
+            "How did God show up today?",
+            "Pause and reflect, beloved",
+            "Before you rest, remember His goodness",
+            "What did God grow in you today?",
+            "Your day had purpose — let's capture it",
+            "End this day in His presence"
+        ]
+
+        for dayOffset in 0..<7 {
+            let promptIndex = (dayOfYear + dayOffset - 1) % DailyPrompt.eveningPrompts.count
+            let prompt = DailyPrompt.eveningPrompts[promptIndex]
+
+            let content = UNMutableNotificationContent()
+            content.title = "\(greetings[dayOffset]) 🌷"
+            content.subtitle = "\(prompt.scriptureReference)"
+            content.body = "\(prompt.scripture)\n\nReflect on how God worked through you today."
+            content.sound = .default
+            content.categoryIdentifier = "EVENING_BLOOM"
+
+            guard let targetDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: Date()) else { continue }
+            var components = Calendar.current.dateComponents([.year, .month, .day], from: targetDate)
+            let timeComponents = Calendar.current.dateComponents([.hour, .minute], from: time)
+            components.hour = timeComponents.hour
+            components.minute = timeComponents.minute
+
+            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "\(Self.eveningIdentifier)_\(dayOffset)",
+                content: content,
+                trigger: trigger
+            )
+            center.add(request)
+        }
+    }
+
+    // MARK: - Streak Loss / Come-Back Notification
+    static let streakLossIdentifier = "streak_loss_nudge"
+
+    /// Schedules a gentle nudge if the user misses a day (fires 36 hours after last reminder)
+    func scheduleStreakLossNudge(lastActiveDate: Date) {
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [Self.streakLossIdentifier])
+
+        let content = UNMutableNotificationContent()
+        content.title = "Your garden is waiting for you 🌱"
+        content.body = "Every master gardener has seasons of rest. Your roots are still there, sister. Come back and watch what God grows next."
+        content.sound = .default
+        content.categoryIdentifier = "STREAK_LOSS"
+
+        // Fire 36 hours after last active date
+        guard let triggerDate = Calendar.current.date(byAdding: .hour, value: 36, to: lastActiveDate) else { return }
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
 
         let request = UNNotificationRequest(
-            identifier: Self.eveningIdentifier,
+            identifier: Self.streakLossIdentifier,
             content: content,
             trigger: trigger
         )
-
-        UNUserNotificationCenter.current().add(request)
+        center.add(request)
     }
 
     // MARK: - Premium Scripture Reminders
@@ -171,5 +238,7 @@ final class NotificationManager: ObservableObject {
         }
         // Always schedule weekly summary
         scheduleWeeklySummary(streak: streak, anchorCount: weeklyAnchors, totalDays: totalDays)
+        // Schedule streak-loss nudge to bring them back
+        scheduleStreakLossNudge(lastActiveDate: Date())
     }
 }

@@ -10,6 +10,7 @@ struct DashboardView: View {
     @State private var showBloomSheet = false
     @State private var showProgressView = false
     @State private var showJourneyProgress = false
+    @State private var showStreakRewards = false
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -135,6 +136,9 @@ struct DashboardView: View {
                         }
                     }
 
+                    // Streak Rewards card
+                    streakRewardsCard
+
                     // Quick stats row
                     statsRow
 
@@ -168,7 +172,72 @@ struct DashboardView: View {
                     JourneyProgressView(journey: journey, viewModel: viewModel)
                 }
             }
+            .sheet(isPresented: $showStreakRewards) {
+                StreakRewardsView(
+                    currentStreak: viewModel.userProfile?.currentStreak ?? 0,
+                    longestStreak: viewModel.userProfile?.longestStreak ?? 0,
+                    totalDays: viewModel.userProfile?.totalDaysCompleted ?? 0,
+                    displayName: viewModel.userProfile?.displayName ?? "Sister",
+                    recentEntries: viewModel.recentEntries
+                )
+            }
         }
+    }
+
+    // MARK: - Streak Rewards Card
+    private var streakRewardsCard: some View {
+        let streak = viewModel.userProfile?.currentStreak ?? 0
+        let nextMilestone = [7, 14, 30, 60, 90, 180, 365].first(where: { $0 > streak }) ?? 365
+        let progress = streak > 0 ? min(Double(streak) / Double(nextMilestone), 1.0) : 0
+
+        return Button {
+            showStreakRewards = true
+        } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(ABTheme.warmGold)
+                    Text("\(streak)-Day Streak")
+                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+                    Spacer()
+                    Text("View Rewards")
+                        .font(.system(.caption, design: .serif, weight: .medium))
+                        .foregroundColor(ABTheme.sageGreen)
+                    Image(systemName: "chevron.right")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+
+                // Progress to next milestone
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Next reward at \(nextMilestone) days")
+                            .font(.caption2)
+                            .foregroundColor(ABTheme.secondaryText)
+                        Spacer()
+                        Text("\(streak)/\(nextMilestone)")
+                            .font(.system(.caption2, design: .serif, weight: .bold))
+                            .foregroundColor(ABTheme.warmGold)
+                    }
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(ABTheme.sageGreen.opacity(0.15))
+                                .frame(height: 6)
+
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(ABTheme.warmGold)
+                                .frame(width: geo.size.width * progress, height: 6)
+                        }
+                    }
+                    .frame(height: 6)
+                }
+            }
+            .abCard()
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: - Active Journey Card

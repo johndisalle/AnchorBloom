@@ -92,53 +92,125 @@ struct ScriptureActionButtons: View {
     }
 }
 
+// MARK: - Verse Card Template
+/// Available templates for verse share cards
+enum VerseCardTemplate: String, CaseIterable {
+    case garden = "Garden"        // FREE  — sage green botanical
+    case dawn = "Dawn"            // PREMIUM — warm gold sunrise
+    case twilight = "Twilight"    // PREMIUM — dark navy evening
+    case blossom = "Blossom"      // PREMIUM — blush pink floral
+    case minimalist = "Minimalist" // PREMIUM — clean white with thin border
+
+    var isPremium: Bool { self != .garden }
+
+    var icon: String {
+        switch self {
+        case .garden:     return "leaf.fill"
+        case .dawn:       return "sunrise.fill"
+        case .twilight:   return "moon.stars.fill"
+        case .blossom:    return "camera.macro"
+        case .minimalist: return "square"
+        }
+    }
+}
+
 // MARK: - Verse Share Sheet
-/// Renders a beautiful verse card and presents the system share sheet
+/// Renders a beautiful verse card with template selection and presents the system share sheet
 struct VerseShareSheet: View {
     let verseText: String
     let reference: String
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
+
+    @State private var selectedTemplate: VerseCardTemplate = .garden
+    @State private var showUpgradePrompt = false
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: ABTheme.paddingLarge) {
-                Text("Share this verse")
-                    .font(ABTheme.subheadlineFont)
-                    .foregroundColor(ABTheme.primaryText)
+            ScrollView {
+                VStack(spacing: ABTheme.paddingLarge) {
+                    Text("Share this verse")
+                        .font(ABTheme.subheadlineFont)
+                        .foregroundColor(ABTheme.primaryText)
 
-                // Preview of the card
-                VerseCardImage(verseText: verseText, reference: reference)
-                    .frame(maxWidth: 340)
+                    // MARK: Template Picker
+                    VStack(alignment: .leading, spacing: ABTheme.paddingSmall) {
+                        Text("Choose a style")
+                            .font(.system(.caption, design: .serif, weight: .medium))
+                            .foregroundColor(ABTheme.secondaryText)
+                            .padding(.horizontal, ABTheme.paddingSmall)
 
-                // Share button using rendered image
-                if let image = renderVerseCard() {
-                    ShareLink(
-                        item: image,
-                        preview: SharePreview(
-                            "\(reference) — AnchorBloom",
-                            image: image
-                        )
-                    ) {
-                        HStack {
-                            Image(systemName: "square.and.arrow.up")
-                            Text("Share Verse Card")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(VerseCardTemplate.allCases, id: \.self) { template in
+                                    TemplatePickerThumbnail(
+                                        template: template,
+                                        isSelected: selectedTemplate == template,
+                                        isPremium: template.isPremium,
+                                        userIsPremium: subscriptionManager.isPremium
+                                    )
+                                    .onTapGesture {
+                                        if template.isPremium && !subscriptionManager.isPremium {
+                                            showUpgradePrompt = true
+                                        } else {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                selectedTemplate = template
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, ABTheme.paddingSmall)
+                            .padding(.vertical, 4)
+                        }
+
+                        // Upgrade prompt for free users
+                        if !subscriptionManager.isPremium {
+                            HStack(spacing: 6) {
+                                Image(systemName: "lock.fill")
+                                    .font(.system(size: 10, weight: .semibold, design: .default))
+                                Text("Unlock Dawn, Twilight, Blossom & Minimalist with Premium")
+                                    .font(.system(.caption2, design: .serif))
+                            }
+                            .foregroundColor(ABTheme.warmGold)
+                            .padding(.horizontal, ABTheme.paddingSmall)
                         }
                     }
-                    .buttonStyle(ABPrimaryButtonStyle())
-                }
 
-                // Text-only share
-                ShareLink(item: "\"\(verseText)\"\n— \(reference)\n\nShared from AnchorBloom") {
-                    HStack {
-                        Image(systemName: "text.bubble")
-                        Text("Share as Text")
+                    // Preview of the card
+                    VerseCardImage(verseText: verseText, reference: reference, template: selectedTemplate)
+                        .frame(maxWidth: 340)
+
+                    // Share button using rendered image
+                    if let image = renderVerseCard() {
+                        ShareLink(
+                            item: image,
+                            preview: SharePreview(
+                                "\(reference) — Anchor & Bloom",
+                                image: image
+                            )
+                        ) {
+                            HStack {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share Verse Card")
+                            }
+                        }
+                        .buttonStyle(ABPrimaryButtonStyle())
                     }
-                }
-                .buttonStyle(ABSecondaryButtonStyle())
 
-                Spacer()
+                    // Text-only share
+                    ShareLink(item: "\"\(verseText)\"\n— \(reference)\n\nShared from Anchor & Bloom") {
+                        HStack {
+                            Image(systemName: "text.bubble")
+                            Text("Share as Text")
+                        }
+                    }
+                    .buttonStyle(ABSecondaryButtonStyle())
+
+                    Spacer(minLength: ABTheme.paddingLarge)
+                }
+                .padding(ABTheme.paddingLarge)
             }
-            .padding(ABTheme.paddingLarge)
             .abScreenBackground()
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -146,13 +218,19 @@ struct VerseShareSheet: View {
                         .foregroundColor(ABTheme.sageGreen)
                 }
             }
+            .alert("Upgrade to Premium", isPresented: $showUpgradePrompt) {
+                Button("Upgrade", role: .none) { showUpgradePrompt = false }
+                Button("Not Now", role: .cancel) { }
+            } message: {
+                Text("Unlock all verse card templates and more with Anchor & Bloom Premium.")
+            }
         }
     }
 
     @MainActor
     private func renderVerseCard() -> Image? {
         let renderer = ImageRenderer(
-            content: VerseCardImage(verseText: verseText, reference: reference)
+            content: VerseCardImage(verseText: verseText, reference: reference, template: selectedTemplate)
                 .frame(width: 600, height: 600)
         )
         renderer.scale = 3.0
@@ -161,15 +239,115 @@ struct VerseShareSheet: View {
     }
 }
 
+// MARK: - Template Picker Thumbnail
+/// Small tappable thumbnail shown in the template horizontal picker
+private struct TemplatePickerThumbnail: View {
+    let template: VerseCardTemplate
+    let isSelected: Bool
+    let isPremium: Bool
+    let userIsPremium: Bool
+
+    var isLocked: Bool { isPremium && !userIsPremium }
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ZStack {
+                // Mini gradient background matching each template
+                RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                    .fill(thumbnailBackground)
+                    .frame(width: 64, height: 64)
+
+                // Template icon
+                Image(systemName: template.icon)
+                    .font(.system(size: 22, weight: .regular, design: .default))
+                    .foregroundColor(thumbnailIconColor)
+
+                // Lock overlay for premium templates when user is free
+                if isLocked {
+                    RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                        .fill(Color.black.opacity(0.35))
+                        .frame(width: 64, height: 64)
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 14, weight: .semibold, design: .default))
+                        .foregroundColor(.white)
+                }
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                    .stroke(isSelected ? ABTheme.sageGreen : Color.clear, lineWidth: 2)
+            )
+
+            Text(template.rawValue)
+                .font(.system(.caption2, design: .serif))
+                .foregroundColor(isSelected ? ABTheme.sageGreen : ABTheme.secondaryText)
+        }
+    }
+
+    private var thumbnailBackground: AnyShapeStyle {
+        switch template {
+        case .garden:
+            return AnyShapeStyle(LinearGradient(
+                colors: [Color(red: 0.93, green: 0.96, blue: 0.93), Color(red: 0.82, green: 0.91, blue: 0.83)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ))
+        case .dawn:
+            return AnyShapeStyle(LinearGradient(
+                colors: [Color(red: 1.0, green: 0.95, blue: 0.80), Color(red: 0.97, green: 0.82, blue: 0.55)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ))
+        case .twilight:
+            return AnyShapeStyle(LinearGradient(
+                colors: [Color(red: 0.12, green: 0.14, blue: 0.28), Color(red: 0.22, green: 0.18, blue: 0.38)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ))
+        case .blossom:
+            return AnyShapeStyle(LinearGradient(
+                colors: [Color(red: 0.99, green: 0.92, blue: 0.93), Color(red: 0.95, green: 0.80, blue: 0.84)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ))
+        case .minimalist:
+            return AnyShapeStyle(LinearGradient(
+                colors: [Color(red: 0.99, green: 0.99, blue: 0.99), Color(red: 0.96, green: 0.95, blue: 0.93)],
+                startPoint: .topLeading, endPoint: .bottomTrailing
+            ))
+        }
+    }
+
+    private var thumbnailIconColor: Color {
+        switch template {
+        case .garden:     return ABTheme.sageGreen
+        case .dawn:       return ABTheme.warmGold
+        case .twilight:   return Color.white.opacity(0.85)
+        case .blossom:    return ABTheme.blushDark
+        case .minimalist: return ABTheme.secondaryText
+        }
+    }
+}
+
 // MARK: - Verse Card Image (for rendering/sharing)
-/// Beautiful branded verse card for social sharing
+/// Beautiful branded verse card for social sharing — supports multiple templates
 struct VerseCardImage: View {
     let verseText: String
     let reference: String
+    var template: VerseCardTemplate = .garden
 
     var body: some View {
         ZStack {
-            // Background gradient
+            cardBackground
+            decorativeElements
+            cardContent
+        }
+        .aspectRatio(1, contentMode: .fit)
+        .cornerRadius(20)
+        .shadow(color: ABTheme.cardShadow, radius: 10, x: 0, y: 4)
+    }
+
+    // MARK: Backgrounds
+
+    @ViewBuilder
+    private var cardBackground: some View {
+        switch template {
+        case .garden:
             LinearGradient(
                 colors: [
                     Color(red: 0.97, green: 0.95, blue: 0.91),
@@ -179,65 +357,228 @@ struct VerseCardImage: View {
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+        case .dawn:
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.97, blue: 0.85),
+                    Color(red: 1.0, green: 0.90, blue: 0.65),
+                    Color(red: 0.98, green: 0.80, blue: 0.50)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        case .twilight:
+            LinearGradient(
+                colors: [
+                    Color(red: 0.08, green: 0.10, blue: 0.22),
+                    Color(red: 0.18, green: 0.15, blue: 0.35),
+                    Color(red: 0.15, green: 0.18, blue: 0.27)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .blossom:
+            LinearGradient(
+                colors: [
+                    Color(red: 0.99, green: 0.94, blue: 0.95),
+                    Color(red: 0.97, green: 0.85, blue: 0.88),
+                    Color(red: 0.99, green: 0.94, blue: 0.95)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        case .minimalist:
+            LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 1.0, blue: 1.0),
+                    Color(red: 0.97, green: 0.96, blue: 0.94)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
 
-            // Subtle decorative elements
+    // MARK: Decorative Elements
+
+    @ViewBuilder
+    private var decorativeElements: some View {
+        switch template {
+        case .garden:
             VStack {
                 HStack {
                     Spacer()
                     Image(systemName: "leaf.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(ABTheme.sageGreen.opacity(0.12))
-                        .rotationEffect(.degrees(-30))
+                        .font(.system(size: 50, weight: .regular, design: .default))
+                        .foregroundColor(ABTheme.sageGreen.opacity(0.13))
+                        .rotationEffect(.degrees(-25))
                 }
                 Spacer()
                 HStack {
                     Image(systemName: "leaf.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(ABTheme.blush.opacity(0.12))
-                        .rotationEffect(.degrees(150))
+                        .font(.system(size: 36, weight: .regular, design: .default))
+                        .foregroundColor(ABTheme.blush.opacity(0.13))
+                        .rotationEffect(.degrees(155))
                     Spacer()
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 24, weight: .regular, design: .default))
+                        .foregroundColor(ABTheme.sageGreenDark.opacity(0.10))
+                        .rotationEffect(.degrees(60))
                 }
             }
             .padding(20)
 
-            // Content
-            VStack(spacing: 20) {
-                Spacer()
-
-                // Opening quote mark
-                Image(systemName: "quote.opening")
-                    .font(.system(size: 24))
-                    .foregroundColor(ABTheme.warmGold.opacity(0.6))
-
-                // Verse text
-                Text(verseText)
-                    .font(.system(.title3, design: .serif).italic())
-                    .foregroundColor(ABTheme.darkNavy)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(6)
-                    .padding(.horizontal, 30)
-
-                // Reference
-                Text(reference)
-                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                    .foregroundColor(ABTheme.sageGreen)
-
-                Spacer()
-
-                // Branding
-                HStack(spacing: 6) {
-                    Image(systemName: "anchor")
-                        .font(.caption2)
-                    Text("AnchorBloom")
-                        .font(.system(.caption, design: .serif, weight: .medium))
+        case .dawn:
+            VStack {
+                HStack {
+                    Spacer()
+                    // Sun rays top-right
+                    ZStack {
+                        ForEach(0..<8, id: \.self) { i in
+                            Rectangle()
+                                .fill(Color.white.opacity(0.12))
+                                .frame(width: 2, height: 55)
+                                .offset(y: -28)
+                                .rotationEffect(.degrees(Double(i) * 22.5))
+                        }
+                        Circle()
+                            .fill(ABTheme.warmGold.opacity(0.25))
+                            .frame(width: 36, height: 36)
+                    }
+                    .frame(width: 80, height: 80)
+                    .offset(x: 10, y: -10)
                 }
-                .foregroundColor(ABTheme.secondaryText.opacity(0.5))
-                .padding(.bottom, 16)
+                Spacer()
             }
-            .padding(ABTheme.paddingLarge)
+            .padding(20)
+
+        case .twilight:
+            ZStack {
+                // Scattered stars
+                ForEach(0..<12, id: \.self) { i in
+                    Circle()
+                        .fill(Color.white.opacity(Double.random(in: 0.25...0.55)))
+                        .frame(
+                            width: CGFloat.random(in: 2...5),
+                            height: CGFloat.random(in: 2...5)
+                        )
+                        .offset(
+                            x: CGFloat(i * 47 % 260) - 130,
+                            y: CGFloat(i * 31 % 200) - 130
+                        )
+                }
+                VStack {
+                    HStack {
+                        Spacer()
+                        Image(systemName: "moon.stars.fill")
+                            .font(.system(size: 40, weight: .regular, design: .default))
+                            .foregroundColor(Color.white.opacity(0.18))
+                    }
+                    Spacer()
+                }
+                .padding(24)
+            }
+
+        case .blossom:
+            VStack {
+                HStack {
+                    Image(systemName: "camera.macro")
+                        .font(.system(size: 44, weight: .regular, design: .default))
+                        .foregroundColor(ABTheme.blush.opacity(0.25))
+                        .rotationEffect(.degrees(-15))
+                    Spacer()
+                }
+                Spacer()
+                HStack {
+                    Spacer()
+                    Image(systemName: "camera.macro")
+                        .font(.system(size: 32, weight: .regular, design: .default))
+                        .foregroundColor(ABTheme.blushDark.opacity(0.15))
+                        .rotationEffect(.degrees(20))
+                }
+            }
+            .padding(20)
+
+        case .minimalist:
+            // Thin gold border inset
+            RoundedRectangle(cornerRadius: 17)
+                .stroke(ABTheme.warmGold.opacity(0.40), lineWidth: 1.5)
+                .padding(10)
         }
-        .aspectRatio(1, contentMode: .fit)
-        .cornerRadius(20)
-        .shadow(color: ABTheme.cardShadow, radius: 10, x: 0, y: 4)
+    }
+
+    // MARK: Card Content
+
+    private var cardContent: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            // Quote mark
+            Image(systemName: "quote.opening")
+                .font(.system(size: 24, weight: .regular, design: .default))
+                .foregroundColor(quoteMarkColor)
+
+            // Verse text
+            Text(verseText)
+                .font(.system(.title3, design: .serif).italic())
+                .foregroundColor(verseTextColor)
+                .multilineTextAlignment(.center)
+                .lineSpacing(6)
+                .padding(.horizontal, 30)
+
+            // Reference
+            Text(reference)
+                .font(.system(.subheadline, design: .serif, weight: .semibold))
+                .foregroundColor(referenceColor)
+
+            Spacer()
+
+            // Branding watermark
+            HStack(spacing: 6) {
+                Image(systemName: "anchor")
+                    .font(.system(.caption2, design: .default))
+                Text("Anchor & Bloom")
+                    .font(.system(.caption, design: .serif, weight: .medium))
+            }
+            .foregroundColor(brandingColor)
+            .padding(.bottom, 16)
+        }
+        .padding(ABTheme.paddingLarge)
+    }
+
+    // MARK: Per-template color tokens
+
+    private var quoteMarkColor: Color {
+        switch template {
+        case .garden:     return ABTheme.warmGold.opacity(0.6)
+        case .dawn:       return ABTheme.warmGold.opacity(0.8)
+        case .twilight:   return Color.white.opacity(0.55)
+        case .blossom:    return ABTheme.blushDark.opacity(0.70)
+        case .minimalist: return ABTheme.warmGold.opacity(0.50)
+        }
+    }
+
+    private var verseTextColor: Color {
+        switch template {
+        case .twilight: return Color.white.opacity(0.92)
+        default:        return ABTheme.darkNavy
+        }
+    }
+
+    private var referenceColor: Color {
+        switch template {
+        case .garden:     return ABTheme.sageGreen
+        case .dawn:       return Color(red: 0.72, green: 0.50, blue: 0.18)
+        case .twilight:   return Color.white.opacity(0.75)
+        case .blossom:    return ABTheme.blushDark
+        case .minimalist: return ABTheme.secondaryText
+        }
+    }
+
+    private var brandingColor: Color {
+        switch template {
+        case .twilight: return Color.white.opacity(0.35)
+        default:        return ABTheme.secondaryText.opacity(0.45)
+        }
     }
 }

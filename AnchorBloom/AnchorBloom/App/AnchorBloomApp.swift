@@ -100,11 +100,17 @@ struct MainTabView: View {
                 }
                 .tag(3)
 
+            PrayerWallView()
+                .tabItem {
+                    Label("Prayer", systemImage: "hands.sparkles.fill")
+                }
+                .tag(4)
+
             SettingsView()
                 .tabItem {
                     Label("Settings", systemImage: "gearshape.fill")
                 }
-                .tag(4)
+                .tag(5)
         }
         .tint(ABTheme.sageGreen)
         .task {
