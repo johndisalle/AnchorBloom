@@ -16,6 +16,7 @@ struct SisterCircle: Codable, Identifiable {
     var inviteCode: String?
     var maxMembers: Int
     var coverImageName: String
+    var driftCategory: String? // Links circle to a DriftCategory (e.g. "Anxiety", "Comparison")
 
     var memberCount: Int { memberIDs.count }
     var isFull: Bool { memberIDs.count >= maxMembers }
@@ -23,6 +24,12 @@ struct SisterCircle: Codable, Identifiable {
     /// Check if a user is an admin (creator or explicit admin)
     func isAdmin(_ userID: String) -> Bool {
         creatorID == userID || adminIDs.contains(userID)
+    }
+
+    /// Returns the linked DriftCategory if one exists
+    var linkedDriftCategory: DriftCategory? {
+        guard let raw = driftCategory else { return nil }
+        return DriftCategory(rawValue: raw)
     }
 
     static let maxFreeCircles = 2

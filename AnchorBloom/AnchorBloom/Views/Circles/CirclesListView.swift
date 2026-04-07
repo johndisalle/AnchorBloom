@@ -9,11 +9,14 @@ struct CirclesListView: View {
 
     @State private var circles: [SisterCircle] = []
     @State private var publicCircles: [SisterCircle] = []
+    @State private var driftCircles: [SisterCircle] = []
     @State private var showCreateCircle = false
     @State private var showJoinCircle = false
     @State private var selectedCircle: SisterCircle?
     @State private var isLoading = false
     @State private var showUpgradePrompt = false
+    @State private var showSearch = false
+    @State private var showDiscoverCircles = false
 
     var body: some View {
         NavigationStack {
@@ -35,6 +38,39 @@ struct CirclesListView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, ABTheme.paddingSmall)
+
+                    // Search & Discover bar
+                    HStack(spacing: 10) {
+                        Button {
+                            showSearch = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "magnifyingglass")
+                                Text("Search posts & circles")
+                                    .font(.system(.caption, design: .serif))
+                                Spacer()
+                            }
+                            .foregroundColor(ABTheme.secondaryText)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 12)
+                            .background(ABTheme.cardBackground)
+                            .cornerRadius(ABTheme.cornerRadius)
+                            .shadow(color: ABTheme.cardShadow, radius: 4, x: 0, y: 1)
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            showDiscoverCircles = true
+                        } label: {
+                            Image(systemName: "safari")
+                                .font(.title3)
+                                .foregroundColor(ABTheme.sageGreen)
+                                .padding(12)
+                                .background(ABTheme.sageGreen.opacity(0.1))
+                                .cornerRadius(ABTheme.cornerRadius)
+                        }
+                        .buttonStyle(.plain)
+                    }
 
                     // Action buttons
                     HStack(spacing: 12) {
@@ -88,7 +124,7 @@ struct CirclesListView: View {
                         ProgressView()
                             .tint(ABTheme.sageGreen)
                             .padding(.top, 40)
-                    } else if circles.isEmpty && publicCircles.isEmpty {
+                    } else if circles.isEmpty && publicCircles.isEmpty && driftCircles.isEmpty {
                         emptyState
                     } else {
                         if !circles.isEmpty {
@@ -99,6 +135,29 @@ struct CirclesListView: View {
 
                                 ForEach(circles) { circle in
                                     CircleCardView(circle: circle) {
+                                        selectedCircle = circle
+                                    }
+                                }
+                            }
+                        }
+
+                        // Drift-affiliated circles
+                        if !driftCircles.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Image(systemName: "water.waves")
+                                        .foregroundColor(ABTheme.blush)
+                                    Text("Drift Topic Circles")
+                                        .font(ABTheme.subheadlineFont)
+                                        .foregroundColor(ABTheme.primaryText)
+                                }
+
+                                Text("Circles centered around common drift topics")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+
+                                ForEach(driftCircles) { circle in
+                                    CircleCardView(circle: circle, showDriftBadge: true) {
                                         selectedCircle = circle
                                     }
                                 }
@@ -152,6 +211,16 @@ struct CirclesListView: View {
             .sheet(isPresented: $showUpgradePrompt) {
                 SubscriptionView()
             }
+            .sheet(isPresented: $showSearch) {
+                CircleSearchView(userCircles: circles) { circle in
+                    selectedCircle = circle
+                }
+            }
+            .sheet(isPresented: $showDiscoverCircles) {
+                DiscoverCirclesView { circle in
+                    selectedCircle = circle
+                }
+            }
         }
     }
 
@@ -179,6 +248,13 @@ struct CirclesListView: View {
         do {
             circles = try await firestoreService.fetchUserCircles()
             publicCircles = try await firestoreService.fetchPublicCircles()
+            driftCircles = try await firestoreService.fetchAllDriftCircles()
+            // Remove drift circles that are already shown in public circles
+            let publicIDs = Set(publicCircles.compactMap { $0.id })
+            driftCircles = driftCircles.filter { circle in
+                guard let id = circle.id else { return false }
+                return !publicIDs.contains(id)
+            }
         } catch {
             // Handle error silently for MVP
         }
@@ -189,6 +265,7 @@ struct CirclesListView: View {
 struct CircleCardView: View {
     let circle: SisterCircle
     var showPublicBadge: Bool = false
+    var showDriftBadge: Bool = false
     let action: () -> Void
 
     var body: some View {
@@ -197,12 +274,18 @@ struct CircleCardView: View {
                 // Circle avatar
                 ZStack {
                     Circle()
-                        .fill(ABTheme.blush.opacity(0.2))
+                        .fill(showDriftBadge ? ABTheme.warmGold.opacity(0.2) : ABTheme.blush.opacity(0.2))
                         .frame(width: 50, height: 50)
 
-                    Text(String(circle.name.prefix(2)).uppercased())
-                        .font(.system(.body, design: .serif, weight: .bold))
-                        .foregroundColor(ABTheme.blush)
+                    if let drift = circle.linkedDriftCategory {
+                        Image(systemName: drift.icon)
+                            .font(.body)
+                            .foregroundColor(ABTheme.warmGold)
+                    } else {
+                        Text(String(circle.name.prefix(2)).uppercased())
+                            .font(.system(.body, design: .serif, weight: .bold))
+                            .foregroundColor(ABTheme.blush)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -222,6 +305,20 @@ struct CircleCardView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(ABTheme.sageGreen.opacity(0.1))
+                            .cornerRadius(6)
+                        }
+
+                        if showDriftBadge, let drift = circle.linkedDriftCategory {
+                            HStack(spacing: 2) {
+                                Image(systemName: drift.icon)
+                                    .font(.system(size: 9))
+                                Text(drift.rawValue)
+                                    .font(.system(size: 9, weight: .medium, design: .serif))
+                            }
+                            .foregroundColor(ABTheme.blush)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(ABTheme.blush.opacity(0.1))
                             .cornerRadius(6)
                         }
                     }
@@ -261,6 +358,8 @@ struct CreateCircleView: View {
     @State private var description = ""
     @State private var isPrivate = true
     @State private var isSaving = false
+    @State private var selectedDriftCategory: DriftCategory?
+    @State private var showDriftPicker = false
 
     let onCreated: (SisterCircle) -> Void
 
@@ -285,6 +384,75 @@ struct CreateCircleView: View {
                         }
                     }
                     .tint(ABTheme.sageGreen)
+
+                    // Drift topic link (optional)
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Link to a drift topic (optional)")
+                            .font(.system(.caption, design: .serif))
+                            .foregroundColor(ABTheme.secondaryText)
+
+                        Button {
+                            showDriftPicker.toggle()
+                        } label: {
+                            HStack {
+                                Image(systemName: selectedDriftCategory?.icon ?? "water.waves")
+                                    .foregroundColor(selectedDriftCategory != nil ? ABTheme.blush : ABTheme.secondaryText)
+                                Text(selectedDriftCategory?.rawValue ?? "Choose a drift topic")
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(selectedDriftCategory != nil ? ABTheme.primaryText : ABTheme.secondaryText)
+                                Spacer()
+                                if selectedDriftCategory != nil {
+                                    Button {
+                                        selectedDriftCategory = nil
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                                    }
+                                }
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                            .padding()
+                            .background(ABTheme.softWhite)
+                            .cornerRadius(ABTheme.cornerRadiusSmall)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ABTheme.cornerRadiusSmall)
+                                    .stroke(ABTheme.sageGreen.opacity(0.2), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+
+                        if showDriftPicker {
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                                ForEach(DriftCategory.allCases, id: \.self) { category in
+                                    Button {
+                                        selectedDriftCategory = category
+                                        showDriftPicker = false
+                                    } label: {
+                                        VStack(spacing: 4) {
+                                            Image(systemName: category.icon)
+                                                .font(.caption)
+                                            Text(category.rawValue)
+                                                .font(.system(.caption2, design: .serif))
+                                                .lineLimit(1)
+                                                .minimumScaleFactor(0.8)
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 10)
+                                        .background(selectedDriftCategory == category ? ABTheme.blush.opacity(0.2) : ABTheme.cardBackground)
+                                        .foregroundColor(selectedDriftCategory == category ? ABTheme.blush : ABTheme.primaryText)
+                                        .cornerRadius(8)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+
+                        Text("Linking a drift topic helps sisters find circles about shared struggles")
+                            .font(.caption2)
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                    }
 
                     Button("Create Circle") {
                         createCircle()
@@ -323,7 +491,8 @@ struct CreateCircleView: View {
             isPrivate: isPrivate,
             inviteCode: inviteCode,
             maxMembers: SisterCircle.defaultMaxMembers,
-            coverImageName: "default"
+            coverImageName: "default",
+            driftCategory: selectedDriftCategory?.rawValue
         )
 
         Task {
@@ -428,6 +597,7 @@ struct CircleDetailView: View {
     @State private var showDeleteCircleAlert = false
     @State private var showManageMembers = false
     @State private var showLeaveAlert = false
+    @State private var showShareSheet = false
     @State private var blockedUserIDs: [String] = []
     @State private var errorMessage: String?
     @State private var didJoin = false
@@ -476,8 +646,41 @@ struct CircleDetailView: View {
                         }
                         .font(.caption)
                         .foregroundColor(ABTheme.secondaryText)
+
+                        // Drift category badge
+                        if let drift = circle.linkedDriftCategory {
+                            HStack(spacing: 4) {
+                                Image(systemName: drift.icon)
+                                    .font(.caption2)
+                                Text(drift.rawValue)
+                                    .font(.system(.caption2, design: .serif, weight: .medium))
+                            }
+                            .foregroundColor(ABTheme.blush)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(ABTheme.blush.opacity(0.1))
+                            .cornerRadius(8)
+                        }
                     }
                     .padding(.top, ABTheme.paddingSmall)
+
+                    // Share button
+                    if isMember {
+                        Button {
+                            shareCircle()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "square.and.arrow.up")
+                                Text("Share Circle")
+                            }
+                            .font(.system(.caption, design: .serif, weight: .medium))
+                            .foregroundColor(ABTheme.sageGreen)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(ABTheme.sageGreen.opacity(0.1))
+                            .cornerRadius(20)
+                        }
+                    }
 
                     // Admin controls
                     if isAdmin {
@@ -702,6 +905,26 @@ struct CircleDetailView: View {
         defer { isLoading = false }
         if let circleID = circle.id {
             posts = (try? await firestoreService.fetchCirclePosts(circleID: circleID)) ?? []
+        }
+    }
+
+    private func shareCircle() {
+        var shareText = "Join my Sister Circle \"\(circle.name)\" on Anchor & Bloom!"
+        if let code = circle.inviteCode {
+            shareText += "\n\nInvite Code: \(code)"
+        }
+        if !circle.isPrivate {
+            shareText += "\n\nThis is a public circle — search for it in the app!"
+        }
+        shareText += "\n\nDownload Anchor & Bloom to grow together in faith."
+
+        let activityVC = UIActivityViewController(
+            activityItems: [shareText],
+            applicationActivities: nil
+        )
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
         }
     }
 }
@@ -1655,6 +1878,455 @@ struct NewPostView: View {
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             onCreated(post)
             dismiss()
+        }
+    }
+}
+
+// MARK: - Circle Search View
+/// Search posts and circles to find similar experiences and conversations
+struct CircleSearchView: View {
+    let userCircles: [SisterCircle]
+    let onCircleSelected: (SisterCircle) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var searchText = ""
+    @State private var searchResults: [CirclePost] = []
+    @State private var circleResults: [SisterCircle] = []
+    @State private var isSearching = false
+    @State private var hasSearched = false
+    @State private var selectedTab = 0 // 0 = posts, 1 = circles
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(ABTheme.secondaryText)
+
+                    TextField("Search posts, topics, circles...", text: $searchText)
+                        .font(ABTheme.bodyFont)
+                        .textInputAutocapitalization(.never)
+                        .onSubmit { performSearch() }
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                            searchResults = []
+                            circleResults = []
+                            hasSearched = false
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(ABTheme.cardBackground)
+                .cornerRadius(ABTheme.cornerRadius)
+                .padding(.horizontal, ABTheme.paddingMedium)
+                .padding(.top, ABTheme.paddingSmall)
+
+                // Quick search suggestions
+                if !hasSearched {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach([
+                                "Prayer Request", "Anxiety", "Comparison",
+                                "Testimony", "Doubt", "Encouragement"
+                            ], id: \.self) { suggestion in
+                                Button {
+                                    searchText = suggestion
+                                    performSearch()
+                                } label: {
+                                    Text(suggestion)
+                                        .font(.system(.caption, design: .serif, weight: .medium))
+                                        .foregroundColor(ABTheme.sageGreen)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(ABTheme.sageGreen.opacity(0.1))
+                                        .cornerRadius(16)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                        .padding(.top, ABTheme.paddingSmall)
+                    }
+                }
+
+                // Result tabs
+                if hasSearched {
+                    Picker("Results", selection: $selectedTab) {
+                        Text("Posts (\(searchResults.count))").tag(0)
+                        Text("Circles (\(circleResults.count))").tag(1)
+                    }
+                    .pickerStyle(.segmented)
+                    .padding(.horizontal, ABTheme.paddingMedium)
+                    .padding(.top, ABTheme.paddingMedium)
+                }
+
+                // Results
+                ScrollView {
+                    if isSearching {
+                        ProgressView()
+                            .tint(ABTheme.sageGreen)
+                            .padding(.top, 40)
+                    } else if hasSearched {
+                        if selectedTab == 0 {
+                            postResults
+                        } else {
+                            circleResultsList
+                        }
+                    } else {
+                        searchPrompt
+                    }
+                }
+            }
+            .abScreenBackground()
+            .navigationTitle("Search")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+        }
+    }
+
+    private var searchPrompt: some View {
+        VStack(spacing: ABTheme.paddingMedium) {
+            Image(systemName: "text.magnifyingglass")
+                .font(.system(size: 40))
+                .foregroundColor(ABTheme.blush.opacity(0.4))
+
+            Text("Search for topics, questions, or experiences")
+                .font(ABTheme.captionFont)
+                .foregroundColor(ABTheme.secondaryText)
+                .multilineTextAlignment(.center)
+
+            Text("Find out if other sisters have shared similar struggles or wisdom")
+                .font(.caption2)
+                .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                .multilineTextAlignment(.center)
+        }
+        .padding(.top, 60)
+        .padding(.horizontal, ABTheme.paddingLarge)
+    }
+
+    private var postResults: some View {
+        VStack(spacing: ABTheme.paddingSmall) {
+            if searchResults.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "bubble.left.and.bubble.right")
+                        .font(.title)
+                        .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+                    Text("No posts found for \"\(searchText)\"")
+                        .font(ABTheme.captionFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                    Text("Try different keywords or start a conversation in your circle!")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, 40)
+            } else {
+                ForEach(searchResults) { post in
+                    SearchResultPostView(post: post)
+                }
+            }
+        }
+        .padding(.horizontal, ABTheme.paddingMedium)
+        .padding(.top, ABTheme.paddingSmall)
+    }
+
+    private var circleResultsList: some View {
+        VStack(spacing: ABTheme.paddingSmall) {
+            if circleResults.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "person.3")
+                        .font(.title)
+                        .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+                    Text("No circles found for \"\(searchText)\"")
+                        .font(ABTheme.captionFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+                .padding(.top, 40)
+            } else {
+                ForEach(circleResults) { circle in
+                    CircleCardView(circle: circle, showPublicBadge: true, showDriftBadge: circle.driftCategory != nil) {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            onCircleSelected(circle)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, ABTheme.paddingMedium)
+        .padding(.top, ABTheme.paddingSmall)
+    }
+
+    private func performSearch() {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        isSearching = true
+        hasSearched = true
+        Task {
+            let circleIDs = userCircles.compactMap { $0.id }
+            async let postsResult = firestoreService.searchCirclePosts(query: searchText, circleIDs: circleIDs)
+            async let circlesResult = firestoreService.searchPublicCircles(query: searchText)
+            searchResults = (try? await postsResult) ?? []
+            circleResults = (try? await circlesResult) ?? []
+            isSearching = false
+        }
+    }
+}
+
+// MARK: - Search Result Post View
+struct SearchResultPostView: View {
+    let post: CirclePost
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: post.type.icon)
+                        .font(.caption2)
+                    Text(post.type.rawValue)
+                        .font(.caption2)
+                }
+                .foregroundColor(ABTheme.sageGreen)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(ABTheme.sageGreen.opacity(0.1))
+                .cornerRadius(6)
+
+                Spacer()
+
+                Text(post.createdAt, style: .relative)
+                    .font(.caption2)
+                    .foregroundColor(ABTheme.secondaryText)
+            }
+
+            Text(post.content)
+                .font(ABTheme.bodyFont)
+                .foregroundColor(ABTheme.primaryText)
+                .lineLimit(3)
+                .lineSpacing(2)
+
+            HStack(spacing: 12) {
+                HStack(spacing: 3) {
+                    Image(systemName: "heart")
+                        .font(.caption2)
+                    Text("\(post.likeCount)")
+                        .font(.caption2)
+                }
+                HStack(spacing: 3) {
+                    Image(systemName: "bubble.right")
+                        .font(.caption2)
+                    Text("\(post.commentCount)")
+                        .font(.caption2)
+                }
+                Spacer()
+                Text("by \(post.displayName)")
+                    .font(.caption2)
+            }
+            .foregroundColor(ABTheme.secondaryText)
+        }
+        .abCard()
+    }
+}
+
+// MARK: - Discover Circles View
+/// Browse and search public circles, with drift topic filtering
+struct DiscoverCirclesView: View {
+    let onCircleSelected: (SisterCircle) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var allPublicCircles: [SisterCircle] = []
+    @State private var isLoading = false
+    @State private var searchText = ""
+    @State private var selectedDriftFilter: DriftCategory?
+
+    private var filteredCircles: [SisterCircle] {
+        var results = allPublicCircles
+
+        if let drift = selectedDriftFilter {
+            results = results.filter { $0.driftCategory == drift.rawValue }
+        }
+
+        if !searchText.isEmpty {
+            let lowered = searchText.lowercased()
+            results = results.filter {
+                $0.name.lowercased().contains(lowered) ||
+                $0.description.lowercased().contains(lowered)
+            }
+        }
+
+        return results
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Search bar
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundColor(ABTheme.secondaryText)
+                    TextField("Search public circles...", text: $searchText)
+                        .font(ABTheme.bodyFont)
+                        .textInputAutocapitalization(.never)
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(ABTheme.secondaryText.opacity(0.5))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .background(ABTheme.cardBackground)
+                .cornerRadius(ABTheme.cornerRadius)
+                .padding(.horizontal, ABTheme.paddingMedium)
+                .padding(.top, ABTheme.paddingSmall)
+
+                // Drift category filter chips
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        // "All" chip
+                        Button {
+                            selectedDriftFilter = nil
+                        } label: {
+                            Text("All")
+                                .font(.system(.caption, design: .serif, weight: .medium))
+                                .foregroundColor(selectedDriftFilter == nil ? .white : ABTheme.primaryText)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 7)
+                                .background(selectedDriftFilter == nil ? ABTheme.sageGreen : ABTheme.cardBackground)
+                                .cornerRadius(16)
+                        }
+
+                        ForEach(DriftCategory.allCases, id: \.self) { category in
+                            Button {
+                                if selectedDriftFilter == category {
+                                    selectedDriftFilter = nil
+                                } else {
+                                    selectedDriftFilter = category
+                                }
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: category.icon)
+                                        .font(.system(size: 10))
+                                    Text(category.rawValue)
+                                        .font(.system(.caption, design: .serif, weight: .medium))
+                                }
+                                .foregroundColor(selectedDriftFilter == category ? .white : ABTheme.primaryText)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(selectedDriftFilter == category ? ABTheme.blush : ABTheme.cardBackground)
+                                .cornerRadius(16)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, ABTheme.paddingMedium)
+                    .padding(.top, ABTheme.paddingSmall)
+                }
+
+                // Results
+                ScrollView {
+                    if isLoading {
+                        ProgressView()
+                            .tint(ABTheme.sageGreen)
+                            .padding(.top, 40)
+                    } else if filteredCircles.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "person.3")
+                                .font(.system(size: 40))
+                                .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+
+                            if selectedDriftFilter != nil || !searchText.isEmpty {
+                                Text("No circles match your filter")
+                                    .font(ABTheme.captionFont)
+                                    .foregroundColor(ABTheme.secondaryText)
+                                Text("Try a different topic or create one!")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                            } else {
+                                Text("No public circles yet")
+                                    .font(ABTheme.captionFont)
+                                    .foregroundColor(ABTheme.secondaryText)
+                                Text("Be the first to create a public circle!")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                            }
+                        }
+                        .padding(.top, 60)
+                    } else {
+                        VStack(spacing: 8) {
+                            Text("\(filteredCircles.count) circle\(filteredCircles.count == 1 ? "" : "s") found")
+                                .font(.system(.caption, design: .serif))
+                                .foregroundColor(ABTheme.secondaryText)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            ForEach(filteredCircles) { circle in
+                                CircleCardView(
+                                    circle: circle,
+                                    showPublicBadge: true,
+                                    showDriftBadge: circle.driftCategory != nil
+                                ) {
+                                    dismiss()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        onCircleSelected(circle)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, ABTheme.paddingMedium)
+                        .padding(.top, ABTheme.paddingSmall)
+                    }
+
+                    Spacer().frame(height: 40)
+                }
+            }
+            .abScreenBackground()
+            .navigationTitle("Discover Circles")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+            }
+            .task {
+                await loadPublicCircles()
+            }
+        }
+    }
+
+    private func loadPublicCircles() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            allPublicCircles = try await firestoreService.fetchPublicCircles()
+            // Also include drift circles the user might already be in
+            let driftCircles = try await firestoreService.fetchAllDriftCircles()
+            let existingIDs = Set(allPublicCircles.compactMap { $0.id })
+            for circle in driftCircles {
+                if let id = circle.id, !existingIDs.contains(id) {
+                    allPublicCircles.append(circle)
+                }
+            }
+        } catch {
+            // Silent for MVP
         }
     }
 }

@@ -1,4 +1,5 @@
 import SwiftUI
+import FirebaseAuth
 
 // MARK: - Drift Log View
 /// One-tap drift entries with anchoring prayer text
@@ -142,6 +143,31 @@ struct DriftLogView: View {
                 .background(ABTheme.sageGreen)
                 .cornerRadius(ABTheme.cornerRadius)
 
+                // Link to find circles about this drift topic
+                NavigationLink {
+                    DriftCircleFinderView(category: category)
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "heart.circle.fill")
+                            .foregroundColor(ABTheme.blush)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Find sisters who understand")
+                                .font(.system(.caption, design: .serif, weight: .semibold))
+                                .foregroundColor(ABTheme.primaryText)
+                            Text("Join a circle about \(category.rawValue.lowercased())")
+                                .font(.caption2)
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
+                    .padding(ABTheme.paddingMedium)
+                    .background(ABTheme.blush.opacity(0.08))
+                    .cornerRadius(ABTheme.cornerRadius)
+                }
+
                 Button {
                     driftLogged = false
                     selectedCategory = nil
@@ -268,6 +294,171 @@ struct DriftCategoryButton: View {
         }
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.2), value: isSelected)
+    }
+}
+
+// MARK: - Drift Circle Finder View
+/// Shows circles affiliated with a specific drift category
+struct DriftCircleFinderView: View {
+    let category: DriftCategory
+    @EnvironmentObject var firestoreService: FirestoreService
+
+    @State private var circles: [SisterCircle] = []
+    @State private var isLoading = false
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: ABTheme.paddingLarge) {
+                // Header
+                VStack(spacing: 8) {
+                    Image(systemName: category.icon)
+                        .font(.system(size: 36))
+                        .foregroundColor(ABTheme.blush)
+
+                    Text("\(category.rawValue) Circles")
+                        .font(ABTheme.headlineFont)
+                        .foregroundColor(ABTheme.primaryText)
+
+                    Text("Connect with sisters walking through similar struggles")
+                        .font(ABTheme.captionFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.top, ABTheme.paddingMedium)
+
+                if isLoading {
+                    ProgressView()
+                        .tint(ABTheme.sageGreen)
+                        .padding(.top, 40)
+                } else if circles.isEmpty {
+                    VStack(spacing: 12) {
+                        Image(systemName: "person.3")
+                            .font(.system(size: 40))
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.3))
+
+                        Text("No circles yet for \(category.rawValue)")
+                            .font(ABTheme.captionFont)
+                            .foregroundColor(ABTheme.secondaryText)
+
+                        Text("Be the first to create a circle about this topic!")
+                            .font(.caption2)
+                            .foregroundColor(ABTheme.secondaryText.opacity(0.7))
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, 40)
+                } else {
+                    ForEach(circles) { circle in
+                        DriftCircleCard(circle: circle)
+                    }
+                }
+
+                Spacer().frame(height: 40)
+            }
+            .padding(.horizontal, ABTheme.paddingMedium)
+        }
+        .abScreenBackground()
+        .navigationTitle(category.rawValue)
+        .navigationBarTitleDisplayMode(.inline)
+        .task {
+            isLoading = true
+            defer { isLoading = false }
+            circles = (try? await firestoreService.fetchDriftCircles(category: category.rawValue)) ?? []
+        }
+    }
+}
+
+// MARK: - Drift Circle Card
+struct DriftCircleCard: View {
+    let circle: SisterCircle
+    @EnvironmentObject var firestoreService: FirestoreService
+    @State private var isJoining = false
+    @State private var didJoin = false
+
+    private var currentUserID: String {
+        FirebaseAuth.Auth.auth().currentUser?.uid ?? ""
+    }
+
+    private var isMember: Bool {
+        didJoin || circle.memberIDs.contains(currentUserID)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(ABTheme.warmGold.opacity(0.2))
+                        .frame(width: 44, height: 44)
+
+                    if let drift = circle.linkedDriftCategory {
+                        Image(systemName: drift.icon)
+                            .foregroundColor(ABTheme.warmGold)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(circle.name)
+                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.primaryText)
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "person.2.fill")
+                            .font(.caption2)
+                        Text("\(circle.memberCount) members")
+                            .font(.caption2)
+                    }
+                    .foregroundColor(ABTheme.secondaryText)
+                }
+
+                Spacer()
+
+                if isMember {
+                    Text("Joined")
+                        .font(.system(.caption, design: .serif, weight: .medium))
+                        .foregroundColor(ABTheme.sageGreen)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(ABTheme.sageGreen.opacity(0.1))
+                        .cornerRadius(16)
+                } else {
+                    Button {
+                        joinCircle()
+                    } label: {
+                        if isJoining {
+                            ProgressView()
+                                .tint(ABTheme.sageGreen)
+                                .scaleEffect(0.7)
+                        } else {
+                            Text("Join")
+                                .font(.system(.caption, design: .serif, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(ABTheme.sageGreen)
+                    .cornerRadius(16)
+                    .disabled(isJoining)
+                }
+            }
+
+            Text(circle.description)
+                .font(.caption)
+                .foregroundColor(ABTheme.secondaryText)
+                .lineLimit(2)
+        }
+        .abCard()
+    }
+
+    private func joinCircle() {
+        guard let circleID = circle.id else { return }
+        isJoining = true
+        Task {
+            try? await firestoreService.joinPublicCircle(circleID: circleID)
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            didJoin = true
+            isJoining = false
+        }
     }
 }
 

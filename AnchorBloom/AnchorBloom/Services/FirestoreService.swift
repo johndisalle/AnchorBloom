@@ -608,6 +608,69 @@ final class FirestoreService: ObservableObject {
         try await usersCollection.document(userID).delete()
     }
 
+    // MARK: - Circle Search & Discovery
+
+    /// Searches public circles by name or description (client-side filter)
+    func searchPublicCircles(query: String) async throws -> [SisterCircle] {
+        let snapshot = try await circlesCollection
+            .whereField("isPrivate", isEqualTo: false)
+            .getDocuments()
+
+        let lowered = query.lowercased()
+        let userID = currentUserID ?? ""
+        return snapshot.documents
+            .compactMap { try? $0.data(as: SisterCircle.self) }
+            .filter { circle in
+                circle.name.lowercased().contains(lowered) ||
+                circle.description.lowercased().contains(lowered) ||
+                (circle.driftCategory?.lowercased().contains(lowered) ?? false)
+            }
+            .filter { !$0.memberIDs.contains(userID) }
+    }
+
+    /// Fetches public circles linked to a specific drift category
+    func fetchDriftCircles(category: String) async throws -> [SisterCircle] {
+        let snapshot = try await circlesCollection
+            .whereField("isPrivate", isEqualTo: false)
+            .whereField("driftCategory", isEqualTo: category)
+            .getDocuments()
+
+        return snapshot.documents.compactMap { try? $0.data(as: SisterCircle.self) }
+    }
+
+    /// Fetches all drift-affiliated circles grouped by category
+    func fetchAllDriftCircles() async throws -> [SisterCircle] {
+        let snapshot = try await circlesCollection
+            .whereField("isPrivate", isEqualTo: false)
+            .getDocuments()
+
+        return snapshot.documents
+            .compactMap { try? $0.data(as: SisterCircle.self) }
+            .filter { $0.driftCategory != nil }
+    }
+
+    /// Searches posts across all circles the user belongs to
+    func searchCirclePosts(query: String, circleIDs: [String]) async throws -> [CirclePost] {
+        guard !circleIDs.isEmpty else { return [] }
+
+        // Firestore 'in' queries support max 30 values
+        let batchedIDs = Array(circleIDs.prefix(30))
+        let snapshot = try await postsCollection
+            .whereField("circleID", in: batchedIDs)
+            .order(by: "createdAt", descending: true)
+            .limit(to: 100)
+            .getDocuments()
+
+        let lowered = query.lowercased()
+        return snapshot.documents
+            .compactMap { try? $0.data(as: CirclePost.self) }
+            .filter { post in
+                post.content.lowercased().contains(lowered) ||
+                (post.scriptureReference?.lowercased().contains(lowered) ?? false) ||
+                post.type.rawValue.lowercased().contains(lowered)
+            }
+    }
+
     // MARK: - Badge Operations
 
     /// Checks and awards badges based on current progress
