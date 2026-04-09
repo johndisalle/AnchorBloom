@@ -1,26 +1,23 @@
 import SwiftUI
 
-// MARK: - Dashboard View
-/// Main home screen with blooming tree, streak, daily actions, and badges
+// MARK: - Dashboard View (Home)
+/// Focused daily companion: greeting, one action, scripture, tree, active journey.
+/// Everything else lives in Discover, Community, or Profile tabs.
 struct DashboardView: View {
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
     @State private var showAnchorSheet = false
     @State private var showBloomSheet = false
-    @State private var showProgressView = false
     @State private var showJourneyProgress = false
-    @State private var showStreakRewards = false
-    @State private var showScriptureMemory = false
-    @State private var showYearInBloom = false
-    @State private var showTopicalLibrary = false
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
+        let name = viewModel.userProfile?.displayName.components(separatedBy: " ").first ?? "beautiful"
         switch hour {
-        case 0..<12: return "Good morning, beautiful"
-        case 12..<17: return "Good afternoon, sister"
-        default: return "Good evening, beloved"
+        case 0..<12: return "Good morning, \(name)"
+        case 12..<17: return "Good afternoon, \(name)"
+        default: return "Good evening, \(name)"
         }
     }
 
@@ -30,222 +27,25 @@ struct DashboardView: View {
         return formatter.string(from: Date())
     }
 
-    private var timeBasedAction: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        if hour < 14 {
-            return "anchor" // morning/early afternoon = anchor time
-        } else {
-            return "bloom" // afternoon/evening = bloom time
-        }
-    }
-
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
-                    // Header
-                    headerSection
+                    // 1. HEADER — greeting + streak badge
+                    headerRow
 
-                    // TODAY'S SCRIPTURE
-                    todayScriptureCard
+                    // 2. THE ACTION — one clear, unmissable CTA
+                    todayActionCard
 
-                    // Tree visualization (growth meter)
-                    treeSection
+                    // 3. TODAY'S SCRIPTURE — subtle, beautiful
+                    todayScripture
 
-                    // PRIMARY ACTION — what they should do NOW
-                    if timeBasedAction == "anchor" && !(viewModel.todayEntry?.anchorCompleted ?? false) {
-                        urgentActionCard(
-                            title: "Anchor Your Morning",
-                            message: "Start your day rooted in truth. Don't let the enemy set the tone — God already has a word for you.",
-                            icon: "sunrise.fill",
-                            color: ABTheme.warmGold
-                        ) {
-                            showAnchorSheet = true
-                        }
-                    } else if timeBasedAction == "bloom" && !(viewModel.todayEntry?.bloomCompleted ?? false) {
-                        urgentActionCard(
-                            title: "Time to Bloom",
-                            message: "Before this day ends, reflect on how God worked through you. Celebrate who He's making you.",
-                            icon: "camera.macro",
-                            color: ABTheme.blush
-                        ) {
-                            showBloomSheet = true
-                        }
-                    }
+                    // 4. BLOOMING TREE — hero visual with compact stats
+                    treeHero
 
-                    // Morning Anchor card
-                    DailyActionCard(
-                        title: "Morning Anchor",
-                        subtitle: "Root yourself in God's truth",
-                        icon: "sunrise.fill",
-                        color: ABTheme.warmGold,
-                        isCompleted: viewModel.todayEntry?.anchorCompleted ?? false,
-                        completedText: "Anchored"
-                    ) {
-                        showAnchorSheet = true
-                    }
-
-                    // Evening Bloom card
-                    DailyActionCard(
-                        title: "Evening Bloom",
-                        subtitle: "Reflect on how you bloomed today",
-                        icon: "camera.macro",
-                        color: ABTheme.blush,
-                        isCompleted: viewModel.todayEntry?.bloomCompleted ?? false,
-                        completedText: "Bloomed"
-                    ) {
-                        showBloomSheet = true
-                    }
-
-                    // Active journey card
+                    // 5. ACTIVE JOURNEY — only if user has one in progress
                     if let journey = viewModel.activeJourney {
-                        activeJourneyCard(journey)
-                    }
-
-                    // Active goals (premium)
-                    if subscriptionManager.isPremium {
-                        let activeGoals = viewModel.spiritualGoals.filter { !$0.isCompleted }
-                        if !activeGoals.isEmpty {
-                            VStack(alignment: .leading, spacing: ABTheme.paddingSmall) {
-                                HStack {
-                                    Image(systemName: "target")
-                                        .foregroundColor(ABTheme.warmGold)
-                                    Text("Active Goals")
-                                        .font(ABTheme.subheadlineFont)
-                                        .foregroundColor(ABTheme.primaryText)
-                                }
-
-                                ForEach(activeGoals.prefix(2)) { goal in
-                                    HStack(spacing: 10) {
-                                        Image(systemName: goal.category.icon)
-                                            .foregroundColor(ABTheme.sageGreen)
-                                            .frame(width: 20)
-
-                                        Text(goal.title)
-                                            .font(.system(.caption, design: .serif))
-                                            .foregroundColor(ABTheme.primaryText)
-                                            .lineLimit(1)
-
-                                        Spacer()
-
-                                        Text("\(goal.completedDays)/\(goal.targetDays)")
-                                            .font(.system(.caption2, design: .serif, weight: .bold))
-                                            .foregroundColor(ABTheme.sageGreen)
-                                    }
-                                    .padding(.vertical, 6)
-                                }
-                            }
-                            .abCard()
-                        }
-                    }
-
-                    // Streak Rewards card
-                    streakRewardsCard
-
-                    // Scripture Memory card
-                    Button { showScriptureMemory = true } label: {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(ABTheme.sageGreen.opacity(0.15))
-                                    .frame(width: 40, height: 40)
-                                Image(systemName: "brain.head.profile")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(ABTheme.sageGreen)
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Scripture Memory")
-                                    .font(.system(.body, design: .serif, weight: .semibold))
-                                    .foregroundColor(ABTheme.primaryText)
-                                Text("Memorize verses through spaced repetition")
-                                    .font(.caption2)
-                                    .foregroundColor(ABTheme.secondaryText)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(ABTheme.secondaryText)
-                        }
-                        .abCard()
-                    }
-                    .buttonStyle(.plain)
-
-                    // Topical Library card
-                    Button { showTopicalLibrary = true } label: {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(ABTheme.blush.opacity(0.15))
-                                    .frame(width: 40, height: 40)
-                                Image(systemName: "books.vertical.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(ABTheme.blush)
-                            }
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Devotional Library")
-                                    .font(.system(.body, design: .serif, weight: .semibold))
-                                    .foregroundColor(ABTheme.primaryText)
-                                Text("Devotionals for every season of life")
-                                    .font(.caption2)
-                                    .foregroundColor(ABTheme.secondaryText)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.caption)
-                                .foregroundColor(ABTheme.secondaryText)
-                        }
-                        .abCard()
-                    }
-                    .buttonStyle(.plain)
-
-                    // Year in Bloom — show in Dec/Jan
-                    let month = Calendar.current.component(.month, from: Date())
-                    if month == 12 || month == 1 {
-                        Button { showYearInBloom = true } label: {
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    Circle()
-                                        .fill(ABTheme.warmGold.opacity(0.15))
-                                        .frame(width: 40, height: 40)
-                                    Image(systemName: "sparkles")
-                                        .font(.system(size: 16))
-                                        .foregroundColor(ABTheme.warmGold)
-                                }
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Your Year in Bloom")
-                                        .font(.system(.body, design: .serif, weight: .semibold))
-                                        .foregroundColor(ABTheme.primaryText)
-                                    Text("See your faith journey this year — share your story")
-                                        .font(.caption2)
-                                        .foregroundColor(ABTheme.secondaryText)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundColor(ABTheme.warmGold)
-                            }
-                            .padding(ABTheme.paddingMedium)
-                            .background(
-                                LinearGradient(
-                                    colors: [ABTheme.warmGold.opacity(0.08), ABTheme.blush.opacity(0.08)],
-                                    startPoint: .leading, endPoint: .trailing
-                                )
-                            )
-                            .cornerRadius(ABTheme.cornerRadius)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                                    .stroke(ABTheme.warmGold.opacity(0.15), lineWidth: 1)
-                            )
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    // Quick stats row
-                    statsRow
-
-                    // Recent badges
-                    if !viewModel.earnedBadges.isEmpty {
-                        recentBadgesSection
+                        activeJourneyBar(journey)
                     }
 
                     Spacer().frame(height: 20)
@@ -265,133 +65,335 @@ struct DashboardView: View {
             .sheet(isPresented: $showBloomSheet) {
                 BloomView(viewModel: viewModel)
             }
-            .sheet(isPresented: $showProgressView) {
-                ProgressStatsView(viewModel: viewModel)
-            }
             .fullScreenCover(isPresented: $showJourneyProgress) {
                 if let journey = viewModel.activeJourney {
                     JourneyProgressView(journey: journey, viewModel: viewModel)
                 }
             }
-            .sheet(isPresented: $showScriptureMemory) {
-                ScriptureMemoryView()
+        }
+    }
+
+    // MARK: - 1. Header Row
+
+    private var headerRow: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greeting)
+                    .font(ABTheme.headlineFont)
+                    .foregroundColor(ABTheme.primaryText)
+
+                Text(dateString)
+                    .font(ABTheme.captionFont)
+                    .foregroundColor(ABTheme.secondaryText)
             }
-            .sheet(isPresented: $showTopicalLibrary) {
-                TopicalLibraryView()
+
+            Spacer()
+
+            // Streak badge
+            let streak = viewModel.userProfile?.currentStreak ?? 0
+            if streak > 0 {
+                HStack(spacing: 4) {
+                    Image(systemName: "flame.fill")
+                        .font(.system(size: 14))
+                        .foregroundColor(.orange)
+                    Text("\(streak)")
+                        .font(.system(.body, design: .serif, weight: .bold))
+                        .foregroundColor(ABTheme.primaryText)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.orange.opacity(0.1))
+                .cornerRadius(20)
             }
-            .fullScreenCover(isPresented: $showYearInBloom) {
-                YearInBloomView()
-            }
-            .sheet(isPresented: $showStreakRewards) {
-                StreakRewardsView(
-                    currentStreak: viewModel.userProfile?.currentStreak ?? 0,
-                    longestStreak: viewModel.userProfile?.longestStreak ?? 0,
-                    totalDays: viewModel.userProfile?.totalDaysCompleted ?? 0,
-                    displayName: viewModel.userProfile?.displayName ?? "Sister",
-                    recentEntries: viewModel.recentEntries
+        }
+        .padding(.top, ABTheme.paddingMedium)
+    }
+
+    // MARK: - 2. Today's Action Card
+
+    private var todayActionCard: some View {
+        let anchorDone = viewModel.todayEntry?.anchorCompleted ?? false
+        let bloomDone = viewModel.todayEntry?.bloomCompleted ?? false
+        let hour = Calendar.current.component(.hour, from: Date())
+        let isMorning = hour < 14
+
+        return Group {
+            if anchorDone && bloomDone {
+                // BOTH COMPLETE — celebration
+                fullyRootedCard
+            } else if !anchorDone && (isMorning || !bloomDone) {
+                // ANCHOR NEEDED — primary action
+                actionHeroCard(
+                    title: "Anchor Your Morning",
+                    subtitle: "Start your day rooted in God's truth. Don't let the enemy set the tone.",
+                    icon: "sunrise.fill",
+                    accentColor: ABTheme.warmGold,
+                    isAnchor: true
+                )
+            } else if anchorDone && !bloomDone {
+                // ANCHOR DONE, BLOOM PENDING
+                splitProgressCard
+            } else {
+                // BLOOM NEEDED (afternoon, anchor not done either)
+                actionHeroCard(
+                    title: "Time to Bloom",
+                    subtitle: "Reflect on how God worked through you today. Celebrate who He's making you.",
+                    icon: "camera.macro",
+                    accentColor: ABTheme.blush,
+                    isAnchor: false
                 )
             }
         }
     }
 
-    // MARK: - Streak Rewards Card
-    private var streakRewardsCard: some View {
-        let streak = viewModel.userProfile?.currentStreak ?? 0
-        let nextMilestone = [7, 14, 30, 60, 90, 180, 365].first(where: { $0 > streak }) ?? 365
-        let progress = streak > 0 ? min(Double(streak) / Double(nextMilestone), 1.0) : 0
-
-        return Button {
-            showStreakRewards = true
+    private func actionHeroCard(title: String, subtitle: String, icon: String, accentColor: Color, isAnchor: Bool) -> some View {
+        Button {
+            if isAnchor { showAnchorSheet = true } else { showBloomSheet = true }
         } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Image(systemName: "flame.fill")
-                        .foregroundColor(ABTheme.warmGold)
-                    Text("\(streak)-Day Streak")
-                        .font(.system(.body, design: .serif, weight: .semibold))
-                        .foregroundColor(ABTheme.primaryText)
+            VStack(spacing: 16) {
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(accentColor.opacity(0.15))
+                            .frame(width: 56, height: 56)
+                        Image(systemName: icon)
+                            .font(.system(size: 24))
+                            .foregroundColor(accentColor)
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                            .font(.system(.title3, design: .serif, weight: .bold))
+                            .foregroundColor(ABTheme.primaryText)
+                        Text("Tap to begin")
+                            .font(.system(.caption, design: .serif, weight: .medium))
+                            .foregroundColor(accentColor)
+                    }
+
                     Spacer()
-                    Text("View Rewards")
-                        .font(.system(.caption, design: .serif, weight: .medium))
-                        .foregroundColor(ABTheme.sageGreen)
-                    Image(systemName: "chevron.right")
-                        .font(.caption2)
-                        .foregroundColor(ABTheme.sageGreen)
+
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(accentColor)
                 }
 
-                // Progress to next milestone
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text("Next reward at \(nextMilestone) days")
-                            .font(.caption2)
-                            .foregroundColor(ABTheme.secondaryText)
-                        Spacer()
-                        Text("\(streak)/\(nextMilestone)")
-                            .font(.system(.caption2, design: .serif, weight: .bold))
-                            .foregroundColor(ABTheme.warmGold)
-                    }
-
-                    GeometryReader { geo in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(ABTheme.sageGreen.opacity(0.15))
-                                .frame(height: 6)
-
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(ABTheme.warmGold)
-                                .frame(width: geo.size.width * progress, height: 6)
-                        }
-                    }
-                    .frame(height: 6)
-                }
+                Text(subtitle)
+                    .font(.system(.subheadline, design: .serif))
+                    .foregroundColor(ABTheme.secondaryText)
+                    .lineSpacing(3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .abCard()
+            .padding(ABTheme.paddingLarge)
+            .background(
+                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                    .fill(ABTheme.cardBackground)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                            .stroke(accentColor.opacity(0.25), lineWidth: 1.5)
+                    )
+            )
+            .shadow(color: accentColor.opacity(0.12), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
     }
 
-    // MARK: - Active Journey Card
-    private func activeJourneyCard(_ journey: Journey) -> some View {
+    private var splitProgressCard: some View {
+        HStack(spacing: 0) {
+            // Anchor — completed
+            Button { showAnchorSheet = true } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundColor(ABTheme.sageGreen)
+                    Text("Anchored")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.sageGreen)
+                    Text("This morning")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, ABTheme.paddingLarge)
+                .background(ABTheme.sageGreen.opacity(0.06))
+            }
+
+            // Divider
+            Rectangle()
+                .fill(ABTheme.secondaryText.opacity(0.1))
+                .frame(width: 1)
+
+            // Bloom — pending
+            Button { showBloomSheet = true } label: {
+                VStack(spacing: 8) {
+                    Image(systemName: "moon.stars.fill")
+                        .font(.title2)
+                        .foregroundColor(ABTheme.blush)
+                    Text("Bloom Tonight")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.blush)
+                    Text("Tap to begin")
+                        .font(.caption2)
+                        .foregroundColor(ABTheme.secondaryText)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, ABTheme.paddingLarge)
+                .background(ABTheme.blush.opacity(0.04))
+            }
+        }
+        .buttonStyle(.plain)
+        .cornerRadius(ABTheme.cornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                .stroke(ABTheme.secondaryText.opacity(0.1), lineWidth: 1)
+        )
+    }
+
+    private var fullyRootedCard: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(ABTheme.sageGreen)
+                    Text("Anchored")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.sageGreen)
+                }
+
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(ABTheme.blush)
+                    Text("Bloomed")
+                        .font(.system(.caption, design: .serif, weight: .semibold))
+                        .foregroundColor(ABTheme.blush)
+                }
+            }
+
+            Text("Fully Rooted Today")
+                .font(.system(.body, design: .serif, weight: .bold))
+                .foregroundColor(ABTheme.primaryText)
+
+            Text("You anchored in truth this morning and bloomed in purpose tonight. Well done, sister.")
+                .font(.system(.caption, design: .serif))
+                .foregroundColor(ABTheme.secondaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+        }
+        .padding(ABTheme.paddingLarge)
+        .frame(maxWidth: .infinity)
+        .background(
+            LinearGradient(
+                colors: [ABTheme.sageGreen.opacity(0.06), ABTheme.blush.opacity(0.06)],
+                startPoint: .leading, endPoint: .trailing
+            )
+        )
+        .cornerRadius(ABTheme.cornerRadius)
+        .overlay(
+            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                .stroke(ABTheme.sageGreen.opacity(0.15), lineWidth: 1)
+        )
+    }
+
+    // MARK: - 3. Today's Scripture
+
+    private var todayScripture: some View {
+        let prompt = DailyPrompt.morningPrompts[
+            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.morningPrompts.count
+        ]
+        return VStack(spacing: 8) {
+            Text(prompt.scripture)
+                .font(.system(.subheadline, design: .serif).italic())
+                .foregroundColor(ABTheme.primaryText)
+                .multilineTextAlignment(.center)
+                .lineSpacing(4)
+
+            Text("— \(prompt.scriptureReference)")
+                .font(.system(size: 12, weight: .semibold, design: .serif))
+                .foregroundColor(ABTheme.sageGreen)
+        }
+        .padding(.vertical, ABTheme.paddingMedium)
+        .padding(.horizontal, ABTheme.paddingLarge)
+        .frame(maxWidth: .infinity)
+        .background(ABTheme.sageGreen.opacity(0.06))
+        .cornerRadius(ABTheme.cornerRadius)
+    }
+
+    // MARK: - 4. Tree Hero
+
+    private var treeHero: some View {
+        VStack(spacing: ABTheme.paddingMedium) {
+            BloomingTreeView(
+                growthLevel: viewModel.treeGrowthLevel,
+                bloomCount: viewModel.bloomCount,
+                fruitCount: viewModel.fruitCount,
+                streakDays: viewModel.currentStreak
+            )
+
+            // Compact stats row
+            HStack(spacing: 0) {
+                miniStat(value: "\(viewModel.currentStreak)", label: "Streak", icon: "flame.fill", color: .orange)
+                miniDivider
+                miniStat(value: "\(viewModel.totalDays)", label: "Total Days", icon: "calendar", color: ABTheme.sageGreen)
+                miniDivider
+                miniStat(value: "\(viewModel.earnedBadges.count)", label: "Badges", icon: "star.fill", color: ABTheme.warmGold)
+            }
+            .padding(.vertical, 10)
+            .background(ABTheme.cardBackground)
+            .cornerRadius(ABTheme.cornerRadiusSmall)
+        }
+        .abCard()
+    }
+
+    private func miniStat(value: String, label: String, icon: String, color: Color) -> some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 10))
+                    .foregroundColor(color)
+                Text(value)
+                    .font(.system(.body, design: .serif, weight: .bold))
+                    .foregroundColor(ABTheme.primaryText)
+            }
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundColor(ABTheme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private var miniDivider: some View {
+        Rectangle()
+            .fill(ABTheme.secondaryText.opacity(0.12))
+            .frame(width: 1, height: 28)
+    }
+
+    // MARK: - 5. Active Journey Bar
+
+    private func activeJourneyBar(_ journey: Journey) -> some View {
         let progress = viewModel.journeyProgress(for: journey.id)
         let nextDay = min(progress + 1, journey.totalDays)
 
-        return Button {
-            showJourneyProgress = true
-        } label: {
-            HStack(spacing: ABTheme.paddingMedium) {
-                // Journey icon
+        return Button { showJourneyProgress = true } label: {
+            HStack(spacing: 12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(ABTheme.sageGreen.opacity(0.15))
-                        .frame(width: 50, height: 50)
-
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(ABTheme.sageGreen.opacity(0.12))
+                        .frame(width: 42, height: 42)
                     Image(systemName: journey.iconName)
-                        .font(.title2)
+                        .font(.body)
                         .foregroundColor(ABTheme.sageGreen)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(journey.title)
-                        .font(.system(.body, design: .serif, weight: .semibold))
+                        .font(.system(.subheadline, design: .serif, weight: .semibold))
                         .foregroundColor(ABTheme.primaryText)
+                        .lineLimit(1)
 
-                    if progress >= journey.totalDays {
-                        Text("Journey Complete!")
-                            .font(.caption)
-                            .foregroundColor(ABTheme.warmGold)
-                    } else {
-                        Text("Continue Day \(nextDay) of \(journey.totalDays)")
-                            .font(.caption)
-                            .foregroundColor(ABTheme.sageGreen)
-                    }
-
-                    // Mini progress bar
                     GeometryReader { geo in
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(ABTheme.sageGreen.opacity(0.12))
                                 .frame(height: 4)
-
                             RoundedRectangle(cornerRadius: 2)
                                 .fill(ABTheme.sageGreen)
                                 .frame(width: journey.totalDays > 0 ? geo.size.width * CGFloat(progress) / CGFloat(journey.totalDays) : 0, height: 4)
@@ -400,176 +402,25 @@ struct DashboardView: View {
                     .frame(height: 4)
                 }
 
-                Spacer()
-
-                Image(systemName: "arrow.right.circle.fill")
-                    .font(.title3)
+                Text("Day \(nextDay)")
+                    .font(.system(.caption, design: .serif, weight: .semibold))
                     .foregroundColor(ABTheme.sageGreen)
-            }
-            .abCard()
-        }
-        .buttonStyle(.plain)
-    }
 
-    // MARK: - Today's Scripture Card
-    private var todayScriptureCard: some View {
-        let prompt = DailyPrompt.morningPrompts[
-            (Calendar.current.ordinality(of: .day, in: .year, for: Date()) ?? 1 - 1) % DailyPrompt.morningPrompts.count
-        ]
-        return VStack(spacing: 10) {
-            Text(prompt.scripture)
-                .font(.system(size: 15, design: .serif).italic())
-                .foregroundColor(ABTheme.sageGreenDark)
-                .multilineTextAlignment(.center)
-                .lineSpacing(4)
-
-            Text("— \(prompt.scriptureReference)")
-                .font(.system(size: 12, weight: .semibold, design: .serif))
-                .foregroundColor(ABTheme.sageGreen)
-        }
-        .padding(ABTheme.paddingMedium)
-        .frame(maxWidth: .infinity)
-        .background(ABTheme.sageGreen.opacity(0.08))
-        .cornerRadius(ABTheme.cornerRadius)
-    }
-
-    // MARK: - Urgent Action Card
-    private func urgentActionCard(title: String, message: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(color.opacity(0.15))
-                            .frame(width: 44, height: 44)
-
-                        Image(systemName: icon)
-                            .font(.title3)
-                            .foregroundColor(color)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                            .font(.system(.body, design: .serif, weight: .bold))
-                            .foregroundColor(ABTheme.primaryText)
-
-                        Text("Tap to begin")
-                            .font(.system(.caption2, design: .serif))
-                            .foregroundColor(color)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(color)
-                }
-
-                Text(message)
-                    .font(.system(size: 14, design: .serif))
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
                     .foregroundColor(ABTheme.secondaryText)
-                    .lineSpacing(3)
             }
             .padding(ABTheme.paddingMedium)
-            .background(
-                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                    .fill(ABTheme.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                            .stroke(color.opacity(0.3), lineWidth: 1.5)
-                    )
-            )
-            .shadow(color: color.opacity(0.15), radius: 8, y: 3)
+            .background(ABTheme.cardBackground)
+            .cornerRadius(ABTheme.cornerRadius)
+            .shadow(color: ABTheme.cardShadow, radius: 4, x: 0, y: 1)
         }
         .buttonStyle(.plain)
-    }
-
-    // MARK: - Header
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(greeting)
-                .font(ABTheme.headlineFont)
-                .foregroundColor(ABTheme.primaryText)
-
-            Text(dateString)
-                .font(ABTheme.captionFont)
-                .foregroundColor(ABTheme.secondaryText)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, ABTheme.paddingMedium)
-    }
-
-    // MARK: - Tree Section
-    private var treeSection: some View {
-        VStack(spacing: ABTheme.paddingSmall) {
-            BloomingTreeView(
-                growthLevel: viewModel.treeGrowthLevel,
-                bloomCount: viewModel.bloomCount,
-                fruitCount: viewModel.fruitCount,
-                streakDays: viewModel.currentStreak
-            )
-
-            Button {
-                showProgressView = true
-            } label: {
-                HStack(spacing: 6) {
-                    Text("View Growth")
-                        .font(.system(.caption, design: .serif, weight: .medium))
-                    Image(systemName: "chart.bar.fill")
-                        .font(.caption2)
-                }
-                .foregroundColor(ABTheme.sageGreen)
-            }
-        }
-        .abCard()
-    }
-
-
-    // MARK: - Stats Row
-    private var statsRow: some View {
-        HStack(spacing: ABTheme.paddingMedium) {
-            StatCard(
-                value: "\(viewModel.currentStreak)",
-                label: "Day Streak",
-                icon: "flame.fill",
-                color: .orange
-            )
-
-            StatCard(
-                value: "\(viewModel.totalDays)",
-                label: "Total Days",
-                icon: "calendar",
-                color: ABTheme.sageGreen
-            )
-
-            StatCard(
-                value: "\(viewModel.earnedBadges.count)",
-                label: "Badges",
-                icon: "star.fill",
-                color: ABTheme.warmGold
-            )
-        }
-    }
-
-    // MARK: - Recent Badges
-    private var recentBadgesSection: some View {
-        VStack(alignment: .leading, spacing: ABTheme.paddingSmall) {
-            Text("Recent Badges")
-                .font(ABTheme.subheadlineFont)
-                .foregroundColor(ABTheme.primaryText)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(viewModel.earnedBadges.suffix(5)) { badge in
-                        BadgeCardSmall(badge: badge)
-                    }
-                }
-            }
-        }
     }
 }
 
-// MARK: - Daily Action Card
+// MARK: - Reusable Components (preserved from original)
+
 struct DailyActionCard: View {
     let title: String
     let subtitle: String
@@ -582,12 +433,10 @@ struct DailyActionCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: ABTheme.paddingMedium) {
-                // Icon
                 ZStack {
                     Circle()
                         .fill(color.opacity(0.15))
                         .frame(width: 50, height: 50)
-
                     if isCompleted {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title2)
@@ -598,19 +447,15 @@ struct DailyActionCard: View {
                             .foregroundColor(color)
                     }
                 }
-
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(.body, design: .serif, weight: .semibold))
                         .foregroundColor(ABTheme.primaryText)
-
                     Text(isCompleted ? completedText : subtitle)
                         .font(.caption)
                         .foregroundColor(isCompleted ? ABTheme.sageGreen : ABTheme.secondaryText)
                 }
-
                 Spacer()
-
                 Image(systemName: isCompleted ? "checkmark" : "chevron.right")
                     .foregroundColor(isCompleted ? ABTheme.sageGreen : ABTheme.secondaryText)
                     .font(.caption)
@@ -621,7 +466,6 @@ struct DailyActionCard: View {
     }
 }
 
-// MARK: - Stat Card
 struct StatCard: View {
     let value: String
     let label: String
@@ -633,11 +477,9 @@ struct StatCard: View {
             Image(systemName: icon)
                 .foregroundColor(color)
                 .font(.title3)
-
             Text(value)
                 .font(.system(.title2, design: .serif, weight: .bold))
                 .foregroundColor(ABTheme.primaryText)
-
             Text(label)
                 .font(.system(.caption2, design: .serif))
                 .foregroundColor(ABTheme.secondaryText)
@@ -650,7 +492,6 @@ struct StatCard: View {
     }
 }
 
-// MARK: - Small Badge Card
 struct BadgeCardSmall: View {
     let badge: Badge
 
@@ -659,7 +500,6 @@ struct BadgeCardSmall: View {
             Image(systemName: badge.iconName)
                 .font(.title2)
                 .foregroundColor(ABTheme.warmGold)
-
             Text(badge.name)
                 .font(.system(.caption2, design: .serif, weight: .medium))
                 .foregroundColor(ABTheme.primaryText)

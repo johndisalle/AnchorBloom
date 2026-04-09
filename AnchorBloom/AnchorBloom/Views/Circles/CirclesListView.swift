@@ -4,6 +4,7 @@ import FirebaseAuth
 // MARK: - Circles List View
 /// Sister Circles: private small groups for encouragement
 struct CirclesListView: View {
+    var embedded = false
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
@@ -19,10 +20,42 @@ struct CirclesListView: View {
     @State private var showDiscoverCircles = false
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: ABTheme.paddingLarge) {
-                    // Header
+        Group {
+            if embedded {
+                circlesContent
+            } else {
+                NavigationStack {
+                    circlesContent
+                        .navigationTitle("Circles")
+                        .navigationBarTitleDisplayMode(.inline)
+                }
+            }
+        }
+        .refreshable { await loadCircles() }
+        .task { await loadCircles() }
+        .sheet(isPresented: $showCreateCircle) {
+            CreateCircleView { newCircle in circles.append(newCircle) }
+        }
+        .sheet(isPresented: $showJoinCircle) {
+            JoinCircleView { joinedCircle in
+                if let circle = joinedCircle { circles.append(circle) }
+            }
+        }
+        .sheet(item: $selectedCircle) { circle in CircleDetailView(circle: circle) }
+        .sheet(isPresented: $showUpgradePrompt) { SubscriptionView() }
+        .sheet(isPresented: $showSearch) {
+            CircleSearchView(userCircles: circles) { circle in selectedCircle = circle }
+        }
+        .sheet(isPresented: $showDiscoverCircles) {
+            DiscoverCirclesView { circle in selectedCircle = circle }
+        }
+    }
+
+    private var circlesContent: some View {
+        ScrollView {
+            VStack(spacing: ABTheme.paddingLarge) {
+                if !embedded {
+                    // Header (only in standalone mode)
                     VStack(spacing: 8) {
                         Image(systemName: "heart.circle.fill")
                             .font(.title)
@@ -38,6 +71,7 @@ struct CirclesListView: View {
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, ABTheme.paddingSmall)
+                }
 
                     // Search & Discover bar
                     HStack(spacing: 10) {
@@ -185,43 +219,6 @@ struct CirclesListView: View {
                 .padding(.horizontal, ABTheme.paddingMedium)
             }
             .abScreenBackground()
-            .navigationTitle("Circles")
-            .navigationBarTitleDisplayMode(.inline)
-            .refreshable {
-                await loadCircles()
-            }
-            .task {
-                await loadCircles()
-            }
-            .sheet(isPresented: $showCreateCircle) {
-                CreateCircleView { newCircle in
-                    circles.append(newCircle)
-                }
-            }
-            .sheet(isPresented: $showJoinCircle) {
-                JoinCircleView { joinedCircle in
-                    if let circle = joinedCircle {
-                        circles.append(circle)
-                    }
-                }
-            }
-            .sheet(item: $selectedCircle) { circle in
-                CircleDetailView(circle: circle)
-            }
-            .sheet(isPresented: $showUpgradePrompt) {
-                SubscriptionView()
-            }
-            .sheet(isPresented: $showSearch) {
-                CircleSearchView(userCircles: circles) { circle in
-                    selectedCircle = circle
-                }
-            }
-            .sheet(isPresented: $showDiscoverCircles) {
-                DiscoverCirclesView { circle in
-                    selectedCircle = circle
-                }
-            }
-        }
     }
 
     private var emptyState: some View {

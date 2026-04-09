@@ -82,9 +82,9 @@ struct MainTabView: View {
                 }
                 .tag(0)
 
-            JourneyListView()
+            DiscoverView()
                 .tabItem {
-                    Label("Journeys", systemImage: "map.fill")
+                    Label("Discover", systemImage: "sparkle.magnifyingglass")
                 }
                 .tag(1)
 
@@ -94,23 +94,17 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
-            CirclesListView()
+            CommunityView()
                 .tabItem {
-                    Label("Circles", systemImage: "heart.circle.fill")
+                    Label("Community", systemImage: "heart.circle.fill")
                 }
                 .tag(3)
 
-            PrayerWallView()
+            ProfileView()
                 .tabItem {
-                    Label("Prayer", systemImage: "hands.sparkles.fill")
+                    Label("Me", systemImage: "person.fill")
                 }
                 .tag(4)
-
-            SettingsView()
-                .tabItem {
-                    Label("Settings", systemImage: "gearshape.fill")
-                }
-                .tag(5)
         }
         .tint(ABTheme.sageGreen)
         .task {

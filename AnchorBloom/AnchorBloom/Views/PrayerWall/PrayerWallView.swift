@@ -52,6 +52,7 @@ enum PrayerCategory: String, Codable, CaseIterable {
 // MARK: - Prayer Wall View
 
 struct PrayerWallView: View {
+    var embedded = false
     @EnvironmentObject var firestoreService: FirestoreService
     @EnvironmentObject var subscriptionManager: SubscriptionManager
 
@@ -72,65 +73,62 @@ struct PrayerWallView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: ABTheme.paddingLarge) {
-
-                    // MARK: Header
-                    headerSection
-
-                    // MARK: Category Filter
-                    categoryFilterRow
-
-                    // MARK: Post Prayer Button
-                    postPrayerButton
-
-                    // MARK: Prayer Request List
-                    if isLoading {
-                        ProgressView()
-                            .tint(ABTheme.sageGreen)
-                            .padding(.top, 40)
-                    } else if filteredRequests.isEmpty {
-                        emptyStateView
-                    } else {
-                        LazyVStack(spacing: ABTheme.paddingMedium) {
-                            ForEach(filteredRequests) { request in
-                                PrayerRequestCard(
-                                    request: request,
-                                    currentUserID: currentUserID,
-                                    onPrayTapped: { handlePrayTapped(request: request) },
-                                    onMarkAnswered: { handleMarkAnswered(request: request) },
-                                    onAnsweredUpdated: { updated in updateRequest(updated) }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer().frame(height: 40)
+        Group {
+            if embedded {
+                mainContent
+            } else {
+                NavigationStack {
+                    mainContent
+                        .navigationTitle("Prayer Wall")
+                        .navigationBarTitleDisplayMode(.inline)
                 }
-                .padding(.horizontal, ABTheme.paddingMedium)
-            }
-            .abScreenBackground()
-            .navigationTitle("Prayer Wall")
-            .navigationBarTitleDisplayMode(.inline)
-            .refreshable {
-                await loadPrayerRequests()
-            }
-            .task {
-                await loadPrayerRequests()
-            }
-            .sheet(isPresented: $showNewPrayerSheet) {
-                NewPrayerRequestView { newRequest in
-                    prayerRequests.insert(newRequest, at: 0)
-                }
-                .environmentObject(firestoreService)
-                .environmentObject(subscriptionManager)
-            }
-            .sheet(isPresented: $showUpgradePrompt) {
-                SubscriptionView()
-                    .environmentObject(subscriptionManager)
             }
         }
+        .refreshable { await loadPrayerRequests() }
+        .task { await loadPrayerRequests() }
+        .sheet(isPresented: $showNewPrayerSheet) {
+            NewPrayerRequestView { newRequest in
+                prayerRequests.insert(newRequest, at: 0)
+            }
+            .environmentObject(firestoreService)
+            .environmentObject(subscriptionManager)
+        }
+        .sheet(isPresented: $showUpgradePrompt) {
+            SubscriptionView()
+                .environmentObject(subscriptionManager)
+        }
+    }
+
+    private var mainContent: some View {
+        ScrollView {
+            VStack(spacing: ABTheme.paddingLarge) {
+                if !embedded { headerSection }
+                categoryFilterRow
+                postPrayerButton
+                if isLoading {
+                    ProgressView()
+                        .tint(ABTheme.sageGreen)
+                        .padding(.top, 40)
+                } else if filteredRequests.isEmpty {
+                    emptyStateView
+                } else {
+                    LazyVStack(spacing: ABTheme.paddingMedium) {
+                        ForEach(filteredRequests) { request in
+                            PrayerRequestCard(
+                                request: request,
+                                currentUserID: currentUserID,
+                                onPrayTapped: { handlePrayTapped(request: request) },
+                                onMarkAnswered: { handleMarkAnswered(request: request) },
+                                onAnsweredUpdated: { updated in updateRequest(updated) }
+                            )
+                        }
+                    }
+                }
+                Spacer().frame(height: 40)
+            }
+            .padding(.horizontal, ABTheme.paddingMedium)
+        }
+        .abScreenBackground()
     }
 
     // MARK: - Header Section
