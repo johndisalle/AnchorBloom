@@ -11,6 +11,9 @@ struct AnchorView: View {
     @State private var selectedTags: Set<AnchorTag> = []
     @State private var isSaving = false
     @State private var showCompletionAnimation = false
+    @StateObject private var aiService = ClaudeAIService()
+    @StateObject private var audioService = AudioDevotionalService()
+    @State private var aiResponse: String?
 
     private var todayPrompt: DailyPrompt {
         DailyPrompt.morningPrompt(for: Date())
@@ -239,24 +242,46 @@ struct AnchorView: View {
         ZStack {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
+                .onTapGesture { dismiss() }
 
-            VStack(spacing: ABTheme.paddingMedium) {
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(ABTheme.sageGreen)
+            ScrollView {
+                VStack(spacing: ABTheme.paddingMedium) {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(ABTheme.sageGreen)
 
-                Text("Anchored")
-                    .font(ABTheme.headlineFont)
-                    .foregroundColor(ABTheme.primaryText)
+                    Text("Anchored")
+                        .font(ABTheme.headlineFont)
+                        .foregroundColor(ABTheme.primaryText)
 
-                Text("Your heart is rooted in truth today.")
-                    .font(ABTheme.bodyFont)
-                    .foregroundColor(ABTheme.secondaryText)
+                    Text("Your heart is rooted in truth today.")
+                        .font(ABTheme.bodyFont)
+                        .foregroundColor(ABTheme.secondaryText)
+
+                    // AI Devotional Response
+                    if aiService.isGenerating || aiResponse != nil {
+                        AIDevotionalResponseView(
+                            response: aiResponse ?? "",
+                            isGenerating: aiService.isGenerating,
+                            onDismiss: { dismiss() }
+                        )
+                        .padding(.top, ABTheme.paddingSmall)
+                    }
+
+                    Button { dismiss() } label: {
+                        Text("Continue →")
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.sageGreen)
+                    }
+                    .padding(.top, ABTheme.paddingSmall)
+                }
+                .padding(ABTheme.paddingLarge)
+                .background(ABTheme.softWhite)
+                .cornerRadius(ABTheme.cornerRadius)
+                .shadow(radius: 20)
+                .padding(.horizontal, ABTheme.paddingMedium)
+                .padding(.vertical, 60)
             }
-            .padding(ABTheme.paddingXLarge)
-            .background(ABTheme.softWhite)
-            .cornerRadius(ABTheme.cornerRadius)
-            .shadow(radius: 20)
             .transition(.scale.combined(with: .opacity))
         }
     }
@@ -274,8 +299,22 @@ struct AnchorView: View {
             withAnimation(.spring(response: 0.4)) {
                 showCompletionAnimation = true
             }
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
-            dismiss()
+
+            // Generate AI response if user wrote a reflection
+            if !reflectionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let context = DevotionalContext(
+                    type: .morningAnchor,
+                    displayName: viewModel.userProfile?.displayName ?? "Sister",
+                    streakDays: viewModel.userProfile?.currentStreak ?? 0,
+                    tags: Array(selectedTags).map { $0.rawValue },
+                    roles: [],
+                    scriptureReference: todayPrompt.scriptureReference
+                )
+                aiResponse = await aiService.generateResponse(reflection: reflectionText, context: context)
+            } else {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                dismiss()
+            }
         }
     }
 }

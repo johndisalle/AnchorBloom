@@ -11,6 +11,9 @@ struct DashboardView: View {
     @State private var showProgressView = false
     @State private var showJourneyProgress = false
     @State private var showStreakRewards = false
+    @State private var showScriptureMemory = false
+    @State private var showYearInBloom = false
+    @State private var showTopicalLibrary = false
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -139,6 +142,104 @@ struct DashboardView: View {
                     // Streak Rewards card
                     streakRewardsCard
 
+                    // Scripture Memory card
+                    Button { showScriptureMemory = true } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(ABTheme.sageGreen.opacity(0.15))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "brain.head.profile")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(ABTheme.sageGreen)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Scripture Memory")
+                                    .font(.system(.body, design: .serif, weight: .semibold))
+                                    .foregroundColor(ABTheme.primaryText)
+                                Text("Memorize verses through spaced repetition")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                        .abCard()
+                    }
+                    .buttonStyle(.plain)
+
+                    // Topical Library card
+                    Button { showTopicalLibrary = true } label: {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(ABTheme.blush.opacity(0.15))
+                                    .frame(width: 40, height: 40)
+                                Image(systemName: "books.vertical.fill")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(ABTheme.blush)
+                            }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Devotional Library")
+                                    .font(.system(.body, design: .serif, weight: .semibold))
+                                    .foregroundColor(ABTheme.primaryText)
+                                Text("Devotionals for every season of life")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundColor(ABTheme.secondaryText)
+                        }
+                        .abCard()
+                    }
+                    .buttonStyle(.plain)
+
+                    // Year in Bloom — show in Dec/Jan
+                    let month = Calendar.current.component(.month, from: Date())
+                    if month == 12 || month == 1 {
+                        Button { showYearInBloom = true } label: {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(ABTheme.warmGold.opacity(0.15))
+                                        .frame(width: 40, height: 40)
+                                    Image(systemName: "sparkles")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(ABTheme.warmGold)
+                                }
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Your Year in Bloom")
+                                        .font(.system(.body, design: .serif, weight: .semibold))
+                                        .foregroundColor(ABTheme.primaryText)
+                                    Text("See your faith journey this year — share your story")
+                                        .font(.caption2)
+                                        .foregroundColor(ABTheme.secondaryText)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(ABTheme.warmGold)
+                            }
+                            .padding(ABTheme.paddingMedium)
+                            .background(
+                                LinearGradient(
+                                    colors: [ABTheme.warmGold.opacity(0.08), ABTheme.blush.opacity(0.08)],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .cornerRadius(ABTheme.cornerRadius)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                                    .stroke(ABTheme.warmGold.opacity(0.15), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     // Quick stats row
                     statsRow
 
@@ -171,6 +272,15 @@ struct DashboardView: View {
                 if let journey = viewModel.activeJourney {
                     JourneyProgressView(journey: journey, viewModel: viewModel)
                 }
+            }
+            .sheet(isPresented: $showScriptureMemory) {
+                ScriptureMemoryView()
+            }
+            .sheet(isPresented: $showTopicalLibrary) {
+                TopicalLibraryView()
+            }
+            .fullScreenCover(isPresented: $showYearInBloom) {
+                YearInBloomView()
             }
             .sheet(isPresented: $showStreakRewards) {
                 StreakRewardsView(

@@ -6,6 +6,7 @@ struct JourneyListView: View {
     @EnvironmentObject var subscriptionManager: SubscriptionManager
     @EnvironmentObject var firestoreService: FirestoreService
     @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
+    @State private var showUpgrade = false
 
     var body: some View {
         NavigationStack {
@@ -74,6 +75,56 @@ struct JourneyListView: View {
                         .buttonStyle(.plain)
                     }
 
+                    // Seasonal journeys (time-limited)
+                    let seasonalJourneys = SeasonalJourneyContent.availableJourneys()
+                    if !seasonalJourneys.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            SectionHeader(title: "Seasonal — Limited Time", icon: "clock.badge.fill")
+
+                            ForEach(seasonalJourneys) { journey in
+                                VStack(spacing: 0) {
+                                    if subscriptionManager.isPremium {
+                                        NavigationLink {
+                                            JourneyDetailView(journey: journey, viewModel: viewModel)
+                                        } label: {
+                                            JourneyCardLabel(
+                                                journey: journey,
+                                                progress: viewModel.journeyProgress(for: journey.id)
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    } else {
+                                        Button { showUpgrade = true } label: {
+                                            JourneyCardLabel(
+                                                journey: journey,
+                                                progress: 0,
+                                                isPremiumLocked: true
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+
+                                    // Days remaining badge
+                                    if let daysLeft = SeasonalJourneyContent.daysRemaining(for: journey) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "clock.fill")
+                                                .font(.system(size: 9))
+                                            Text(daysLeft <= 5 ? "Only \(daysLeft) days left!" : "\(daysLeft) days remaining")
+                                                .font(.system(.caption2, design: .serif, weight: .medium))
+                                        }
+                                        .foregroundColor(daysLeft <= 5 ? ABTheme.destructive : ABTheme.warmGold)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 4)
+                                        .background((daysLeft <= 5 ? ABTheme.destructive : ABTheme.warmGold).opacity(0.1))
+                                        .cornerRadius(8)
+                                        .frame(maxWidth: .infinity, alignment: .trailing)
+                                        .padding(.top, 4)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Free journeys
                     VStack(alignment: .leading, spacing: 12) {
                         SectionHeader(title: "Free Journeys", icon: "gift.fill")
@@ -125,6 +176,9 @@ struct JourneyListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .task {
                 await viewModel.loadUserData()
+            }
+            .sheet(isPresented: $showUpgrade) {
+                SubscriptionView()
             }
         }
     }

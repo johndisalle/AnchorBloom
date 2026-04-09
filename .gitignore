@@ -43,3 +43,4 @@ playground.xcworkspace
 # Sensitive files
 *.env
 credentials.json
+APIConfig.swift

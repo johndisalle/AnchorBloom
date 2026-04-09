@@ -11,6 +11,8 @@ struct BloomView: View {
     @State private var selectedRoles: Set<BloomRole> = []
     @State private var isSaving = false
     @State private var showCompletionAnimation = false
+    @StateObject private var aiService = ClaudeAIService()
+    @State private var aiResponse: String?
 
     private var todayPrompt: DailyPrompt {
         DailyPrompt.eveningPrompt(for: Date())
@@ -255,26 +257,47 @@ struct BloomView: View {
         ZStack {
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
+                .onTapGesture { dismiss() }
 
-            VStack(spacing: ABTheme.paddingMedium) {
-                // Animated flower
-                PrettyFlower(petalColor: ABTheme.blush, centerColor: ABTheme.warmGold, size: 80, petalCount: 5)
-                    .rotationEffect(.degrees(showCompletionAnimation ? 0 : -15))
-                    .animation(.spring(response: 0.6, dampingFraction: 0.5), value: showCompletionAnimation)
+            ScrollView {
+                VStack(spacing: ABTheme.paddingMedium) {
+                    PrettyFlower(petalColor: ABTheme.blush, centerColor: ABTheme.warmGold, size: 80, petalCount: 5)
+                        .rotationEffect(.degrees(showCompletionAnimation ? 0 : -15))
+                        .animation(.spring(response: 0.6, dampingFraction: 0.5), value: showCompletionAnimation)
 
-                Text("Beautifully Bloomed")
-                    .font(ABTheme.headlineFont)
-                    .foregroundColor(ABTheme.primaryText)
+                    Text("Beautifully Bloomed")
+                        .font(ABTheme.headlineFont)
+                        .foregroundColor(ABTheme.primaryText)
 
-                Text("You walked in purpose today.\nGod is growing something beautiful in you.")
-                    .font(ABTheme.bodyFont)
-                    .foregroundColor(ABTheme.secondaryText)
-                    .multilineTextAlignment(.center)
+                    Text("You walked in purpose today.\nGod is growing something beautiful in you.")
+                        .font(ABTheme.bodyFont)
+                        .foregroundColor(ABTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+
+                    // AI Devotional Response
+                    if aiService.isGenerating || aiResponse != nil {
+                        AIDevotionalResponseView(
+                            response: aiResponse ?? "",
+                            isGenerating: aiService.isGenerating,
+                            onDismiss: { dismiss() }
+                        )
+                        .padding(.top, ABTheme.paddingSmall)
+                    }
+
+                    Button { dismiss() } label: {
+                        Text("Continue →")
+                            .font(.system(.body, design: .serif, weight: .semibold))
+                            .foregroundColor(ABTheme.blush)
+                    }
+                    .padding(.top, ABTheme.paddingSmall)
+                }
+                .padding(ABTheme.paddingLarge)
+                .background(ABTheme.softWhite)
+                .cornerRadius(ABTheme.cornerRadius)
+                .shadow(radius: 20)
+                .padding(.horizontal, ABTheme.paddingMedium)
+                .padding(.vertical, 60)
             }
-            .padding(ABTheme.paddingXLarge)
-            .background(ABTheme.softWhite)
-            .cornerRadius(ABTheme.cornerRadius)
-            .shadow(radius: 20)
             .transition(.scale.combined(with: .opacity))
         }
     }
@@ -291,8 +314,22 @@ struct BloomView: View {
             withAnimation(.spring(response: 0.4)) {
                 showCompletionAnimation = true
             }
-            try? await Task.sleep(nanoseconds: 1_500_000_000)
-            dismiss()
+
+            // Generate AI response if user wrote a reflection
+            if !reflectionText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let context = DevotionalContext(
+                    type: .eveningBloom,
+                    displayName: viewModel.userProfile?.displayName ?? "Sister",
+                    streakDays: viewModel.userProfile?.currentStreak ?? 0,
+                    tags: [],
+                    roles: Array(selectedRoles).map { $0.rawValue },
+                    scriptureReference: nil
+                )
+                aiResponse = await aiService.generateResponse(reflection: reflectionText, context: context)
+            } else {
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                dismiss()
+            }
         }
     }
 }

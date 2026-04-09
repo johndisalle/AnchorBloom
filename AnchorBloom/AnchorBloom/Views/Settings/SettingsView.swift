@@ -20,6 +20,7 @@ struct SettingsView: View {
     @State private var showBlockedUsers = false
     @State private var showDeleteError = false
     @State private var showJournalExport = false
+    @State private var showGiftPremium = false
     @State private var deleteErrorMessage = ""
     @AppStorage("appearanceMode") private var appearanceMode: AppearanceMode = .system
 
@@ -61,6 +62,29 @@ struct SettingsView: View {
                     Text("Scripture")
                 }
 
+                // Gifting section
+                Section {
+                    Button {
+                        showGiftPremium = true
+                    } label: {
+                        Label {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Gift Premium to a Friend")
+                                    .font(.system(.body, design: .serif))
+                                    .foregroundColor(ABTheme.primaryText)
+                                Text("Give the gift of deeper growth in Christ")
+                                    .font(.caption2)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                        } icon: {
+                            Image(systemName: "gift.fill")
+                                .foregroundColor(ABTheme.warmGold)
+                        }
+                    }
+                } header: {
+                    Text("Gift")
+                }
+
                 // Subscription section
                 subscriptionSection
 
@@ -92,6 +116,9 @@ struct SettingsView: View {
             }
             .sheet(isPresented: $showJournalExport) {
                 JournalExportView()
+            }
+            .sheet(isPresented: $showGiftPremium) {
+                GiftPremiumView()
             }
         }
     }
