@@ -251,7 +251,7 @@ struct GiftPremiumView: View {
         ]
 
         Task {
-            try? await Firestore.firestore().collection("gifts").addDocument(data: giftData)
+            _ = try? await Firestore.firestore().collection("gifts").addDocument(data: giftData)
             UINotificationFeedbackGenerator().notificationOccurred(.success)
             showSuccess = true
             isSending = false

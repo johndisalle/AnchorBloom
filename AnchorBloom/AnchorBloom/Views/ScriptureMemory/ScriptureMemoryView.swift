@@ -342,7 +342,7 @@ struct AddMemoryVerseView: View {
             practiceCount: 0
         )
         Task {
-            try? Firestore.firestore().collection("scriptureMemory").addDocument(from: card)
+            _ = try? Firestore.firestore().collection("scriptureMemory").addDocument(from: card)
             onAdded(card)
             dismiss()
         }
