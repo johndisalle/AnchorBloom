@@ -24,8 +24,8 @@ enum SeasonalJourneyContent {
             available.append(newYearJourney)
         }
 
-        // Lent: roughly Feb 15 — April 15 (varies by year, this covers the window)
-        if (month == 2 && day >= 15) || month == 3 || (month == 4 && day <= 15) {
+        // Lent: roughly Feb 15 — April 5 (ends at Easter, which varies yearly)
+        if (month == 2 && day >= 15) || month == 3 || (month == 4 && day <= 5) {
             available.append(lentJourney)
         }
 
@@ -52,7 +52,7 @@ enum SeasonalJourneyContent {
                 return max(0, calendar.dateComponents([.day], from: date, to: end).day ?? 0)
             }
         case "seasonal_lent":
-            if let end = calendar.date(from: DateComponents(year: calendar.component(.year, from: date), month: 4, day: 15)) {
+            if let end = calendar.date(from: DateComponents(year: calendar.component(.year, from: date), month: 4, day: 5)) {
                 return max(0, calendar.dateComponents([.day], from: date, to: end).day ?? 0)
             }
         case "seasonal_backtoschool":

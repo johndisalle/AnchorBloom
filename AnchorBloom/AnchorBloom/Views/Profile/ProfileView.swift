@@ -13,6 +13,7 @@ struct ProfileView: View {
 
     @State private var showStreakRewards = false
     @State private var showProgressStats = false
+    @State private var showMyVerses = false
     @State private var showJournalExport = false
     @State private var showGiftPremium = false
     @State private var showSubscription = false
@@ -78,6 +79,7 @@ struct ProfileView: View {
             .sheet(isPresented: $showProgressStats) {
                 ProgressStatsView(viewModel: viewModel)
             }
+            .sheet(isPresented: $showMyVerses) { NavigationStack { MyVersesView() } }
             .sheet(isPresented: $showJournalExport) { JournalExportView() }
             .sheet(isPresented: $showGiftPremium) { GiftPremiumView() }
             .sheet(isPresented: $showSubscription) { SubscriptionView() }
@@ -261,11 +263,8 @@ struct ProfileView: View {
     private var quickActionsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
             quickAction(icon: "bookmark.fill", title: "My Verses", color: ABTheme.warmGold) {
-                // Navigate to My Verses
+                showMyVerses = true
             }
-            .background(
-                NavigationLink("", destination: MyVersesView()).opacity(0)
-            )
 
             if subscriptionManager.isPremium {
                 quickAction(icon: "doc.richtext", title: "Export Journal", color: ABTheme.sageGreen) {
@@ -504,6 +503,37 @@ struct SettingsSheetView: View {
                             Image(systemName: "hand.raised.fill")
                                 .foregroundColor(ABTheme.destructive)
                         }
+                    }
+                }
+
+                // About
+                Section("About") {
+                    HStack {
+                        Text("Version")
+                            .font(.system(.body, design: .serif))
+                            .foregroundColor(ABTheme.primaryText)
+                        Spacer()
+                        Text("1.0.0")
+                            .font(.caption)
+                            .foregroundColor(ABTheme.secondaryText)
+                    }
+
+                    Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/terms.md")!) {
+                        Label("Terms of Service", systemImage: "doc.text")
+                            .font(.system(.body, design: .serif))
+                            .foregroundColor(ABTheme.primaryText)
+                    }
+
+                    Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/privacy.md")!) {
+                        Label("Privacy Policy", systemImage: "hand.raised.fill")
+                            .font(.system(.body, design: .serif))
+                            .foregroundColor(ABTheme.primaryText)
+                    }
+
+                    Link(destination: URL(string: "https://github.com/johndisalle/AnchorBloom/blob/claude/anchor-bloom-mvp-D2kbN/docs/support.md")!) {
+                        Label("Support", systemImage: "questionmark.circle")
+                            .font(.system(.body, design: .serif))
+                            .foregroundColor(ABTheme.primaryText)
                     }
                 }
 

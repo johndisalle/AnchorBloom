@@ -12,6 +12,7 @@ struct BloomView: View {
     @State private var isSaving = false
     @State private var showCompletionAnimation = false
     @StateObject private var aiService = ClaudeAIService()
+    @StateObject private var audioService = AudioDevotionalService()
     @State private var aiResponse: String?
 
     private var todayPrompt: DailyPrompt {
@@ -104,11 +105,19 @@ struct BloomView: View {
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .foregroundColor(ABTheme.blushDark)
 
-            ScriptureActionButtons(
-                verseText: todayPrompt.scripture,
-                reference: todayPrompt.scriptureReference,
-                source: .eveningBloom
-            )
+            HStack(spacing: 16) {
+                ScriptureActionButtons(
+                    verseText: todayPrompt.scripture,
+                    reference: todayPrompt.scriptureReference,
+                    source: .eveningBloom
+                )
+                ListenButton(
+                    audioService: audioService,
+                    text: todayPrompt.scripture,
+                    cacheKey: "bloom_verse_\(todayPrompt.scriptureReference)",
+                    isPremium: subscriptionManager.isPremium
+                )
+            }
         }
         .abCard()
     }
@@ -232,7 +241,9 @@ struct BloomView: View {
         }
     }
 
-    // MARK: - 5. Close in Prayer
+    // MARK: - 5. Close in Prayer + Audio
+    private static let bloomPrayerText = "Lord, thank You for this day and the ways You moved through me. Where I fell short, cover me with grace. As I rest tonight, let the seeds planted today take root and bloom for Your glory. Amen."
+
     private var closeInPrayerSection: some View {
         VStack(spacing: 10) {
             Image(systemName: "hands.sparkles.fill")
@@ -243,11 +254,18 @@ struct BloomView: View {
                 .font(ABTheme.subheadlineFont)
                 .foregroundColor(ABTheme.primaryText)
 
-            Text("Lord, thank You for this day and the ways You moved through me. Where I fell short, cover me with grace. As I rest tonight, let the seeds planted today take root and bloom for Your glory. Amen.")
+            Text(Self.bloomPrayerText)
                 .font(ABTheme.bodyFont)
                 .foregroundColor(ABTheme.secondaryText)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
+
+            ListenButton(
+                audioService: audioService,
+                text: Self.bloomPrayerText,
+                cacheKey: "bloom_prayer",
+                isPremium: subscriptionManager.isPremium
+            )
         }
         .abCard()
     }
@@ -274,18 +292,30 @@ struct BloomView: View {
                         .foregroundColor(ABTheme.secondaryText)
                         .multilineTextAlignment(.center)
 
-                    // AI Devotional Response
-                    if aiService.isGenerating || aiResponse != nil {
-                        AIDevotionalResponseView(
-                            response: aiResponse ?? "",
-                            isGenerating: aiService.isGenerating,
-                            onDismiss: { dismiss() }
-                        )
-                        .padding(.top, ABTheme.paddingSmall)
+                    // AI Devotional Response (with error/timeout handling)
+                    if aiService.isGenerating || aiResponse != nil || aiService.errorMessage != nil {
+                        if let error = aiService.errorMessage {
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle")
+                                    .foregroundColor(ABTheme.secondaryText)
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                            .padding(ABTheme.paddingSmall)
+                        } else {
+                            AIDevotionalResponseView(
+                                response: aiResponse ?? "",
+                                isGenerating: aiService.isGenerating,
+                                onDismiss: { dismiss() }
+                            )
+                            .padding(.top, ABTheme.paddingSmall)
+                        }
                     }
 
+                    // Always show Continue — never leave user stuck
                     Button { dismiss() } label: {
-                        Text("Continue →")
+                        Text(aiService.isGenerating ? "Skip & Continue →" : "Continue →")
                             .font(.system(.body, design: .serif, weight: .semibold))
                             .foregroundColor(ABTheme.blush)
                     }

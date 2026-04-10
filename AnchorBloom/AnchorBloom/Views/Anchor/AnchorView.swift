@@ -77,7 +77,7 @@ struct AnchorView: View {
         }
     }
 
-    // MARK: - 1. Scripture Card (Verse)
+    // MARK: - 1. Scripture Card (Verse) + Audio
     private var scriptureCard: some View {
         VStack(spacing: ABTheme.paddingMedium) {
             Image(systemName: "book.closed.fill")
@@ -94,11 +94,19 @@ struct AnchorView: View {
                 .font(.system(.caption, design: .serif, weight: .semibold))
                 .foregroundColor(ABTheme.sageGreen)
 
-            ScriptureActionButtons(
-                verseText: todayPrompt.scripture,
-                reference: todayPrompt.scriptureReference,
-                source: .morningAnchor
-            )
+            HStack(spacing: 16) {
+                ScriptureActionButtons(
+                    verseText: todayPrompt.scripture,
+                    reference: todayPrompt.scriptureReference,
+                    source: .morningAnchor
+                )
+                ListenButton(
+                    audioService: audioService,
+                    text: todayPrompt.scripture,
+                    cacheKey: "anchor_verse_\(todayPrompt.scriptureReference)",
+                    isPremium: subscriptionManager.isPremium
+                )
+            }
         }
         .abCard()
     }
@@ -217,22 +225,36 @@ struct AnchorView: View {
         }
     }
 
-    // MARK: - 5. Open in Prayer
+    // MARK: - 5. Open in Prayer + Audio
+    private static let anchorPrayerText = "Lord, anchor my heart in Your truth today. Guard my mind from the enemy's lies and help me walk confidently in who You've called me to be. Amen."
+
     private var openInPrayerSection: some View {
         VStack(spacing: 10) {
-            Image(systemName: "hands.sparkles.fill")
-                .font(.title2)
-                .foregroundColor(ABTheme.warmGold)
+            HStack {
+                Spacer()
+                Image(systemName: "hands.sparkles.fill")
+                    .font(.title2)
+                    .foregroundColor(ABTheme.warmGold)
+                Spacer()
+            }
 
             Text("Open in Prayer")
                 .font(ABTheme.subheadlineFont)
                 .foregroundColor(ABTheme.primaryText)
 
-            Text("Lord, anchor my heart in Your truth today. Guard my mind from the enemy's lies and help me walk confidently in who You've called me to be. Amen.")
+            Text(Self.anchorPrayerText)
                 .font(ABTheme.bodyFont)
                 .foregroundColor(ABTheme.secondaryText)
                 .multilineTextAlignment(.center)
                 .lineSpacing(4)
+
+            // Premium audio: listen to prayer read aloud
+            ListenButton(
+                audioService: audioService,
+                text: Self.anchorPrayerText,
+                cacheKey: "anchor_prayer",
+                isPremium: subscriptionManager.isPremium
+            )
         }
         .abCard()
     }
@@ -258,18 +280,31 @@ struct AnchorView: View {
                         .font(ABTheme.bodyFont)
                         .foregroundColor(ABTheme.secondaryText)
 
-                    // AI Devotional Response
-                    if aiService.isGenerating || aiResponse != nil {
-                        AIDevotionalResponseView(
-                            response: aiResponse ?? "",
-                            isGenerating: aiService.isGenerating,
-                            onDismiss: { dismiss() }
-                        )
-                        .padding(.top, ABTheme.paddingSmall)
+                    // AI Devotional Response (with error/timeout handling)
+                    if aiService.isGenerating || aiResponse != nil || aiService.errorMessage != nil {
+                        if let error = aiService.errorMessage {
+                            // Error state — don't leave user stuck
+                            HStack(spacing: 8) {
+                                Image(systemName: "exclamationmark.circle")
+                                    .foregroundColor(ABTheme.secondaryText)
+                                Text(error)
+                                    .font(.caption)
+                                    .foregroundColor(ABTheme.secondaryText)
+                            }
+                            .padding(ABTheme.paddingSmall)
+                        } else {
+                            AIDevotionalResponseView(
+                                response: aiResponse ?? "",
+                                isGenerating: aiService.isGenerating,
+                                onDismiss: { dismiss() }
+                            )
+                            .padding(.top, ABTheme.paddingSmall)
+                        }
                     }
 
+                    // Always show Continue — never leave user stuck
                     Button { dismiss() } label: {
-                        Text("Continue →")
+                        Text(aiService.isGenerating ? "Skip & Continue →" : "Continue →")
                             .font(.system(.body, design: .serif, weight: .semibold))
                             .foregroundColor(ABTheme.sageGreen)
                     }

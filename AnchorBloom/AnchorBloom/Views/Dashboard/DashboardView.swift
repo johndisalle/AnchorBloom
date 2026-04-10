@@ -151,7 +151,8 @@ struct DashboardView: View {
                     icon: "anchor",
                     accentColor: ABTheme.warmGold,
                     ctaText: actionCTAText,
-                    isAnchor: true
+                    isAnchor: true,
+                    secondaryAction: nil
                 )
             }
             // Priority 4: Neither done — time-based
@@ -172,33 +173,21 @@ struct DashboardView: View {
                     icon: "sunrise.fill",
                     accentColor: ABTheme.warmGold,
                     ctaText: actionCTAText,
-                    isAnchor: true
+                    isAnchor: true,
+                    secondaryAction: nil
                 )
             }
-            // 1pm-midnight: Bloom is primary, with anchor secondary
+            // 1pm-midnight: Bloom is primary, with anchor secondary INSIDE the card
             else if hour >= 13 {
-                VStack(spacing: 10) {
-                    actionHeroCard(
-                        title: "Time to Bloom",
-                        subtitle: "Reflect on how God worked through you today. Celebrate who He's making you.",
-                        icon: "camera.macro",
-                        accentColor: ABTheme.blush,
-                        ctaText: actionCTAText,
-                        isAnchor: false
-                    )
-
-                    // Subtle secondary anchor option
-                    Button { showAnchorSheet = true } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "anchor")
-                                .font(.caption)
-                            Text("You can still anchor today")
-                                .font(.system(.caption, design: .serif))
-                        }
-                        .foregroundColor(ABTheme.warmGold.opacity(0.8))
-                        .padding(.vertical, 8)
-                    }
-                }
+                actionHeroCard(
+                    title: "Time to Bloom",
+                    subtitle: "Reflect on how God worked through you today. Celebrate who He's making you.",
+                    icon: "camera.macro",
+                    accentColor: ABTheme.blush,
+                    ctaText: actionCTAText,
+                    isAnchor: false,
+                    secondaryAction: ("anchor", "You can still anchor today", ABTheme.warmGold)
+                )
             }
             // 12am-3am: Rest state
             else {
@@ -207,55 +196,81 @@ struct DashboardView: View {
         }
     }
 
-    private func actionHeroCard(title: String, subtitle: String, icon: String, accentColor: Color, ctaText: String, isAnchor: Bool) -> some View {
-        Button {
-            if isAnchor { showAnchorSheet = true } else { showBloomSheet = true }
-        } label: {
-            VStack(spacing: 16) {
-                HStack(spacing: 14) {
-                    ZStack {
-                        Circle()
-                            .fill(accentColor.opacity(0.15))
-                            .frame(width: 56, height: 56)
-                        Image(systemName: icon)
-                            .font(.system(size: 24))
+    private func actionHeroCard(title: String, subtitle: String, icon: String, accentColor: Color, ctaText: String, isAnchor: Bool, secondaryAction: (String, String, Color)?) -> some View {
+        VStack(spacing: 0) {
+            Button {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                if isAnchor { showAnchorSheet = true } else { showBloomSheet = true }
+            } label: {
+                VStack(spacing: 16) {
+                    HStack(spacing: 14) {
+                        ZStack {
+                            Circle()
+                                .fill(accentColor.opacity(0.15))
+                                .frame(width: 56, height: 56)
+                            Image(systemName: icon)
+                                .font(.system(size: 24))
+                                .foregroundColor(accentColor)
+                        }
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(title)
+                                .font(.system(.title3, design: .serif, weight: .bold))
+                                .foregroundColor(ABTheme.primaryText)
+                            Text(ctaText)
+                                .font(.system(.caption, design: .serif, weight: .medium))
+                                .foregroundColor(accentColor)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title2)
                             .foregroundColor(accentColor)
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(title)
-                            .font(.system(.title3, design: .serif, weight: .bold))
-                            .foregroundColor(ABTheme.primaryText)
-                        Text(ctaText)
-                            .font(.system(.caption, design: .serif, weight: .medium))
-                            .foregroundColor(accentColor)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(accentColor)
+                    Text(subtitle)
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundColor(ABTheme.secondaryText)
+                        .lineSpacing(3)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                Text(subtitle)
-                    .font(.system(.subheadline, design: .serif))
-                    .foregroundColor(ABTheme.secondaryText)
-                    .lineSpacing(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(ABTheme.paddingLarge)
             }
-            .padding(ABTheme.paddingLarge)
-            .background(
-                RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                    .fill(ABTheme.cardBackground)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
-                            .stroke(accentColor.opacity(0.25), lineWidth: 1.5)
-                    )
-            )
-            .shadow(color: accentColor.opacity(0.12), radius: 10, y: 4)
+            .buttonStyle(.plain)
+
+            // Secondary action (e.g., "You can still anchor today") — INSIDE the card
+            if let (secondaryIcon, secondaryText, secondaryColor) = secondaryAction {
+                Divider().padding(.horizontal, ABTheme.paddingMedium)
+
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    showAnchorSheet = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: secondaryIcon)
+                            .font(.system(size: 12))
+                        Text(secondaryText)
+                            .font(.system(.caption, design: .serif, weight: .medium))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9))
+                    }
+                    .foregroundColor(secondaryColor)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
+        .background(
+            RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                .fill(ABTheme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: ABTheme.cornerRadius)
+                        .stroke(accentColor.opacity(0.25), lineWidth: 1.5)
+                )
+        )
+        .shadow(color: accentColor.opacity(0.12), radius: 10, y: 4)
     }
 
     private var splitProgressCard: some View {
@@ -491,8 +506,15 @@ struct DashboardView: View {
 
     // MARK: - 5. Tree Hero
 
+    @State private var showProgressStats = false
+
     private var treeHero: some View {
-        VStack(spacing: ABTheme.paddingMedium) {
+        VStack(spacing: ABTheme.paddingSmall) {
+            // Label for new users
+            Text("Your Blooming Tree")
+                .font(.system(.caption, design: .serif, weight: .medium))
+                .foregroundColor(ABTheme.secondaryText)
+
             BloomingTreeView(
                 growthLevel: viewModel.treeGrowthLevel,
                 bloomCount: viewModel.bloomCount,
@@ -500,19 +522,25 @@ struct DashboardView: View {
                 streakDays: viewModel.currentStreak
             )
 
-            // Compact stats row
-            HStack(spacing: 0) {
-                miniStat(value: "\(viewModel.currentStreak)", label: "Streak", icon: "flame.fill", color: .orange)
-                miniDivider
-                miniStat(value: "\(viewModel.totalDays)", label: "Total Days", icon: "calendar", color: ABTheme.sageGreen)
-                miniDivider
-                miniStat(value: "\(viewModel.earnedBadges.count)", label: "Badges", icon: "star.fill", color: ABTheme.warmGold)
+            // Tappable stats row — links to full progress
+            Button { showProgressStats = true } label: {
+                HStack(spacing: 0) {
+                    miniStat(value: "\(viewModel.currentStreak)", label: "Streak", icon: "flame.fill", color: .orange)
+                    miniDivider
+                    miniStat(value: "\(viewModel.totalDays)", label: "Total Days", icon: "calendar", color: ABTheme.sageGreen)
+                    miniDivider
+                    miniStat(value: "\(viewModel.earnedBadges.count)", label: "Badges", icon: "star.fill", color: ABTheme.warmGold)
+                }
+                .padding(.vertical, 10)
+                .background(ABTheme.cardBackground)
+                .cornerRadius(ABTheme.cornerRadiusSmall)
             }
-            .padding(.vertical, 10)
-            .background(ABTheme.cardBackground)
-            .cornerRadius(ABTheme.cornerRadiusSmall)
+            .buttonStyle(.plain)
         }
         .abCard()
+        .sheet(isPresented: $showProgressStats) {
+            ProgressStatsView(viewModel: viewModel)
+        }
     }
 
     private func miniStat(value: String, label: String, icon: String, color: Color) -> some View {

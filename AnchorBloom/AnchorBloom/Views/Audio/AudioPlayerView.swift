@@ -96,14 +96,20 @@ struct AudioPlayerBar: View {
 }
 
 // MARK: - Inline Listen Button
-/// Small "Listen" button that can be placed next to any text content
+/// Small "Listen" button for premium users. Shows lock icon for free users.
 struct ListenButton: View {
     @ObservedObject var audioService: AudioDevotionalService
     let text: String
     let cacheKey: String
+    var isPremium: Bool = true
+    var onUpgrade: (() -> Void)?
 
     var body: some View {
         Button {
+            if !isPremium {
+                onUpgrade?()
+                return
+            }
             if audioService.isPlaying {
                 audioService.togglePlayPause()
             } else {
@@ -113,7 +119,12 @@ struct ListenButton: View {
             }
         } label: {
             HStack(spacing: 4) {
-                if audioService.isLoading {
+                if !isPremium {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: 10))
+                    Text("Listen")
+                        .font(.system(.caption2, design: .serif, weight: .medium))
+                } else if audioService.isLoading {
                     ProgressView()
                         .tint(ABTheme.sageGreen)
                         .scaleEffect(0.6)
@@ -121,10 +132,12 @@ struct ListenButton: View {
                     Image(systemName: audioService.isPlaying ? "pause.circle.fill" : "headphones.circle.fill")
                         .font(.caption)
                 }
-                Text(audioService.isLoading ? "Loading..." : (audioService.isPlaying ? "Pause" : "Listen"))
-                    .font(.system(.caption2, design: .serif, weight: .medium))
+                if isPremium {
+                    Text(audioService.isLoading ? "Loading..." : (audioService.isPlaying ? "Pause" : "Listen"))
+                        .font(.system(.caption2, design: .serif, weight: .medium))
+                }
             }
-            .foregroundColor(ABTheme.sageGreen)
+            .foregroundColor(isPremium ? ABTheme.sageGreen : ABTheme.warmGold)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(ABTheme.sageGreen.opacity(0.08))

@@ -5,7 +5,9 @@ import FirebaseAuth
 /// One-tap drift entries with anchoring prayer text
 struct DriftLogView: View {
     @EnvironmentObject var firestoreService: FirestoreService
+    @EnvironmentObject var subscriptionManager: SubscriptionManager
     @StateObject private var viewModel = AppViewModel(firestoreService: FirestoreService())
+    @StateObject private var audioService = AudioDevotionalService()
 
     @State private var selectedCategory: DriftCategory?
     @State private var driftNote = ""
@@ -58,21 +60,11 @@ struct DriftLogView: View {
 
     // MARK: - Header
     private var headerSection: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "water.waves")
-                .font(.title)
-                .foregroundColor(ABTheme.sageGreen)
-
-            Text("Feeling off course?")
-                .font(ABTheme.headlineFont)
-                .foregroundColor(ABTheme.primaryText)
-
-            Text("Tap what you're feeling. Let God anchor you back.")
-                .font(ABTheme.captionFont)
-                .foregroundColor(ABTheme.secondaryText)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.top, ABTheme.paddingMedium)
+        Text("Tap what you're feeling. Let God anchor you back.")
+            .font(.system(.subheadline, design: .serif))
+            .foregroundColor(ABTheme.secondaryText)
+            .multilineTextAlignment(.center)
+            .padding(.top, ABTheme.paddingSmall)
     }
 
     // MARK: - Drift Categories Grid
@@ -117,6 +109,13 @@ struct DriftLogView: View {
                     .font(.system(.body, design: .serif).italic())
                     .foregroundColor(ABTheme.secondaryText)
                     .lineSpacing(4)
+
+                ListenButton(
+                    audioService: audioService,
+                    text: category.anchoringPrayer,
+                    cacheKey: "drift_prayer_\(category.rawValue)",
+                    isPremium: subscriptionManager.isPremium
+                )
             }
             .abCard()
 
@@ -331,7 +330,7 @@ struct DriftCircleFinderView: View {
                         .tint(ABTheme.sageGreen)
                         .padding(.top, 40)
                 } else if circles.isEmpty {
-                    VStack(spacing: 12) {
+                    VStack(spacing: 16) {
                         Image(systemName: "person.3")
                             .font(.system(size: 40))
                             .foregroundColor(ABTheme.secondaryText.opacity(0.3))
@@ -340,10 +339,26 @@ struct DriftCircleFinderView: View {
                             .font(ABTheme.captionFont)
                             .foregroundColor(ABTheme.secondaryText)
 
-                        Text("Be the first to create a circle about this topic!")
+                        Text("Start a conversation with sisters walking through the same thing.")
                             .font(.caption2)
                             .foregroundColor(ABTheme.secondaryText.opacity(0.7))
                             .multilineTextAlignment(.center)
+
+                        NavigationLink {
+                            CreateCircleView { _ in }
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.caption)
+                                Text("Create a \(category.rawValue) Circle")
+                                    .font(.system(.caption, design: .serif, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(ABTheme.sageGreen)
+                            .cornerRadius(20)
+                        }
                     }
                     .padding(.top, 40)
                 } else {

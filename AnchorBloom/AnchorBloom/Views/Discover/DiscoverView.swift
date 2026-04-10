@@ -17,6 +17,13 @@ struct DiscoverView: View {
             ScrollView {
                 VStack(spacing: ABTheme.paddingLarge) {
 
+                    // Welcome header — always visible so the tab never feels empty
+                    Text("Deepen your walk with guided journeys, devotionals, and scripture memory")
+                        .font(.system(.subheadline, design: .serif))
+                        .foregroundColor(ABTheme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, ABTheme.paddingSmall)
+
                     // Active Journey (if exists) — always top
                     if let active = viewModel.activeJourney {
                         activeJourneySection(active)
@@ -230,6 +237,7 @@ struct DiscoverView: View {
                                     Circle()
                                         .fill(ABTheme.blush.opacity(0.12))
                                         .frame(width: 48, height: 48)
+                                        .shadow(color: ABTheme.blush.opacity(0.15), radius: 4, x: 0, y: 2)
                                     Image(systemName: category.icon)
                                         .font(.system(size: 18))
                                         .foregroundColor(ABTheme.blush)
