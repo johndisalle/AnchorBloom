@@ -54,19 +54,19 @@ struct DashboardView: View {
                     // 2. THE ACTION — state-driven, not time-driven
                     todayActionCard
 
-                    // 3. AI COMPANION — surfaced, visible, the star feature
-                    aiCompanionCard
-
-                    // 4. TODAY'S SCRIPTURE — tappable to bookmark/share
+                    // 3. TODAY'S SCRIPTURE — tappable to bookmark/share
                     todayScripture
 
-                    // 5. BLOOMING TREE — hero visual with compact stats
+                    // 4. BLOOMING TREE — hero visual with compact stats
                     treeHero
 
-                    // 6. ACTIVE JOURNEY — only if user has one in progress
+                    // 5. ACTIVE JOURNEY — only if user has one in progress
                     if let journey = viewModel.activeJourney {
                         activeJourneyBar(journey)
                     }
+
+                    // 6. AI COMPANION — surfaced, the star feature
+                    aiCompanionCard
 
                     Spacer().frame(height: 20)
                 }
